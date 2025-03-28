@@ -59,24 +59,21 @@ const Login = ({ onLogin }: LoginProps) => {
   
   return (
     <div className="login-screen">
-      <div className="anime-particles"></div>
+      <div className="fps-counter">60 FPS (60-60)</div>
+      <div className="score-display-static">Score: 0</div>
       
       <div className="login-content">
-        <h1 className="anime-title">
-          <span className="title-part">Anime</span>
-          <span className="title-part highlight">FPS</span>
-          <span className="title-part">Arena</span>
-        </h1>
+        <h1 className="game-title">FPS Battle Arena</h1>
         
         <div className="login-form">
           <div className="login-label">
-            <span className="highlight">Enter your username</span>
+            <span>Enter your username</span>
           </div>
           
           <input
             id="username-input"
             type="text"
-            placeholder="Your Callsign"
+            placeholder="Player Name"
             value={username}
             onChange={handleUsernameChange}
             onKeyDown={handleKeyDown}
@@ -92,12 +89,12 @@ const Login = ({ onLogin }: LoginProps) => {
             disabled={!username.trim() || isLoading}
             className={isLoading ? 'loading' : ''}
           >
-            {isLoading ? 'Loading...' : 'ENTER BATTLE'}
+            {isLoading ? 'Loading...' : 'START GAME'}
           </button>
         </div>
         
         <div className="controls-guide">
-          <h3>Combat Controls</h3>
+          <h3>Game Controls</h3>
           
           <p>WASD or Arrow Keys - Movement</p>
           <p>Mouse - Aim Weapon</p>
@@ -108,6 +105,8 @@ const Login = ({ onLogin }: LoginProps) => {
           <div className="version-info">v1.0.0</div>
         </div>
       </div>
+      
+      <div className="ammo-display">9 / 10</div>
     </div>
   );
 };

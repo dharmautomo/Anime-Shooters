@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" width="400" height="200">
+  <!-- Simple black gun shape (as seen in bottom right of screenshot) -->
+  <g transform="translate(250, 140)">
+    <!-- Gun body -->
+    <rect x="-160" y="-40" width="110" height="40" fill="#111111" />
+    
+    <!-- Gun barrel -->
+    <rect x="-50" y="-30" width="50" height="20" fill="#111111" />
+    
+    <!-- Gun handle -->
+    <rect x="-150" y="0" width="30" height="40" fill="#222222" />
+    
+    <!-- Gun details -->
+    <rect x="-130" y="-30" width="60" height="10" fill="#222222" />
+    <rect x="-40" y="-35" width="10" height="30" fill="#333333" />
+  </g>
+</svg>

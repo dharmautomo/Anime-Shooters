@@ -31,45 +31,30 @@ canvas {
   touch-action: none;
 }
 
-/* Login screen styles - Anime FPS themed */
+/* Login screen styles - Game FPS themed */
 .login-screen {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: url('/images/anime-fps-bg.svg') no-repeat center center;
+  background: url('/images/game-style-bg.svg') no-repeat center center;
   background-size: cover;
   padding: 0 20px;
   overflow: hidden;
   position: relative;
 }
 
-/* Character and weapon overlay elements */
-.login-screen::before {
+/* Weapon overlay element */
+.login-screen::after {
   content: "";
   position: absolute;
   bottom: 0;
   right: 0;
   width: 400px;
-  height: 600px;
-  background: url('/images/anime-character.svg') no-repeat bottom right;
+  height: 200px;
+  background: url('/images/game-weapon.svg') no-repeat bottom right;
   background-size: contain;
-  opacity: 0.6;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.login-screen::after {
-  content: "";
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  width: 350px;
-  height: 175px;
-  background: url('/images/anime-weapon.svg') no-repeat bottom left;
-  background-size: contain;
-  opacity: 0.6;
   z-index: 1;
   pointer-events: none;
 }
@@ -84,51 +69,35 @@ canvas {
   padding: 20px;
 }
 
-.anime-particles {
+/* Game-style HUD elements */
+.score-display-static {
   position: absolute;
-  top: 0;
+  top: 20px;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgba(94, 114, 228, 0.2) 1px, transparent 1px),
-    radial-gradient(circle at 75% 75%, rgba(94, 114, 228, 0.15) 1px, transparent 1px);
-  background-size: 50px 50px;
-  opacity: 0.5;
+  right: 0;
+  height: 30px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  text-align: center;
+  font-size: 1.2rem;
+  padding: 5px 0;
   z-index: 3;
-  pointer-events: none;
 }
 
-.anime-title {
-  font-size: 3.5rem;
-  font-weight: 900;
+.game-title {
+  font-size: 3rem;
+  font-weight: 800;
   margin-bottom: 2.5rem;
   text-align: center;
-  letter-spacing: 1px;
   position: relative;
   line-height: 1.2;
-  text-shadow: 0 0 10px rgba(94, 114, 228, 0.5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  color: #ffffff;
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.8);
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
-.title-part {
-  position: relative;
-  display: inline-block;
-  padding: 0 10px;
-}
-
-.title-part.highlight {
-  color: #5e72e4;
-  font-size: 4.2rem;
-  text-shadow: 
-    0 0 10px rgba(94, 114, 228, 0.8),
-    0 0 20px rgba(94, 114, 228, 0.5);
-  transform: translateY(-5px);
-}
-
-.anime-title::after {
+.game-title::after {
   content: "";
   position: absolute;
   bottom: -15px;
@@ -136,65 +105,53 @@ canvas {
   transform: translateX(-50%);
   width: 120px;
   height: 4px;
-  background: linear-gradient(90deg, 
-    rgba(94, 114, 228, 0), 
-    rgba(94, 114, 228, 1), 
-    rgba(130, 94, 228, 1), 
-    rgba(94, 114, 228, 0));
+  background: #ffffff;
   border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* FPS counter style like in the screenshot */
+.fps-counter {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 0.8rem;
+  padding: 2px 5px;
+  border-radius: 3px;
+  z-index: 1000;
+}
+
+/* Game-style ammo counter */
+.ammo-display {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-family: monospace;
+  font-size: 1.2rem;
+  z-index: 3;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: rgba(30, 41, 59, 0.8);
-  padding: 2.5rem;
-  border-radius: 12px;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 2rem;
+  border-radius: 8px;
   width: 100%;
   max-width: 400px;
   margin-bottom: 2rem;
-  box-shadow: 
-    0 5px 15px rgba(0, 0, 0, 0.3),
-    0 0 30px rgba(94, 114, 228, 0.2);
-  border: 1px solid #5e72e4;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   position: relative;
   z-index: 100;
   overflow: hidden;
-  backdrop-filter: blur(5px);
-}
-
-.login-form::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    radial-gradient(circle at 20% 30%, rgba(94, 114, 228, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(130, 94, 228, 0.1) 0%, transparent 50%);
-  pointer-events: none;
-}
-
-.login-form::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 200%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(94, 114, 228, 0.1) 50%, 
-    transparent 100%);
-  transform: skewX(-15deg);
-  animation: formShine 8s ease-in-out infinite;
-}
-
-@keyframes formShine {
-  0%, 100% { transform: translateX(-100%) skewX(-15deg); }
-  50% { transform: translateX(100%) skewX(-15deg); }
 }
 
 .login-label {
@@ -209,24 +166,22 @@ canvas {
 
 .login-screen input {
   width: 100%;
-  padding: 14px 18px;
+  padding: 10px 14px;
   margin-bottom: 1.2rem;
-  border: 2px solid rgba(131, 177, 255, 0.3);
-  border-radius: 8px;
-  background-color: rgba(17, 24, 39, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.5);
   color: white;
-  font-size: 1.1rem;
+  font-size: 1rem;
   outline: none;
-  transition: all 0.3s;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) inset;
+  transition: all 0.2s;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+  font-family: monospace;
 }
 
 .login-screen input:focus {
-  background-color: rgba(17, 24, 39, 0.7);
-  box-shadow: 
-    0 0 0 2px rgba(131, 177, 255, 0.5),
-    0 0 15px rgba(131, 177, 255, 0.4);
-  border-color: rgba(131, 177, 255, 0.8);
+  background-color: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .input-error {
@@ -244,60 +199,39 @@ canvas {
 }
 
 .login-screen button {
-  padding: 14px 30px;
-  background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+  padding: 12px 24px;
+  background-color: #333333;
   color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
   width: 100%;
   max-width: 200px;
   text-transform: uppercase;
   letter-spacing: 1px;
   position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(94, 114, 228, 0.4);
-}
-
-.login-screen button::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transform: rotate(45deg);
-  transition: all 0.3s;
-}
-
-.login-screen button:hover:not(:disabled)::before {
-  animation: reflectionAnimation 1.5s;
-}
-
-@keyframes reflectionAnimation {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
 }
 
 .login-screen button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4d61c9 0%, #724bce 100%);
-  transform: translateY(-3px);
-  box-shadow: 0 7px 20px rgba(94, 114, 228, 0.6);
+  background-color: #444444;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
 .login-screen button:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: 0 2px 10px rgba(94, 114, 228, 0.4);
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
 }
 
 .login-screen button:disabled {
-  background: linear-gradient(135deg, #2d3748 0%, #3f4c68 100%);
+  background-color: #222222;
   cursor: not-allowed;
   opacity: 0.7;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
 }
 
 .login-screen .controls-guide {
@@ -364,52 +298,27 @@ canvas {
 
 /* Controls guide styling */
 .login-screen .controls-guide {
-  background-color: rgba(17, 25, 40, 0.75);
-  padding: 1.8rem;
-  border-radius: 12px;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 1.5rem;
+  border-radius: 4px;
   text-align: center;
   max-width: 400px;
-  border: 1px solid #5e72e4;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   margin-top: 20px;
   position: relative;
   z-index: 50;
-  box-shadow: 
-    0 5px 15px rgba(0, 0, 0, 0.3),
-    0 0 30px rgba(94, 114, 228, 0.2);
-  backdrop-filter: blur(5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
-.login-screen .controls-guide::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg, 
-    transparent, 
-    rgba(94, 114, 228, 0.1), 
-    transparent
-  );
-  transform: rotate(45deg);
-  animation: controlsGlow 8s linear infinite;
-}
-
-@keyframes controlsGlow {
-  0% { transform: rotate(45deg) translateX(-100%); }
-  100% { transform: rotate(45deg) translateX(100%); }
-}
-
 .login-screen h3 {
-  margin-bottom: 1.2rem;
-  color: #b9c3ff;
-  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: #ffffff;
+  font-size: 1.3rem;
   font-weight: 600;
   position: relative;
   display: inline-block;
-  text-shadow: 0 0 10px rgba(94, 114, 228, 0.5);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
 }
 
 .login-screen h3::after {
@@ -418,32 +327,21 @@ canvas {
   bottom: -5px;
   left: 50%;
   transform: translateX(-50%);
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(90deg, 
-    rgba(94, 114, 228, 0), 
-    rgba(94, 114, 228, 1), 
-    rgba(94, 114, 228, 0));
+  width: 50px;
+  height: 2px;
+  background: #ffffff;
   border-radius: 2px;
-  box-shadow: 0 0 10px rgba(94, 114, 228, 0.5);
 }
 
 .login-screen p {
   margin: 0.8rem 0;
-  color: #e2e8f0;
-  font-size: 1.05rem;
+  color: #ffffff;
+  font-size: 1rem;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.8rem;
-}
-
-.login-screen p::before {
-  content: "→";
-  color: #5e72e4;
-  font-weight: bold;
-  text-shadow: 0 0 5px rgba(94, 114, 228, 0.7);
+  gap: 0.5rem;
 }
 
 /* Version info */

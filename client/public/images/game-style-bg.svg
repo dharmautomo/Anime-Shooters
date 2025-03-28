@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <!-- Sky background -->
+  <rect width="1200" height="500" fill="#a4c6e4" />
+  
+  <!-- Distant clouds -->
+  <ellipse cx="200" cy="100" rx="120" ry="40" fill="#ffffff" opacity="0.7" />
+  <ellipse cx="400" cy="150" rx="100" ry="30" fill="#ffffff" opacity="0.8" />
+  <ellipse cx="700" cy="120" rx="150" ry="35" fill="#ffffff" opacity="0.7" />
+  <ellipse cx="950" cy="130" rx="120" ry="30" fill="#ffffff" opacity="0.8" />
+  
+  <!-- Ground -->
+  <rect x="0" y="500" width="1200" height="300" fill="#4a8e38" />
+  
+  <!-- Path -->
+  <path d="M500,500 L700,500 L750,800 L450,800 Z" fill="#c19a65" />
+  
+  <!-- Mountains -->
+  <polygon points="150,500 300,300 450,500" fill="#3d6657" />
+  <polygon points="350,500 500,250 650,500" fill="#3d6657" />
+  <polygon points="700,500 850,320 1000,500" fill="#3d6657" />
+  
+  <!-- Trees -->
+  <g transform="translate(200, 400)">
+    <!-- Tree trunk -->
+    <rect x="-15" y="30" width="30" height="70" fill="#725239" />
+    <!-- Tree top -->
+    <circle cx="0" cy="0" r="60" fill="#4e7d36" />
+    <ellipse cx="-15" cy="25" rx="40" ry="30" fill="#5c9141" />
+  </g>
+  
+  <g transform="translate(950, 450)">
+    <!-- Tree trunk -->
+    <rect x="-10" y="20" width="20" height="50" fill="#725239" />
+    <!-- Tree top -->
+    <ellipse cx="0" cy="0" rx="40" ry="35" fill="#4e7d36" />
+  </g>
+  
+  <g transform="translate(100, 475)">
+    <!-- Tree trunk -->
+    <rect x="-8" y="15" width="16" height="35" fill="#725239" />
+    <!-- Tree top -->
+    <ellipse cx="0" cy="0" rx="30" ry="25" fill="#5c9141" />
+  </g>
+  
+  <!-- Houses -->
+  <g transform="translate(350, 465)">
+    <!-- House base -->
+    <rect x="-30" y="0" width="60" height="35" fill="#d77f52" />
+    <!-- Roof -->
+    <polygon points="-35,0 35,0 0,-25" fill="#8b4513" />
+    <!-- Windows -->
+    <rect x="-20" y="10" width="10" height="10" fill="#b7cfe8" />
+    <rect x="10" y="10" width="10" height="10" fill="#b7cfe8" />
+  </g>
+  
+  <g transform="translate(800, 475)">
+    <!-- Dark house -->
+    <rect x="-40" y="0" width="80" height="45" fill="#442222" />
+    <!-- Roof -->
+    <polygon points="-45,0 45,0 0,-30" fill="#221111" />
+  </g>
+</svg>
