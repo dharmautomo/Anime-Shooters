@@ -1,0 +1,145 @@
+# Comprehensive Prompt for Replit Agent to Create an FPS Multiplayer Game
+
+Create a browser-based first-person shooter (FPS) multiplayer game similar to gorescript (https://gorescript.github.io/classic/) and xibalba (https://phoboslab.org/xibalba/). 
+
+## Game Concept
+Build a retro-inspired FPS with multiplayer functionality, where players can join a server, move around in a 3D arena, shoot at each other, and compete for the highest score.
+
+## Tech Stack
+- Frontend: Three.js for 3D graphics rendering
+- Backend: Node.js with Express for the server
+- Networking: Socket.io for real-time multiplayer functionality
+- Audio: Web Audio API for game sounds
+
+## Project Structure
+```
+/
+├── public/
+│   ├── index.html
+│   ├── style.css
+│   ├── js/
+│   │   ├── game.js        # Main game initialization
+│   │   ├── player.js      # Player logic and movement
+│   │   ├── controls.js    # Input handling
+│   │   ├── world.js       # Game world and environment
+│   │   ├── weapons.js     # Weapons system
+│   │   ├── audio.js       # Sound manager
+│   │   ├── networking.js  # Client-side networking
+│   │   └── utils.js       # Helper functions
+│   └── assets/
+│       ├── models/        # 3D models
+│       ├── textures/      # Textures
+│       └── sounds/        # Sound effects
+├── server.js              # Server & multiplayer logic
+└── package.json           # Dependencies
+```
+
+## Key Features to Implement
+
+### 1. Basic FPS Mechanics
+- First-person camera perspective
+- WASD + mouse controls (A/D for left/right movement)
+- Shooting mechanics with visible projectiles
+- Jumping and collision detection
+
+### 2. Weapon System
+- Detailed pistol model with hand holding it
+- Muzzle flash effect when shooting
+- Ammo management and reloading
+- Bullet trails and impact effects
+
+### 3. Game World
+- Large arena with various obstacles and structures
+- Optimized lighting and shadows
+- Different areas with unique terrain features
+
+### 4. Multiplayer Functionality
+- Player joining/leaving
+- Position synchronization
+- Shooting and hit detection
+- Health and respawn system
+- Scoreboard/kill feed
+
+### 5. UI Elements
+- Health bar and ammo counter
+- Crosshair
+- Kill feed
+- Score display
+- Controls guide
+- Main menu with username input
+
+### 6. Audio System
+- Weapon sounds (shooting, reloading)
+- Hit/damage sounds
+- Death sounds
+- Ambient background music
+
+## Specific Technical Requirements
+
+### Game Initialization
+- Create a login screen where players enter their username
+- Support Enter key to start the game after typing username
+- Display controls guide that can be toggled with ESC key
+
+### Player Movement
+- Implement proper movement relative to camera direction
+- A key should move player left, D key should move right
+- Add collision detection with obstacles and world boundaries
+
+### Weapons and Combat
+- Create detailed 3D model for pistol with a hand holding it
+- Add shooting mechanics with visible bullet trails
+- Implement muzzle flash effect when shooting
+- Play sound effects for shooting and reloading
+
+### Graphics
+- Use Three.js for rendering with proper lighting
+- Implement shadow mapping for realistic shadows
+- Create bullet impact effects
+- Add particle effects for muzzle flash
+
+### Multiplayer
+- Handle player joining and leaving
+- Synchronize player positions and rotations
+- Implement projectile synchronization
+- Add hit detection and damage calculation
+- Create respawn mechanics
+
+### Audio
+- Implement 3D spatial audio for game sounds
+- Include ambient background music
+- Add sound effects for shooting, hit detection, and death
+
+### User Interface
+- Create HUD with health bar and ammo counter
+- Add kill feed to show eliminations
+- Display score counter
+- Include controls guide on the screen
+
+## Package.json Dependencies
+```json
+{
+  "name": "fps-multiplayer-game",
+  "version": "1.0.0",
+  "description": "A browser-based FPS multiplayer game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  }
+}
+```
+
+## Sound Resources
+Use these sound URLs for game audio:
+- Gunshot: https://cdn.freesound.org/previews/522/522122_6142149-lq.mp3
+- Reload: https://cdn.freesound.org/previews/258/258113_4772965-lq.mp3
+- Hit: https://cdn.freesound.org/previews/131/131142_2337290-lq.mp3
+- Death: https://cdn.freesound.org/previews/575/575385_6128004-lq.mp3
+- Empty gun: https://cdn.freesound.org/previews/416/416179_777645-lq.mp3
+- Ambient: https://cdn.freesound.org/previews/398/398143_1619270-lq.mp3
+
+Create this complete FPS multiplayer game with all the features described above, ensuring the code is modular and well-organized.
