@@ -6,6 +6,7 @@ import Login from "./components/Login";
 import { usePlayer } from "./lib/stores/usePlayer";
 import { useMultiplayer } from "./lib/stores/useMultiplayer";
 import AudioManager from "./components/AudioManager";
+import UI from "./components/UI";
 import "@fontsource/inter";
 
 // Define control keys for the game
@@ -96,6 +97,7 @@ function App() {
               <Game username={username} />
             </Suspense>
           </Canvas>
+          <UI />
           <AudioManager />
         </KeyboardControls>
       )}

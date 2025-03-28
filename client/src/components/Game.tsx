@@ -5,7 +5,6 @@ import { PointerLockControls, Stats } from '@react-three/drei';
 import { useMultiplayer } from '../lib/stores/useMultiplayer';
 import Player from './Player';
 import World from './World';
-import UI from './UI';
 import Weapon from './Weapon';
 import Bullet from './Bullet';
 import { usePlayer } from '../lib/stores/usePlayer';
@@ -125,9 +124,6 @@ const Game = ({ username }: GameProps) => {
         ammo={ammo}
         onShoot={shootBullet}
       />
-      
-      {/* Game UI */}
-      <UI />
     </>
   );
 };
