@@ -7,6 +7,7 @@ interface LoginProps {
 const Login = ({ onLogin }: LoginProps) => {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
   // Handle username changes
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,9 +34,14 @@ const Login = ({ onLogin }: LoginProps) => {
       return;
     }
     
-    // Valid username - submit it
-    console.log('Submitting username:', trimmedName);
-    onLogin(trimmedName);
+    // Show loading state briefly for smoother UX
+    setIsLoading(true);
+    
+    // Valid username - submit it after a short delay for better UX
+    setTimeout(() => {
+      console.log('Submitting username:', trimmedName);
+      onLogin(trimmedName);
+    }, 300);
   };
   
   // Handle Enter key press
@@ -55,12 +61,15 @@ const Login = ({ onLogin }: LoginProps) => {
   
   return (
     <div className="login-screen">
+      {/* Animated background elements */}
+      <div className="login-particles"></div>
+      
       <div className="login-content">
-        <h1>FPS Multiplayer Game</h1>
+        <h1>Anime FPS Arena</h1>
         
         <div className="login-form">
           <div className="login-label">
-            Enter your username:
+            <span className="highlight">Enter your username</span>
           </div>
           
           <input
@@ -72,25 +81,71 @@ const Login = ({ onLogin }: LoginProps) => {
             onKeyDown={handleKeyDown}
             maxLength={15}
             className={error ? 'input-error' : ''}
+            disabled={isLoading}
           />
           
           {error && <div className="error-message">{error}</div>}
           
           <button 
             onClick={handleSubmit}
-            disabled={!username.trim()}
+            disabled={!username.trim() || isLoading}
+            className={isLoading ? 'loading' : ''}
           >
-            Start Game
+            {isLoading ? (
+              <span className="loading-text">Loading...</span>
+            ) : (
+              <span>Start Game</span>
+            )}
           </button>
         </div>
         
         <div className="controls-guide">
-          <h3>Controls:</h3>
-          <p>WASD or Arrow Keys - Move</p>
-          <p>Mouse - Look around</p>
-          <p>Left Click - Shoot</p>
-          <p>R - Reload</p>
-          <p>Space - Jump</p>
+          <h3>Game Controls</h3>
+          
+          <div className="controls-grid">
+            <div className="control-item">
+              <div className="control-icon movement-icon">
+                <span className="key">W</span>
+                <span className="key">A</span>
+                <span className="key">S</span>
+                <span className="key">D</span>
+              </div>
+              <div className="control-text">Movement</div>
+            </div>
+            
+            <div className="control-item">
+              <div className="control-icon mouse-icon">
+                <div className="mouse-body">
+                  <div className="mouse-wheel"></div>
+                </div>
+              </div>
+              <div className="control-text">Look around</div>
+            </div>
+            
+            <div className="control-item">
+              <div className="control-icon click-icon">
+                <div className="click-circle"></div>
+                <div className="click-ripple"></div>
+              </div>
+              <div className="control-text">Shoot</div>
+            </div>
+            
+            <div className="control-item">
+              <div className="control-icon">
+                <span className="key large-key">R</span>
+              </div>
+              <div className="control-text">Reload</div>
+            </div>
+            
+            <div className="control-item">
+              <div className="control-icon">
+                <span className="key xl-key">Space</span>
+              </div>
+              <div className="control-text">Jump</div>
+            </div>
+          </div>
+          
+          <div className="version-info">v1.0.0</div>
         </div>
       </div>
     </div>
