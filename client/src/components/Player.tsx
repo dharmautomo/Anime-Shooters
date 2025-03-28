@@ -194,12 +194,16 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       playerRef.current.rotation.y = rotation;
     } else if (!isMainPlayer && playerRef.current) {
       // For other players, update the mesh position and rotation based on props
-      // Subtract 0.85 from y position to place the player properly on the ground
+      // Subtract 1.1 from y position to place the player properly on the ground
+      const yPos = (position instanceof THREE.Vector3 ? position.y : position[1]);
+      console.log('Player position before adjustment:', yPos);
+      
       playerRef.current.position.set(
         position instanceof THREE.Vector3 ? position.x : position[0],
-        (position instanceof THREE.Vector3 ? position.y : position[1]) - 0.85,
+        yPos - 1.1,
         position instanceof THREE.Vector3 ? position.z : position[2]
       );
+      console.log('Player position after adjustment:', playerRef.current.position.y);
       playerRef.current.rotation.y = rotation;
       
       // Animate the eyes for blinking effect
