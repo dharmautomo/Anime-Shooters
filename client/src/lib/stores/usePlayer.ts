@@ -93,8 +93,12 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         bulletPosition.y += 1.5; // Eye height
         
         // Add bullet to multiplayer store
-        const { addBullet } = require('./useMultiplayer').useMultiplayer.getState();
-        addBullet(bulletPosition, direction, playerId);
+        // Import the useMultiplayer store at the top of the file and use it directly
+        // This is a workaround for circular dependencies
+        import('./useMultiplayer').then(module => {
+          const { addBullet } = module.useMultiplayer.getState();
+          addBullet(bulletPosition, direction, playerId);
+        });
         
         console.log('Shot bullet with direction:', direction);
         return true;

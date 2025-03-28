@@ -32,6 +32,7 @@ const Game = ({ username }: GameProps) => {
     updatePosition, 
     updateRotation,
     shootBullet,
+    reloadAmmo,
     resetPlayer
   } = usePlayer();
 
@@ -82,8 +83,8 @@ const Game = ({ username }: GameProps) => {
       // 'R' key for reloading
       if (e.code === 'KeyR') {
         console.log('Reloading weapon');
-        // Use the dedicated reloadAmmo function
-        require('../lib/stores/usePlayer').usePlayer.getState().reloadAmmo();
+        // Use the reloadAmmo function from the player store
+        reloadAmmo();
       }
     };
     
@@ -94,7 +95,7 @@ const Game = ({ username }: GameProps) => {
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [shootBullet]);
+  }, [shootBullet, reloadAmmo]);
 
   // Update player position and camera
   useFrame((state, delta) => {
