@@ -47,9 +47,10 @@ const UI = () => {
         <div className="health-bar-fill" style={{ width: `${health}%` }}></div>
       </div>
       
-      {/* Ammo counter */}
+      {/* Ammo counter with reload indicator */}
       <div className="ammo-counter">
         {ammo} / 10
+        {ammo === 0 && <div className="reload-indicator">Press R to reload!</div>}
       </div>
       
       {/* Crosshair */}

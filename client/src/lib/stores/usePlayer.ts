@@ -70,13 +70,38 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   },
   
   shootBullet: () => {
-    set((state) => {
-      // Only shoot if player has ammo and is alive
-      if (state.ammo > 0 && state.isAlive) {
-        return { ammo: state.ammo - 1 };
+    const { ammo, isAlive, position, playerId } = get();
+    
+    // Only shoot if player has ammo and is alive
+    if (ammo > 0 && isAlive) {
+      // Reduce ammo
+      set({ ammo: ammo - 1 });
+      
+      // Get camera direction for bullet direction
+      const canvas = document.querySelector('canvas');
+      // Access the React Three Fiber data with proper type casting
+      const camera = canvas && (canvas as any)?.__r3f?.root?.camera;
+      
+      if (camera) {
+        // Create bullet direction from camera
+        const direction = new THREE.Vector3(0, 0, -1);
+        direction.applyQuaternion(camera.quaternion);
+        direction.normalize();
+        
+        // Calculate bullet spawn position (slightly in front of camera)
+        const bulletPosition = position.clone().add(direction.clone().multiplyScalar(0.5));
+        bulletPosition.y += 1.5; // Eye height
+        
+        // Add bullet to multiplayer store
+        const { addBullet } = require('./useMultiplayer').useMultiplayer.getState();
+        addBullet(bulletPosition, direction, playerId);
+        
+        console.log('Shot bullet with direction:', direction);
+        return true;
       }
-      return {};
-    });
+    }
+    
+    return false;
   },
   
   reloadAmmo: () => {

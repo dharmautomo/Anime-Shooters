@@ -30,7 +30,7 @@ const Bullet = ({ position, velocity, owner }: BulletProps) => {
   
   // Bullet lifetime and speed
   const lifetime = useRef(3000); // 3 seconds
-  const speed = 0.5;
+  const speed = 1.0; // Increase bullet speed for better gameplay
   
   // Set up bullet
   useEffect(() => {
@@ -68,18 +68,47 @@ const Bullet = ({ position, velocity, owner }: BulletProps) => {
   });
   
   return (
-    <mesh 
-      ref={bulletRef} 
-      position={initialPos.current}
-      userData={{ isBullet: true, owner }}
-    >
-      <sphereGeometry args={[0.05, 8, 8]} />
-      <meshStandardMaterial 
-        color="#ffff00" 
-        emissive="#ffff00"
-        emissiveIntensity={1}
+    <group>
+      {/* Main bullet */}
+      <mesh 
+        ref={bulletRef} 
+        position={initialPos.current}
+        userData={{ isBullet: true, owner }}
+      >
+        <sphereGeometry args={[0.08, 16, 16]} />
+        <meshStandardMaterial 
+          color="#ff7700" 
+          emissive="#ff5500"
+          emissiveIntensity={2}
+          transparent={true}
+          opacity={0.9}
+        />
+      </mesh>
+      
+      {/* Bullet trail */}
+      <mesh
+        position={initialPos.current}
+        rotation={[0, 0, Math.PI / 2]}
+      >
+        <cylinderGeometry args={[0.01, 0.05, 1, 8]} />
+        <meshStandardMaterial 
+          color="#ffaa00" 
+          emissive="#ffcc00"
+          emissiveIntensity={1.5}
+          transparent={true}
+          opacity={0.6}
+        />
+      </mesh>
+      
+      {/* Bullet glow */}
+      <pointLight
+        position={initialPos.current}
+        color="#ff7700"
+        intensity={1}
+        distance={2}
+        decay={2}
       />
-    </mesh>
+    </group>
   );
 };
 

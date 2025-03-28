@@ -224,6 +224,20 @@ canvas {
   text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
+.reload-indicator {
+  color: #ff6b6b;
+  font-weight: bold;
+  margin-top: 5px;
+  animation: pulse 1.5s infinite;
+  text-shadow: 0 0 8px rgba(255, 107, 107, 0.7);
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
 .score-display {
   position: absolute;
   top: 20px;

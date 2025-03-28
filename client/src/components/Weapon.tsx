@@ -14,7 +14,7 @@ interface WeaponProps {
 
 const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
   const weaponRef = useRef<THREE.Group>(null);
-  const muzzleFlashRef = useRef<THREE.Mesh>(null);
+  const muzzleFlashRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
   const [isShooting, setIsShooting] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
@@ -144,19 +144,40 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         <meshStandardMaterial color="#111111" />
       </mesh>
       
-      {/* Muzzle flash */}
-      <mesh 
-        ref={muzzleFlashRef} 
-        position={[0, 0, 0.4]} 
-        rotation={[0, 0, 0]}
-      >
-        <sphereGeometry args={[0.05, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial 
-          color="#ffff00" 
-          emissive="#ffff00"
-          emissiveIntensity={2}
+      {/* Muzzle flash effect */}
+      <group ref={muzzleFlashRef} position={[0, 0, 0.4]}>
+        {/* Central flash */}
+        <mesh position={[0, 0, 0]}>
+          <sphereGeometry args={[0.08, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <meshStandardMaterial 
+            color="#ffff00" 
+            emissive="#ffff00"
+            emissiveIntensity={3}
+            transparent={true}
+            opacity={0.9}
+          />
+        </mesh>
+        
+        {/* Radial flare */}
+        <mesh rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.12, 0.04, 0.15, 16]} />
+          <meshStandardMaterial 
+            color="#ffcc00" 
+            emissive="#ffaa00"
+            emissiveIntensity={2}
+            transparent={true}
+            opacity={0.8}
+          />
+        </mesh>
+        
+        {/* Light source */}
+        <pointLight
+          color="#ffcc00"
+          intensity={2}
+          distance={3}
+          decay={2}
         />
-      </mesh>
+      </group>
       
       {/* Hand */}
       <mesh position={[0, -0.12, -0.15]} rotation={[0.3, 0, 0]}>

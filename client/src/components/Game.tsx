@@ -69,6 +69,33 @@ const Game = ({ username }: GameProps) => {
   // Track the last time we sent a position update to the server
   const lastUpdateRef = useRef<number>(0);
   
+  // Mouse click event handling for shooting and keyboard for reloading
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      // Left mouse button (0) is used for shooting
+      if (e.button === 0) {
+        shootBullet();
+      }
+    };
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 'R' key for reloading
+      if (e.code === 'KeyR') {
+        console.log('Reloading weapon');
+        // Use the dedicated reloadAmmo function
+        require('../lib/stores/usePlayer').usePlayer.getState().reloadAmmo();
+      }
+    };
+    
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [shootBullet]);
+
   // Update player position and camera
   useFrame((state, delta) => {
     if (!controlsRef.current) return;
