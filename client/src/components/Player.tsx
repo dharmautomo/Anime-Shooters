@@ -194,13 +194,13 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       playerRef.current.rotation.y = rotation;
     } else if (!isMainPlayer && playerRef.current) {
       // For other players, update the mesh position and rotation based on props
-      // Using y-offset of -1 as requested
+      // Using y-offset of -1.5 as requested
       const yPos = (position instanceof THREE.Vector3 ? position.y : position[1]);
       console.log('Player position before adjustment:', yPos);
       
       playerRef.current.position.set(
         position instanceof THREE.Vector3 ? position.x : position[0],
-        yPos - 1, // Apply -1 y-offset
+        yPos - 1.5, // Apply -1.5 y-offset
         position instanceof THREE.Vector3 ? position.z : position[2]
       );
       console.log('Player position after adjustment:', playerRef.current.position.y);
