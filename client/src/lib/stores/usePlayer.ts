@@ -76,6 +76,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     if (ammo > 0 && isAlive) {
       // Reduce ammo
       set({ ammo: ammo - 1 });
+      console.log(`Bullet fired. Ammo reduced from ${ammo} to ${ammo - 1}`)
       
       // Get camera direction for bullet direction
       const canvas = document.querySelector('canvas');
