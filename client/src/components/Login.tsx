@@ -63,7 +63,7 @@ const Login = ({ onLogin }: LoginProps) => {
       <div className="score-display-static">Score: 0</div>
       
       <div className="login-content">
-        <h1 className="game-title">FPS Battle Arena</h1>
+        <h1 className="game-title">Anime Shooters</h1>
         
         <div className="login-form">
           <div className="login-label">
