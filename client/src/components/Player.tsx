@@ -233,14 +233,14 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       {/* Anime-style player character for other players */}
       {!isMainPlayer && (
         <>
-          {/* Head - slightly larger for anime style */}
-          <mesh position={[0, 1.7, 0]}>
+          {/* Head - slightly larger for anime style - position adjusted */}
+          <mesh position={[0, 1, 0]}>
             <sphereGeometry args={[0.4, 16, 16]} />
             <meshStandardMaterial color="#FFD5CD" />
           </mesh>
           
-          {/* Hair - stylized anime hair */}
-          <group position={[0, 1.85, 0]}>
+          {/* Hair - stylized anime hair - position adjusted */}
+          <group position={[0, 1.15, 0]}>
             {/* Top hair */}
             <mesh position={[0, 0.15, 0]}>
               <sphereGeometry args={[0.42, 16, 16]} />
@@ -280,40 +280,40 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
             </mesh>
           </group>
           
-          {/* Eyes with refs for animation */}
-          <mesh ref={leftEyeRef} position={[0.15, 1.7, 0.35]} rotation={[0, 0, 0]}>
+          {/* Eyes with refs for animation - position adjusted */}
+          <mesh ref={leftEyeRef} position={[0.15, 1, 0.35]} rotation={[0, 0, 0]}>
             <sphereGeometry args={[0.08, 16, 16]} />
             <meshStandardMaterial color="#000000" />
           </mesh>
-          <mesh ref={rightEyeRef} position={[-0.15, 1.7, 0.35]} rotation={[0, 0, 0]}>
+          <mesh ref={rightEyeRef} position={[-0.15, 1, 0.35]} rotation={[0, 0, 0]}>
             <sphereGeometry args={[0.08, 16, 16]} />
             <meshStandardMaterial color="#000000" />
           </mesh>
           
-          {/* Eye whites for anime look */}
-          <mesh position={[0.15, 1.72, 0.36]} rotation={[0, 0, 0]} scale={[0.4, 0.4, 0.4]}>
+          {/* Eye whites for anime look - position adjusted */}
+          <mesh position={[0.15, 1.02, 0.36]} rotation={[0, 0, 0]} scale={[0.4, 0.4, 0.4]}>
             <sphereGeometry args={[0.08, 16, 16]} />
             <meshStandardMaterial color="#ffffff" />
           </mesh>
-          <mesh position={[-0.15, 1.72, 0.36]} rotation={[0, 0, 0]} scale={[0.4, 0.4, 0.4]}>
+          <mesh position={[-0.15, 1.02, 0.36]} rotation={[0, 0, 0]} scale={[0.4, 0.4, 0.4]}>
             <sphereGeometry args={[0.08, 16, 16]} />
             <meshStandardMaterial color="#ffffff" />
           </mesh>
           
-          {/* Glasses - anime glasses effect */}
-          <mesh position={[0, 1.7, 0.36]} rotation={[0, 0, 0]}>
+          {/* Glasses - anime glasses effect - position adjusted */}
+          <mesh position={[0, 1, 0.36]} rotation={[0, 0, 0]}>
             <ringGeometry args={[0.12, 0.14, 16]} />
             <meshStandardMaterial color="#555555" />
           </mesh>
           
-          {/* Mouth */}
-          <mesh ref={mouthRef} position={[0, 1.55, 0.38]} rotation={[0, 0, 0]}>
+          {/* Mouth - position adjusted */}
+          <mesh ref={mouthRef} position={[0, 0.85, 0.38]} rotation={[0, 0, 0]}>
             <boxGeometry args={[0.12, 0.03, 0.01]} />
             <meshStandardMaterial color="#cc6666" />
           </mesh>
           
-          {/* Body - Shirt with unique color */}
-          <mesh position={[0, 0.7, 0]}>
+          {/* Body - Shirt with unique color - Lowered to ground level */}
+          <mesh position={[0, 0, 0]}>
             <boxGeometry args={[0.7, 1.2, 0.4]} />
             <meshStandardMaterial 
               color={health > 0 ? clothesColor : "#ff0000"} 
@@ -323,31 +323,58 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
           </mesh>
           
           {/* Arms */}
-          <mesh position={[0.45, 0.7, 0]}>
+          <mesh position={[0.45, 0, 0]}>
             <boxGeometry args={[0.2, 1, 0.2]} />
             <meshStandardMaterial color="#FFD5CD" />
           </mesh>
-          <mesh position={[-0.45, 0.7, 0]}>
+          <mesh position={[-0.45, 0, 0]}>
             <boxGeometry args={[0.2, 1, 0.2]} />
             <meshStandardMaterial color="#FFD5CD" />
           </mesh>
           
-          {/* Legs - Pants with unique color */}
-          <mesh position={[0.2, -0.3, 0]}>
+          {/* Legs - Pants with unique color - touching ground */}
+          <mesh position={[0.2, -1, 0]}>
             <boxGeometry args={[0.25, 1, 0.25]} />
             <meshStandardMaterial color={pantsColor} />
           </mesh>
-          <mesh position={[-0.2, -0.3, 0]}>
+          <mesh position={[-0.2, -1, 0]}>
             <boxGeometry args={[0.25, 1, 0.25]} />
             <meshStandardMaterial color={pantsColor} />
           </mesh>
+          
+          {/* Weapon - Pistol */}
+          <group position={[0.6, 0, 0.4]} rotation={[0, -Math.PI / 2, 0]}>
+            {/* Gun handle */}
+            <mesh position={[0, -0.15, 0]} rotation={[0, 0, -Math.PI / 12]}>
+              <boxGeometry args={[0.1, 0.3, 0.15]} />
+              <meshStandardMaterial color="#1a1a1a" />
+            </mesh>
+            
+            {/* Gun barrel */}
+            <mesh position={[0, 0, 0]}>
+              <boxGeometry args={[0.4, 0.12, 0.15]} />
+              <meshStandardMaterial color="#333333" />
+            </mesh>
+            
+            {/* Gun details */}
+            <mesh position={[0.15, -0.05, 0]}>
+              <boxGeometry args={[0.05, 0.05, 0.17]} />
+              <meshStandardMaterial color="#1a1a1a" />
+            </mesh>
+            
+            {/* Gun trigger */}
+            <mesh position={[0, -0.05, 0]}>
+              <boxGeometry args={[0.05, 0.05, 0.05]} />
+              <meshStandardMaterial color="#111111" />
+            </mesh>
+          </group>
         </>
       )}
       
-      {/* Player name tag (only for other players) */}
+      {/* Player name tag (only for other players) - position adjusted */}
       {!isMainPlayer && (
         <sprite
-          position={[0, 2.5, 0]}
+          position={[0, 1.8, 0]}
           scale={[3, 0.8, 1]}
         >
           <spriteMaterial attach="material">
