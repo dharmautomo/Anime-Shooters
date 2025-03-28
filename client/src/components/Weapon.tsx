@@ -36,19 +36,23 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     if (shoot && !isShooting && !isReloading && ammo > 0) {
       setIsShooting(true);
       
+      console.log("Shooting weapon!");
+      
       // Play gunshot sound
       playHit();
       
       // Show muzzle flash
       if (muzzleFlashRef.current) {
         muzzleFlashRef.current.visible = true;
+        console.log("Showing muzzle flash");
         
         // Hide muzzle flash after a short time
         setTimeout(() => {
           if (muzzleFlashRef.current) {
             muzzleFlashRef.current.visible = false;
+            console.log("Hiding muzzle flash");
           }
-        }, 50);
+        }, 100); // Extended for better visibility
       }
       
       // Trigger shoot callback
@@ -60,9 +64,51 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       }, 250);
     } else if (shoot && ammo === 0 && !isReloading) {
       // Click sound for empty gun
+      console.log("Click - empty gun");
       playSuccess();
     }
   }, [shoot, isShooting, isReloading, ammo, playHit, playSuccess, onShoot]);
+  
+  // Handle mouse input for shooting (additional method)
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 0) { // Left mouse button
+        if (!isShooting && !isReloading && ammo > 0) {
+          console.log("Mouse click - shooting");
+          setIsShooting(true);
+          
+          // Play gunshot sound
+          playHit();
+          
+          // Show muzzle flash
+          if (muzzleFlashRef.current) {
+            muzzleFlashRef.current.visible = true;
+            
+            // Hide muzzle flash after a short time
+            setTimeout(() => {
+              if (muzzleFlashRef.current) {
+                muzzleFlashRef.current.visible = false;
+              }
+            }, 100);
+          }
+          
+          // Trigger shoot callback
+          onShoot();
+          
+          // Cooldown before next shot
+          setTimeout(() => {
+            setIsShooting(false);
+          }, 250);
+        }
+      }
+    };
+    
+    window.addEventListener('mousedown', handleMouseDown);
+    
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, [isShooting, isReloading, ammo, playHit, onShoot]);
   
   // Handle reloading
   useEffect(() => {
@@ -144,15 +190,15 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         <meshStandardMaterial color="#111111" />
       </mesh>
       
-      {/* Muzzle flash effect */}
+      {/* Muzzle flash effect - enhanced for better visibility */}
       <group ref={muzzleFlashRef} position={[0, 0, 0.4]}>
         {/* Central flash */}
         <mesh position={[0, 0, 0]}>
-          <sphereGeometry args={[0.08, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <sphereGeometry args={[0.12, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
           <meshStandardMaterial 
             color="#ffff00" 
             emissive="#ffff00"
-            emissiveIntensity={3}
+            emissiveIntensity={5}
             transparent={true}
             opacity={0.9}
           />
@@ -160,21 +206,33 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         
         {/* Radial flare */}
         <mesh rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.12, 0.04, 0.15, 16]} />
+          <cylinderGeometry args={[0.18, 0.06, 0.25, 16]} />
           <meshStandardMaterial 
             color="#ffcc00" 
             emissive="#ffaa00"
-            emissiveIntensity={2}
+            emissiveIntensity={4}
             transparent={true}
             opacity={0.8}
           />
         </mesh>
         
-        {/* Light source */}
+        {/* Additional spark particles */}
+        <mesh position={[0, 0, 0.1]}>
+          <octahedronGeometry args={[0.15, 0]} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            emissive="#ffffff"
+            emissiveIntensity={6}
+            transparent={true}
+            opacity={0.7}
+          />
+        </mesh>
+        
+        {/* Light source - brighter */}
         <pointLight
           color="#ffcc00"
-          intensity={2}
-          distance={3}
+          intensity={5}
+          distance={5}
           decay={2}
         />
       </group>

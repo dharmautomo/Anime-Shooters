@@ -32,15 +32,28 @@ const AudioManager = () => {
       ambientSound.volume = 0.2;
       ambientSound.loop = true;
       
+      // Pre-load all sounds to ensure they're ready for playback
+      gunshotSound.load();
+      reloadSound.load();
+      ambientSound.load();
+      hitSound.load();
+      deathSound.load();
+      emptySound.load();
+      
       // Set the sounds in the store
       setHitSound(gunshotSound);
       setSuccessSound(reloadSound);
       setBackgroundMusic(ambientSound);
       
-      // Preload other sounds
-      hitSound.load();
-      deathSound.load();
-      emptySound.load();
+      // Try to play and immediately pause to get past autoplay restrictions
+      try {
+        gunshotSound.play().then(() => {
+          gunshotSound.pause();
+          gunshotSound.currentTime = 0;
+        }).catch(e => console.log("Audio preload failed:", e));
+      } catch (err) {
+        console.log("Audio preload exception:", err);
+      }
       
       console.log('All sound effects loaded');
     };
