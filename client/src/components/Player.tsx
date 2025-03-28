@@ -1,7 +1,7 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useKeyboardControls } from '@react-three/drei';
+import { useKeyboardControls, useAnimations } from '@react-three/drei';
 import { Controls } from '../App';
 import { usePlayer } from '../lib/stores/usePlayer';
 import { useMultiplayer } from '../lib/stores/useMultiplayer';
@@ -17,9 +17,34 @@ interface PlayerProps {
 
 const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerProps) => {
   const playerRef = useRef<THREE.Group>(null);
+  const leftEyeRef = useRef<THREE.Mesh>(null);
+  const rightEyeRef = useRef<THREE.Mesh>(null);
+  const mouthRef = useRef<THREE.Mesh>(null);
   const { updatePosition, takeDamage, respawn } = usePlayer();
   const { updatePlayerPosition } = useMultiplayer();
   const { scene } = useThree();
+  
+  // Animation states for anime character
+  const [blinking, setBlinking] = useState(false);
+  const [blinkTimer, setBlinkTimer] = useState(0);
+  const [animationTime, setAnimationTime] = useState(0);
+  
+  // Randomize player appearance - use player ID/username for consistent colors
+  const playerSeed = username || 'default';
+  const hashCode = playerSeed.split('').reduce((acc, char) => {
+    return char.charCodeAt(0) + ((acc << 5) - acc);
+  }, 0);
+  
+  // Generate somewhat random but deterministic colors based on username
+  const getColor = (offset = 0) => {
+    const h = Math.abs((hashCode + offset) % 360);
+    return `hsl(${h}, 70%, 60%)`;
+  };
+  
+  // Player appearance settings
+  const hairColor = getColor(0);
+  const clothesColor = getColor(120);
+  const pantsColor = getColor(240);
   
   // Get keyboard controls for main player
   const forward = useKeyboardControls<Controls>(state => state.forward);
@@ -38,11 +63,30 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const currentHeight = useRef(1.6); // Player eye height
   
   // Handle player movement in every frame
-  useFrame(({ camera }) => {
+  // Set up eye blinking effect
+  useEffect(() => {
+    if (!isMainPlayer) {
+      // Set up random eye blinking
+      const blinkInterval = setInterval(() => {
+        setBlinking(true);
+        setTimeout(() => {
+          setBlinking(false);
+        }, 200); // Blink duration
+      }, 3000 + Math.random() * 4000); // Random interval between blinks
+      
+      return () => clearInterval(blinkInterval);
+    }
+  }, [isMainPlayer]);
+
+  useFrame((state, delta) => {
+    // Update animation timer
+    setAnimationTime(prev => prev + delta);
+    
+    // Handle player movement and animations
     if (isMainPlayer && playerRef.current) {
       // Get the camera's direction vector
       const direction = new THREE.Vector3();
-      camera.getWorldDirection(direction);
+      state.camera.getWorldDirection(direction);
       
       // Create movement vector
       const moveVector = new THREE.Vector3(0, 0, 0);
@@ -70,12 +114,12 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       
       // Adjust movement direction based on camera's facing direction
       const forwardDirection = new THREE.Vector3(0, 0, -1);
-      forwardDirection.applyQuaternion(camera.quaternion);
+      forwardDirection.applyQuaternion(state.camera.quaternion);
       forwardDirection.y = 0; // Keep movement on the XZ plane
       forwardDirection.normalize();
       
       const rightDirection = new THREE.Vector3(1, 0, 0);
-      rightDirection.applyQuaternion(camera.quaternion);
+      rightDirection.applyQuaternion(state.camera.quaternion);
       rightDirection.y = 0; // Keep movement on the XZ plane
       rightDirection.normalize();
       
@@ -86,7 +130,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       
       // Calculate new potential position
       const newPosition = new THREE.Vector3().addVectors(
-        new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z),
+        new THREE.Vector3(state.camera.position.x, state.camera.position.y, state.camera.position.z),
         moveDirection
       );
       
@@ -134,7 +178,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       // Only update position if there's no collision
       if (!hasCollision) {
         // Update camera position
-        camera.position.set(newPosition.x, newPosition.y, newPosition.z);
+        state.camera.position.set(newPosition.x, newPosition.y, newPosition.z);
         
         // Update player state
         updatePosition(newPosition);
@@ -144,32 +188,161 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       }
       
       // Update player mesh position
-      playerRef.current.position.copy(camera.position);
+      playerRef.current.position.copy(state.camera.position);
       
       // Adjust player rotation to match camera's horizontal rotation
       playerRef.current.rotation.y = rotation;
     } else if (!isMainPlayer && playerRef.current) {
-      // For other players, just update the mesh position and rotation based on props
+      // For other players, update the mesh position and rotation based on props
       playerRef.current.position.set(
         position instanceof THREE.Vector3 ? position.x : position[0],
         position instanceof THREE.Vector3 ? position.y : position[1],
         position instanceof THREE.Vector3 ? position.z : position[2]
       );
       playerRef.current.rotation.y = rotation;
+      
+      // Animate the eyes for blinking effect
+      if (leftEyeRef.current && rightEyeRef.current) {
+        // Eye blinking animation
+        if (blinking) {
+          leftEyeRef.current.scale.y = 0.1;  // Almost closed eyes
+          rightEyeRef.current.scale.y = 0.1;
+        } else {
+          leftEyeRef.current.scale.y = 1;   // Open eyes
+          rightEyeRef.current.scale.y = 1;
+        }
+        
+        // Subtle eye movement
+        const eyeMovement = Math.sin(animationTime * 1.5) * 0.03;
+        leftEyeRef.current.position.x = 0.15 + eyeMovement;
+        rightEyeRef.current.position.x = -0.15 + eyeMovement;
+      }
+      
+      // Animate mouth for expressions
+      if (mouthRef.current) {
+        // Create subtle mouth movement for a more lively character
+        const mouthMovement = Math.sin(animationTime * 2) * 0.01;
+        mouthRef.current.scale.x = 1 + mouthMovement;
+        mouthRef.current.scale.y = 1 + mouthMovement;
+      }
     }
   });
   
   return (
     <group ref={playerRef}>
-      {/* Player mesh */}
-      <mesh visible={!isMainPlayer}>
-        <boxGeometry args={[1, 2, 1]} />
-        <meshStandardMaterial 
-          color={health > 0 ? "#4287f5" : "#ff0000"} 
-          opacity={health > 0 ? 1 : 0.5}
-          transparent={health <= 0}
-        />
-      </mesh>
+      {/* Anime-style player character for other players */}
+      {!isMainPlayer && (
+        <>
+          {/* Head - slightly larger for anime style */}
+          <mesh position={[0, 1.7, 0]}>
+            <sphereGeometry args={[0.4, 16, 16]} />
+            <meshStandardMaterial color="#FFD5CD" />
+          </mesh>
+          
+          {/* Hair - stylized anime hair */}
+          <group position={[0, 1.85, 0]}>
+            {/* Top hair */}
+            <mesh position={[0, 0.15, 0]}>
+              <sphereGeometry args={[0.42, 16, 16]} />
+              <meshStandardMaterial 
+                color={health > 0 ? hairColor : "#ff0000"}
+                opacity={health > 0 ? 1 : 0.7}
+                transparent={health <= 0}
+              />
+            </mesh>
+            
+            {/* Front bangs */}
+            <mesh position={[0, 0.1, 0.25]}>
+              <boxGeometry args={[0.8, 0.25, 0.2]} />
+              <meshStandardMaterial 
+                color={health > 0 ? hairColor : "#ff0000"}
+                opacity={health > 0 ? 1 : 0.7}
+                transparent={health <= 0}
+              />
+            </mesh>
+            
+            {/* Side hair */}
+            <mesh position={[0.35, -0.2, 0]}>
+              <boxGeometry args={[0.15, 0.5, 0.3]} />
+              <meshStandardMaterial 
+                color={health > 0 ? hairColor : "#ff0000"}
+                opacity={health > 0 ? 1 : 0.7}
+                transparent={health <= 0}
+              />
+            </mesh>
+            <mesh position={[-0.35, -0.2, 0]}>
+              <boxGeometry args={[0.15, 0.5, 0.3]} />
+              <meshStandardMaterial 
+                color={health > 0 ? hairColor : "#ff0000"}
+                opacity={health > 0 ? 1 : 0.7}
+                transparent={health <= 0}
+              />
+            </mesh>
+          </group>
+          
+          {/* Eyes with refs for animation */}
+          <mesh ref={leftEyeRef} position={[0.15, 1.7, 0.35]} rotation={[0, 0, 0]}>
+            <sphereGeometry args={[0.08, 16, 16]} />
+            <meshStandardMaterial color="#000000" />
+          </mesh>
+          <mesh ref={rightEyeRef} position={[-0.15, 1.7, 0.35]} rotation={[0, 0, 0]}>
+            <sphereGeometry args={[0.08, 16, 16]} />
+            <meshStandardMaterial color="#000000" />
+          </mesh>
+          
+          {/* Eye whites for anime look */}
+          <mesh position={[0.15, 1.72, 0.36]} rotation={[0, 0, 0]} scale={[0.4, 0.4, 0.4]}>
+            <sphereGeometry args={[0.08, 16, 16]} />
+            <meshStandardMaterial color="#ffffff" />
+          </mesh>
+          <mesh position={[-0.15, 1.72, 0.36]} rotation={[0, 0, 0]} scale={[0.4, 0.4, 0.4]}>
+            <sphereGeometry args={[0.08, 16, 16]} />
+            <meshStandardMaterial color="#ffffff" />
+          </mesh>
+          
+          {/* Glasses - anime glasses effect */}
+          <mesh position={[0, 1.7, 0.36]} rotation={[0, 0, 0]}>
+            <ringGeometry args={[0.12, 0.14, 16]} />
+            <meshStandardMaterial color="#555555" />
+          </mesh>
+          
+          {/* Mouth */}
+          <mesh ref={mouthRef} position={[0, 1.55, 0.38]} rotation={[0, 0, 0]}>
+            <boxGeometry args={[0.12, 0.03, 0.01]} />
+            <meshStandardMaterial color="#cc6666" />
+          </mesh>
+          
+          {/* Body - Shirt with unique color */}
+          <mesh position={[0, 0.7, 0]}>
+            <boxGeometry args={[0.7, 1.2, 0.4]} />
+            <meshStandardMaterial 
+              color={health > 0 ? clothesColor : "#ff0000"} 
+              opacity={health > 0 ? 1 : 0.5}
+              transparent={health <= 0}
+            />
+          </mesh>
+          
+          {/* Arms */}
+          <mesh position={[0.45, 0.7, 0]}>
+            <boxGeometry args={[0.2, 1, 0.2]} />
+            <meshStandardMaterial color="#FFD5CD" />
+          </mesh>
+          <mesh position={[-0.45, 0.7, 0]}>
+            <boxGeometry args={[0.2, 1, 0.2]} />
+            <meshStandardMaterial color="#FFD5CD" />
+          </mesh>
+          
+          {/* Legs - Pants with unique color */}
+          <mesh position={[0.2, -0.3, 0]}>
+            <boxGeometry args={[0.25, 1, 0.25]} />
+            <meshStandardMaterial color={pantsColor} />
+          </mesh>
+          <mesh position={[-0.2, -0.3, 0]}>
+            <boxGeometry args={[0.25, 1, 0.25]} />
+            <meshStandardMaterial color={pantsColor} />
+          </mesh>
+        </>
+      )}
       
       {/* Player name tag (only for other players) */}
       {!isMainPlayer && (
@@ -194,6 +367,15 @@ function createNameTag(name: string): HTMLCanvasElement {
   const context = canvas.getContext('2d');
   
   if (context) {
+    // Get player-specific color for the border based on username
+    const playerSeed = name || 'default';
+    const hashCode = playerSeed.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    
+    const h = Math.abs((hashCode) % 360);
+    const borderColor = `hsl(${h}, 70%, 60%)`;
+    
     // Clear canvas with transparent background
     context.clearRect(0, 0, canvas.width, canvas.height);
     
@@ -213,8 +395,8 @@ function createNameTag(name: string): HTMLCanvasElement {
     context.closePath();
     context.fill();
     
-    // Add border
-    context.strokeStyle = '#4287f5';
+    // Add border with player-specific color
+    context.strokeStyle = borderColor;
     context.lineWidth = 3;
     context.stroke();
     
