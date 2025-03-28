@@ -27,7 +27,7 @@ interface PlayerState {
 export const usePlayer = create<PlayerState>((set, get) => ({
   playerId: '',
   playerName: '',
-  position: new THREE.Vector3(0, 1.6, 0),
+  position: new THREE.Vector3(0, 1.6, 10), // Start on the dirt path facing the farmhouse and barn
   rotation: 0,
   health: 100,
   ammo: 10,
@@ -128,7 +128,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   
   resetPlayer: () => {
     set({
-      position: new THREE.Vector3(0, 1.6, 0),
+      position: new THREE.Vector3(0, 1.6, 10), // Start on the dirt path facing the farmhouse
       rotation: 0,
       health: 100,
       ammo: 10,

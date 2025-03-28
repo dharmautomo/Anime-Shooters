@@ -202,9 +202,9 @@ const Game = ({ username }: GameProps) => {
         />
       ))}
       
-      {/* First-person weapon */}
+      {/* First-person weapon - positioned to match the reference image */}
       <Weapon 
-        position={[0.3, -0.3, -0.5]} 
+        position={[0.35, -0.25, -0.4]} 
         rotation={[0, Math.PI, 0]}
         ammo={ammo}
         onShoot={shootBullet}

@@ -215,101 +215,131 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     <>
       {/* Main weapon group */}
       <group ref={weaponRef}>
-        {/* Gun body */}
-        <mesh rotation={rotation}>
-          <boxGeometry args={[0.1, 0.1, 0.3]} />
-          <meshStandardMaterial color="#333333" />
+        {/* Gun slide (top part) */}
+        <mesh position={[0, 0.03, 0]} rotation={rotation}>
+          <boxGeometry args={[0.09, 0.06, 0.28]} />
+          <meshStandardMaterial color="#1a1a1a" roughness={0.6} metalness={0.8} />
         </mesh>
         
-        {/* Gun handle */}
-        <mesh position={[0, -0.15, -0.1]} rotation={rotation}>
-          <boxGeometry args={[0.08, 0.2, 0.1]} />
-          <meshStandardMaterial color="#222222" />
+        {/* Gun frame (lower part) */}
+        <mesh position={[0, -0.02, 0]} rotation={rotation}>
+          <boxGeometry args={[0.1, 0.07, 0.3]} />
+          <meshStandardMaterial color="#2a2a2a" roughness={0.5} metalness={0.7} />
+        </mesh>
+        
+        {/* Gun handle with brown grip */}
+        <mesh position={[0, -0.13, -0.08]} rotation={[0.1, 0, 0]}>
+          <boxGeometry args={[0.09, 0.18, 0.12]} />
+          <meshStandardMaterial color="#3d2817" roughness={0.9} metalness={0.1} />
         </mesh>
         
         {/* Gun barrel */}
-        <mesh position={[0, 0, 0.2]} rotation={rotation}>
-          <cylinderGeometry args={[0.03, 0.03, 0.3, 8]} />
+        <mesh position={[0, 0.01, 0.18]} rotation={[Math.PI/2, 0, 0]}>
+          <cylinderGeometry args={[0.025, 0.025, 0.16, 8]} />
+          <meshStandardMaterial color="#111111" roughness={0.5} metalness={0.9} />
+        </mesh>
+        
+        {/* Front sight */}
+        <mesh position={[0, 0.06, 0.14]} rotation={rotation}>
+          <boxGeometry args={[0.02, 0.02, 0.02]} />
           <meshStandardMaterial color="#111111" />
         </mesh>
         
-        {/* Hand */}
-        <mesh position={[0, -0.12, -0.15]} rotation={[0.3, 0, 0]}>
-          <boxGeometry args={[0.08, 0.04, 0.12]} />
+        {/* Rear sight */}
+        <mesh position={[0, 0.06, -0.1]} rotation={rotation}>
+          <boxGeometry args={[0.06, 0.02, 0.02]} />
+          <meshStandardMaterial color="#111111" />
+        </mesh>
+        
+        {/* Trigger guard */}
+        <mesh position={[0, -0.04, -0.05]} rotation={rotation}>
+          <torusGeometry args={[0.03, 0.008, 8, 16, Math.PI]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+        
+        {/* Trigger */}
+        <mesh position={[0, -0.04, -0.02]} rotation={[0.3, 0, 0]}>
+          <boxGeometry args={[0.02, 0.04, 0.01]} />
+          <meshStandardMaterial color="#111111" />
+        </mesh>
+        
+        {/* Hand - palm */}
+        <mesh position={[0, -0.17, -0.12]} rotation={[0.4, 0, 0]}>
+          <boxGeometry args={[0.1, 0.05, 0.14]} />
           <meshStandardMaterial color="#ffd6b1" />
-          
-          {/* Fingers */}
-          <mesh position={[0, 0, 0.07]}>
-            <boxGeometry args={[0.075, 0.035, 0.05]} />
-            <meshStandardMaterial color="#ffd6b1" />
-          </mesh>
+        </mesh>
+        
+        {/* Hand - thumb */}
+        <mesh position={[0.06, -0.14, -0.05]} rotation={[0.2, -0.3, 0]}>
+          <capsuleGeometry args={[0.02, 0.06]} />
+          <meshStandardMaterial color="#ffd6b1" />
+        </mesh>
+        
+        {/* Hand - fingers */}
+        <mesh position={[0, -0.13, 0]} rotation={[0.6, 0, 0]}>
+          <boxGeometry args={[0.1, 0.025, 0.08]} />
+          <meshStandardMaterial color="#ffd6b1" />
+        </mesh>
+        
+        {/* Hand - finger segments */}
+        <mesh position={[0, -0.11, 0.05]} rotation={[0.8, 0, 0]}>
+          <boxGeometry args={[0.095, 0.023, 0.05]} />
+          <meshStandardMaterial color="#ffd6b1" />
         </mesh>
       </group>
       
-      {/* Separate muzzle flash that follows the gun position but rendered at a different point */}
+      {/* More subtle, realistic muzzle flash */}
       <group 
         ref={muzzleFlashRef} 
         position={[
           weaponRef.current ? weaponRef.current.position.x : 0, 
-          weaponRef.current ? weaponRef.current.position.y : 0, 
-          weaponRef.current ? weaponRef.current.position.z + 0.5 : 0
+          weaponRef.current ? weaponRef.current.position.y : 0.01, 
+          weaponRef.current ? weaponRef.current.position.z + 0.3 : 0
         ]}
         rotation={rotation}
       >
-        {/* Large central flash cone */}
-        <mesh position={[0, 0, 0.5]} rotation={[0, 0, 0]}>
-          <coneGeometry args={[0.2, 0.4, 16]} />
+        {/* Small central flash */}
+        <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
+          <coneGeometry args={[0.04, 0.08, 8]} />
           <meshStandardMaterial 
-            color="#ffff00" 
-            emissive="#ffff00"
-            emissiveIntensity={10}
+            color="#f8d498" 
+            emissive="#f5a742"
+            emissiveIntensity={3}
             transparent={true}
-            opacity={0.9}
+            opacity={0.7}
           />
         </mesh>
         
-        {/* Wide radial flare */}
-        <mesh position={[0, 0, 0.55]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.25, 0.08, 0.3, 16]} />
+        {/* Thin smoke wisp */}
+        <mesh position={[0, 0.02, 0.05]} rotation={[0, 0, Math.PI / 4]}>
+          <coneGeometry args={[0.03, 0.15, 6]} />
           <meshStandardMaterial 
-            color="#ffcc00" 
-            emissive="#ffaa00"
-            emissiveIntensity={7}
+            color="#d6d6d6" 
+            emissive="#a0a0a0"
+            emissiveIntensity={1}
+            transparent={true}
+            opacity={0.4}
+          />
+        </mesh>
+        
+        {/* Small bright center */}
+        <mesh position={[0, 0, 0.02]}>
+          <sphereGeometry args={[0.02, 8, 8]} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            emissive="#ffcc88"
+            emissiveIntensity={4}
             transparent={true}
             opacity={0.8}
           />
         </mesh>
         
-        {/* Bright center spark */}
-        <mesh position={[0, 0, 0.6]}>
-          <sphereGeometry args={[0.1, 16, 16]} />
-          <meshStandardMaterial 
-            color="#ffffff" 
-            emissive="#ffffff"
-            emissiveIntensity={10}
-            transparent={true}
-            opacity={0.95}
-          />
-        </mesh>
-        
-        {/* Additional larger spark particles */}
-        <mesh position={[0, 0, 0.65]}>
-          <octahedronGeometry args={[0.3, 0]} />
-          <meshStandardMaterial 
-            color="#ffffff" 
-            emissive="#ffffff"
-            emissiveIntensity={10}
-            transparent={true}
-            opacity={0.8}
-          />
-        </mesh>
-        
-        {/* Much brighter light source */}
+        {/* Subtle light source */}
         <pointLight
-          position={[0, 0, 0.6]}
-          color="#ffcc00"
-          intensity={15}
-          distance={15}
+          position={[0, 0, 0.05]}
+          color="#ffbb77"
+          intensity={3}
+          distance={5}
           decay={2}
         />
       </group>
