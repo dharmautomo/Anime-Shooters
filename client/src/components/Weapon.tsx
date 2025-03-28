@@ -18,7 +18,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
   const { camera } = useThree();
   const [isShooting, setIsShooting] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
-  const { playHit, playSuccess } = useAudio();
+  const { playHit, playSuccess, playSound } = useAudio();
   
   // Get keyboard/mouse controls
   const shoot = useKeyboardControls<Controls>(state => state.shoot);
@@ -38,8 +38,8 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       
       console.log("Shooting weapon!");
       
-      // Play gunshot sound
-      playHit();
+      // Play gunshot sound using Web Audio API
+      playSound('gunshot');
       
       // Show muzzle flash
       if (muzzleFlashRef.current) {
@@ -67,7 +67,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       console.log("Click - empty gun");
       playSuccess();
     }
-  }, [shoot, isShooting, isReloading, ammo, playHit, playSuccess, onShoot]);
+  }, [shoot, isShooting, isReloading, ammo, playHit, playSuccess, playSound, onShoot]);
   
   // Handle mouse input for shooting (additional method)
   useEffect(() => {
@@ -77,8 +77,8 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
           console.log("Mouse click - shooting");
           setIsShooting(true);
           
-          // Play gunshot sound
-          playHit();
+          // Play gunshot sound using Web Audio API
+          playSound('gunshot');
           
           // Show muzzle flash
           if (muzzleFlashRef.current) {
@@ -108,7 +108,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     return () => {
       window.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [isShooting, isReloading, ammo, playHit, onShoot]);
+  }, [isShooting, isReloading, ammo, playHit, playSound, onShoot]);
   
   // Handle reloading
   useEffect(() => {
@@ -117,7 +117,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       
       // Play reload sound after a short delay
       setTimeout(() => {
-        playSuccess();
+        playSound('reload');
       }, 300);
       
       // Finish reloading after 1.5 seconds
@@ -125,7 +125,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         setIsReloading(false);
       }, 1500);
     }
-  }, [reload, isReloading, ammo, playSuccess]);
+  }, [reload, isReloading, ammo, playSuccess, playSound]);
   
   // Make weapon follow the camera
   useFrame(() => {
@@ -190,49 +190,50 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         <meshStandardMaterial color="#111111" />
       </mesh>
       
-      {/* Muzzle flash effect - enhanced for better visibility */}
+      {/* Muzzle flash effect - positioned at front of gun barrel */}
       <group ref={muzzleFlashRef} position={[0, 0, 0.4]}>
-        {/* Central flash */}
-        <mesh position={[0, 0, 0]}>
-          <sphereGeometry args={[0.12, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        {/* Central flash at barrel tip */}
+        <mesh position={[0, 0, 0.15]}>
+          <coneGeometry args={[0.15, 0.3, 16]} />
           <meshStandardMaterial 
             color="#ffff00" 
             emissive="#ffff00"
-            emissiveIntensity={5}
+            emissiveIntensity={8}
             transparent={true}
             opacity={0.9}
           />
         </mesh>
         
         {/* Radial flare */}
-        <mesh rotation={[0, 0, Math.PI / 2]}>
+        <mesh position={[0, 0, 0.15]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.18, 0.06, 0.25, 16]} />
           <meshStandardMaterial 
             color="#ffcc00" 
             emissive="#ffaa00"
-            emissiveIntensity={4}
+            emissiveIntensity={5}
             transparent={true}
             opacity={0.8}
           />
         </mesh>
         
         {/* Additional spark particles */}
-        <mesh position={[0, 0, 0.1]}>
-          <octahedronGeometry args={[0.15, 0]} />
+        <mesh position={[0, 0, 0.25]}>
+          <octahedronGeometry args={[0.2, 0]} />
           <meshStandardMaterial 
             color="#ffffff" 
             emissive="#ffffff"
-            emissiveIntensity={6}
+            emissiveIntensity={8}
             transparent={true}
-            opacity={0.7}
+            opacity={0.8}
           />
         </mesh>
         
-        {/* Light source - brighter */}
+        {/* Light source - much brighter */}
         <pointLight
+          position={[0, 0, 0.25]}
           color="#ffcc00"
-          intensity={5}
-          distance={5}
+          intensity={8}
+          distance={10}
           decay={2}
         />
       </group>

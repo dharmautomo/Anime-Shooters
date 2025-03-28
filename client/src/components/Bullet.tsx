@@ -28,18 +28,19 @@ const Bullet = ({ position, velocity, owner }: BulletProps) => {
   
   const { checkBulletCollision, removeBullet } = useMultiplayer();
   const { playerId } = usePlayer();
-  const { playHit } = useAudio();
+  const { playHit, playSound } = useAudio();
   
   // Bullet lifetime and speed
   const lifetime = useRef(3000); // 3 seconds
-  const speed = 2.0; // Doubled bullet speed for better gameplay
+  const speed = 2.5; // Increased bullet speed for better gameplay
   
   // Set up bullet
   useEffect(() => {
     // Play shooting sound when bullet is created (only for bullets that are not owned by other players)
     if (owner === playerId) {
-      playHit();
-      console.log("Playing gunshot sound for bullet");
+      // Use direct Web Audio API for more reliable sound
+      playSound('gunshot');
+      console.log("Playing gunshot sound for bullet using Web Audio API");
     }
     
     // Start lifetime countdown
@@ -54,7 +55,7 @@ const Bullet = ({ position, velocity, owner }: BulletProps) => {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [removeBullet, owner, playerId, playHit]);
+  }, [removeBullet, owner, playerId, playHit, playSound]);
   
   // Update bullet position each frame
   useFrame(() => {
@@ -84,11 +85,11 @@ const Bullet = ({ position, velocity, owner }: BulletProps) => {
         position={initialPos.current}
         userData={{ isBullet: true, owner }}
       >
-        <sphereGeometry args={[0.12, 16, 16]} />
+        <sphereGeometry args={[0.15, 16, 16]} />
         <meshStandardMaterial 
           color="#ff5500" 
           emissive="#ff3300"
-          emissiveIntensity={3}
+          emissiveIntensity={4}
           transparent={true}
           opacity={0.9}
         />
@@ -98,37 +99,51 @@ const Bullet = ({ position, velocity, owner }: BulletProps) => {
       <mesh
         position={initialPos.current}
       >
-        <sphereGeometry args={[0.06, 8, 8]} />
+        <sphereGeometry args={[0.08, 10, 10]} />
         <meshStandardMaterial 
           color="#ffffff" 
           emissive="#ffffff"
-          emissiveIntensity={4}
+          emissiveIntensity={5}
           transparent={true}
           opacity={0.95}
         />
       </mesh>
       
-      {/* Bullet trail - longer */}
+      {/* Bullet trail - longer and more impressive */}
       <mesh
         position={initialPos.current}
         rotation={[0, 0, Math.PI / 2]}
       >
-        <cylinderGeometry args={[0.02, 0.08, 2, 8]} />
+        <cylinderGeometry args={[0.03, 0.12, 3, 8]} />
         <meshStandardMaterial 
           color="#ffaa00" 
           emissive="#ffcc00"
-          emissiveIntensity={2}
+          emissiveIntensity={3}
           transparent={true}
-          opacity={0.7}
+          opacity={0.8}
         />
       </mesh>
       
-      {/* Bullet glow - brighter */}
+      {/* Additional spark effect */}
+      <mesh
+        position={initialPos.current}
+      >
+        <octahedronGeometry args={[0.2, 0]} />
+        <meshStandardMaterial 
+          color="#ffdd00" 
+          emissive="#ffff00"
+          emissiveIntensity={2}
+          transparent={true}
+          opacity={0.5}
+        />
+      </mesh>
+      
+      {/* Bullet glow - much brighter */}
       <pointLight
         position={initialPos.current}
         color="#ff7700"
-        intensity={2}
-        distance={3}
+        intensity={4}
+        distance={5}
         decay={2}
       />
     </group>

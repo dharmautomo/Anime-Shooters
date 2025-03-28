@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import * as THREE from 'three';
 
+type SoundType = 'gunshot' | 'reload';
+type SoundFunction = (type: SoundType) => void;
+
 interface AudioState {
   backgroundMusic: HTMLAudioElement | null;
   hitSound: HTMLAudioElement | null;
@@ -11,11 +14,13 @@ interface AudioState {
   setBackgroundMusic: (music: HTMLAudioElement) => void;
   setHitSound: (sound: HTMLAudioElement) => void;
   setSuccessSound: (sound: HTMLAudioElement) => void;
+  setSoundFunction: (fn: SoundFunction) => void;
   
   // Control functions
   toggleMute: () => void;
   playHit: () => void;
   playSuccess: () => void;
+  playSound: (type: SoundType) => void;
   
   // Additional functions for positional audio
   createPositionalSound: (
@@ -34,6 +39,28 @@ export const useAudio = create<AudioState>((set, get) => ({
   setBackgroundMusic: (music) => set({ backgroundMusic: music }),
   setHitSound: (sound) => set({ hitSound: sound }),
   setSuccessSound: (sound) => set({ successSound: sound }),
+  setSoundFunction: (fn) => {
+    // Store the function in a private variable using closure
+    const playFunc = fn;
+    
+    // Set the playSound method to use this function
+    set((state) => ({
+      ...state,
+      playSound: (type: SoundType) => {
+        if (!state.isMuted) {
+          console.log(`Playing sound: ${type}`);
+          playFunc(type);
+        } else {
+          console.log(`Sound skipped (muted): ${type}`);
+        }
+      }
+    }));
+  },
+  
+  // Default placeholder for playSound until setSoundFunction is called
+  playSound: (type: SoundType) => {
+    console.log(`No sound function set yet for: ${type}`);
+  },
   
   toggleMute: () => {
     const { isMuted } = get();
