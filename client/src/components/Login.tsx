@@ -34,14 +34,12 @@ const Login = ({ onLogin }: LoginProps) => {
       return;
     }
     
-    // Show loading state briefly for smoother UX
+    // Show loading state briefly
     setIsLoading(true);
     
-    // Valid username - submit it after a short delay for better UX
-    setTimeout(() => {
-      console.log('Submitting username:', trimmedName);
-      onLogin(trimmedName);
-    }, 300);
+    // Submit without delay
+    console.log('Submitting username:', trimmedName);
+    onLogin(trimmedName);
   };
   
   // Handle Enter key press
@@ -61,9 +59,6 @@ const Login = ({ onLogin }: LoginProps) => {
   
   return (
     <div className="login-screen">
-      {/* Animated background elements */}
-      <div className="login-particles"></div>
-      
       <div className="login-content">
         <h1>Anime FPS Arena</h1>
         
@@ -91,59 +86,18 @@ const Login = ({ onLogin }: LoginProps) => {
             disabled={!username.trim() || isLoading}
             className={isLoading ? 'loading' : ''}
           >
-            {isLoading ? (
-              <span className="loading-text">Loading...</span>
-            ) : (
-              <span>Start Game</span>
-            )}
+            {isLoading ? 'Loading...' : 'Start Game'}
           </button>
         </div>
         
         <div className="controls-guide">
           <h3>Game Controls</h3>
           
-          <div className="controls-grid">
-            <div className="control-item">
-              <div className="control-icon movement-icon">
-                <span className="key">W</span>
-                <span className="key">A</span>
-                <span className="key">S</span>
-                <span className="key">D</span>
-              </div>
-              <div className="control-text">Movement</div>
-            </div>
-            
-            <div className="control-item">
-              <div className="control-icon mouse-icon">
-                <div className="mouse-body">
-                  <div className="mouse-wheel"></div>
-                </div>
-              </div>
-              <div className="control-text">Look around</div>
-            </div>
-            
-            <div className="control-item">
-              <div className="control-icon click-icon">
-                <div className="click-circle"></div>
-                <div className="click-ripple"></div>
-              </div>
-              <div className="control-text">Shoot</div>
-            </div>
-            
-            <div className="control-item">
-              <div className="control-icon">
-                <span className="key large-key">R</span>
-              </div>
-              <div className="control-text">Reload</div>
-            </div>
-            
-            <div className="control-item">
-              <div className="control-icon">
-                <span className="key xl-key">Space</span>
-              </div>
-              <div className="control-text">Jump</div>
-            </div>
-          </div>
+          <p>WASD or Arrow Keys - Movement</p>
+          <p>Mouse - Look around</p>
+          <p>Left Click - Shoot</p>
+          <p>R - Reload</p>
+          <p>Space - Jump</p>
           
           <div className="version-info">v1.0.0</div>
         </div>
