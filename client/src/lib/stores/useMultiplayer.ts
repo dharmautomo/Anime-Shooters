@@ -2,7 +2,39 @@ import { create } from 'zustand';
 import * as THREE from 'three';
 import { io, Socket } from 'socket.io-client';
 import { usePlayer } from './usePlayer';
-import { PlayerData, BulletData, KillFeedItem } from '../../../shared/types';
+
+// Define types locally to avoid import issues
+interface PlayerData {
+  id: string;
+  username: string;
+  position: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  rotation: number;
+  health: number;
+}
+
+interface BulletData {
+  id: string;
+  position: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  velocity: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  owner: string;
+}
+
+interface KillFeedItem {
+  killer: string;
+  victim: string;
+}
 
 interface OtherPlayer {
   id: string;
@@ -42,7 +74,7 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
   bullets: [],
   killFeed: [],
   
-  initializeSocket: (username) => {
+  initializeSocket: (username: string) => {
     // Create socket connection
     const socket = io('/', {
       transports: ['websocket'],
@@ -58,13 +90,18 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
       set({ connected: true });
       
       // Set player ID to socket ID
-      const playerId = socket.id;
+      const playerId = socket.id || '';
       usePlayer.getState().setPlayerId(playerId);
       
       // Join game with username
+      const userName = username || 'Player';
+      
+      // Save the username to player state
+      usePlayer.getState().setPlayerName(userName);
+      
       socket.emit('joinGame', {
         id: playerId,
-        username: username,
+        username: userName,
         position: usePlayer.getState().position,
         rotation: usePlayer.getState().rotation,
         health: usePlayer.getState().health,
@@ -149,6 +186,7 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
                 ),
                 rotation: playerData.rotation,
                 health: playerData.health,
+                username: playerData.username || state.otherPlayers[playerData.id].username,
               },
             },
           };
@@ -202,10 +240,10 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
     socket.on('playerKilled', (data: { killer: string, victim: string }) => {
       // Format names for kill feed
       const killerName = data.killer === socket.id ? 'You' : 
-        get().otherPlayers[data.killer]?.username || 'Unknown';
+        (get().otherPlayers[data.killer]?.username || 'Unknown Player');
       
       const victimName = data.victim === socket.id ? 'You' : 
-        get().otherPlayers[data.victim]?.username || 'Unknown';
+        (get().otherPlayers[data.victim]?.username || 'Unknown Player');
       
       // Add to kill feed
       set((state) => ({
@@ -230,12 +268,14 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
   
   updatePlayerPosition: (position, rotation) => {
     const { socket } = get();
+    const { playerName, health } = usePlayer.getState();
     
     if (socket && socket.connected) {
       socket.emit('updatePlayer', {
         position: { x: position.x, y: position.y, z: position.z },
         rotation,
-        health: usePlayer.getState().health,
+        health,
+        username: playerName, // Include username in updates
       });
     }
   },

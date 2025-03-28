@@ -14,6 +14,8 @@
     overflow: hidden;
     width: 100vw;
     height: 100vh;
+    background-color: #1a1a2e;
+    color: #ffffff;
   }
 }
 
@@ -27,4 +29,229 @@ canvas {
   width: 100% !important;
   height: 100% !important;
   touch-action: none;
+}
+
+/* Login screen styles */
+.login-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+  background-size: cover;
+  background-position: center;
+  padding: 0 20px;
+}
+
+.login-screen h1 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: #ff6b6b;
+  text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  text-align: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 2rem;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.login-label {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #fff;
+  align-self: flex-start;
+}
+
+.login-screen input {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 1rem;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.login-screen input:focus {
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  border-color: #ff6b6b;
+}
+
+.input-error {
+  border-color: #ff4040 !important;
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.error-message {
+  color: #ff4040;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  width: 100%;
+  text-align: center;
+}
+
+.login-screen button {
+  padding: 12px 30px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+  max-width: 200px;
+}
+
+.login-screen button:hover:not(:disabled) {
+  background-color: #ff8e8e;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+}
+
+.login-screen button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.controls-guide {
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 1.5rem;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 500px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.login-screen h3 {
+  margin-bottom: 0.8rem;
+  color: #ff6b6b;
+  font-size: 1.3rem;
+}
+
+.login-screen p {
+  margin: 0.5rem 0;
+  color: #ddd;
+  font-size: 1rem;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* Game UI styles */
+.game-ui {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.cursor-hidden {
+  cursor: none;
+}
+
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+}
+
+.health-bar {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 200px;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.health-bar-fill {
+  height: 100%;
+  background-color: #ff6b6b;
+  transition: width 0.3s;
+}
+
+.ammo-counter {
+  position: absolute;
+  bottom: 40px;
+  left: 20px;
+  font-size: 1.2rem;
+  color: white;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.score-display {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 1.5rem;
+  color: #fff;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.controls-guide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.kill-feed {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  max-width: 250px;
+  display: flex;
+  flex-direction: column;
+}
+
+.kill-feed-item {
+  margin-bottom: 5px;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  animation: fadeIn 0.3s, fadeOut 0.3s 5s forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }

@@ -32,17 +32,19 @@ export class SocketManager {
         socket.emit('existingPlayers', this.gameState.getPlayers());
       });
       
-      // Handle player updates (position, rotation, health)
+      // Handle player updates (position, rotation, health, username)
       socket.on('updatePlayer', (data: { 
         position: { x: number, y: number, z: number }, 
         rotation: number,
-        health: number
+        health: number,
+        username?: string
       }) => {
         // Update player in game state
         this.gameState.updatePlayer(socket.id, {
           position: data.position,
           rotation: data.rotation,
-          health: data.health
+          health: data.health,
+          username: data.username
         });
         
         // Broadcast updated player data to others
@@ -51,7 +53,7 @@ export class SocketManager {
           position: data.position,
           rotation: data.rotation,
           health: data.health,
-          username: this.gameState.getPlayerUsername(socket.id)
+          username: data.username || this.gameState.getPlayerUsername(socket.id)
         });
       });
       

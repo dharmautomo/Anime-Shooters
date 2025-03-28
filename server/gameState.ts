@@ -24,7 +24,8 @@ export class GameState {
     data: { 
       position: { x: number, y: number, z: number }, 
       rotation: number,
-      health?: number
+      health?: number,
+      username?: string
     }
   ): void {
     if (this.players[playerId]) {
@@ -33,6 +34,10 @@ export class GameState {
       
       if (data.health !== undefined) {
         this.players[playerId].health = data.health;
+      }
+      
+      if (data.username !== undefined) {
+        this.players[playerId].username = data.username;
       }
     }
   }

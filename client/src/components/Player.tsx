@@ -18,7 +18,7 @@ interface PlayerProps {
 const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerProps) => {
   const playerRef = useRef<THREE.Group>(null);
   const { updatePosition, takeDamage, respawn } = usePlayer();
-  const { updatePlayerPosition, syncRotation } = useMultiplayer();
+  const { updatePlayerPosition } = useMultiplayer();
   const { scene } = useThree();
   
   // Get keyboard controls for main player
@@ -172,13 +172,13 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       </mesh>
       
       {/* Player name tag (only for other players) */}
-      {!isMainPlayer && username && (
+      {!isMainPlayer && (
         <sprite
           position={[0, 2.5, 0]}
           scale={[3, 0.8, 1]}
         >
           <spriteMaterial attach="material">
-            <canvasTexture attach="map" image={createNameTag(username)} />
+            <canvasTexture attach="map" image={createNameTag(username || 'Unknown Player')} />
           </spriteMaterial>
         </sprite>
       )}
@@ -194,13 +194,43 @@ function createNameTag(name: string): HTMLCanvasElement {
   const context = canvas.getContext('2d');
   
   if (context) {
-    context.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    // Clear canvas with transparent background
+    context.clearRect(0, 0, canvas.width, canvas.height);
     
-    context.font = '24px Arial';
+    // Draw background with rounded corners
+    context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    const radius = 10;
+    context.beginPath();
+    context.moveTo(radius, 0);
+    context.lineTo(canvas.width - radius, 0);
+    context.quadraticCurveTo(canvas.width, 0, canvas.width, radius);
+    context.lineTo(canvas.width, canvas.height - radius);
+    context.quadraticCurveTo(canvas.width, canvas.height, canvas.width - radius, canvas.height);
+    context.lineTo(radius, canvas.height);
+    context.quadraticCurveTo(0, canvas.height, 0, canvas.height - radius);
+    context.lineTo(0, radius);
+    context.quadraticCurveTo(0, 0, radius, 0);
+    context.closePath();
+    context.fill();
+    
+    // Add border
+    context.strokeStyle = '#4287f5';
+    context.lineWidth = 3;
+    context.stroke();
+    
+    // Draw text
+    context.font = 'bold 24px Arial';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillStyle = 'white';
+    
+    // Text shadow for better visibility
+    context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    context.shadowBlur = 4;
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    
+    // Draw text
+    context.fillStyle = '#ffffff';
     context.fillText(name, canvas.width / 2, canvas.height / 2);
   }
   

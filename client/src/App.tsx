@@ -41,10 +41,12 @@ function App() {
   // Handle login
   const handleLogin = (name: string) => {
     if (name.trim()) {
-      setUsername(name);
-      setPlayerName(name);
+      const trimmedName = name.trim();
+      console.log("Logging in with username:", trimmedName);
+      setUsername(trimmedName);
+      setPlayerName(trimmedName);
       setIsLoggedIn(true);
-      initializeSocket(name);
+      initializeSocket(trimmedName);
     }
   };
 
