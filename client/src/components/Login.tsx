@@ -55,41 +55,43 @@ const Login = ({ onLogin }: LoginProps) => {
   
   return (
     <div className="login-screen">
-      <h1>FPS Multiplayer Game</h1>
-      
-      <div className="login-form">
-        <label htmlFor="username-input" className="login-label">
-          Enter your username:
-        </label>
+      <div className="login-content">
+        <h1>FPS Multiplayer Game</h1>
         
-        <input
-          id="username-input"
-          type="text"
-          placeholder="Your Username"
-          value={username}
-          onChange={handleUsernameChange}
-          onKeyDown={handleKeyDown}
-          maxLength={15}
-          className={error ? 'input-error' : ''}
-        />
+        <div className="login-form">
+          <div className="login-label">
+            Enter your username:
+          </div>
+          
+          <input
+            id="username-input"
+            type="text"
+            placeholder="Your Username"
+            value={username}
+            onChange={handleUsernameChange}
+            onKeyDown={handleKeyDown}
+            maxLength={15}
+            className={error ? 'input-error' : ''}
+          />
+          
+          {error && <div className="error-message">{error}</div>}
+          
+          <button 
+            onClick={handleSubmit}
+            disabled={!username.trim()}
+          >
+            Start Game
+          </button>
+        </div>
         
-        {error && <div className="error-message">{error}</div>}
-        
-        <button 
-          onClick={handleSubmit}
-          disabled={!username.trim()}
-        >
-          Start Game
-        </button>
-      </div>
-      
-      <div className="controls-guide">
-        <h3>Controls:</h3>
-        <p>WASD or Arrow Keys - Move</p>
-        <p>Mouse - Look around</p>
-        <p>Left Click - Shoot</p>
-        <p>R - Reload</p>
-        <p>Space - Jump</p>
+        <div className="controls-guide">
+          <h3>Controls:</h3>
+          <p>WASD or Arrow Keys - Move</p>
+          <p>Mouse - Look around</p>
+          <p>Left Click - Shoot</p>
+          <p>R - Reload</p>
+          <p>Space - Jump</p>
+        </div>
       </div>
     </div>
   );
