@@ -46,13 +46,13 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         muzzleFlashRef.current.visible = true;
         console.log("Showing muzzle flash");
         
-        // Hide muzzle flash after a short time
+        // Hide muzzle flash after a longer time for better visibility
         setTimeout(() => {
           if (muzzleFlashRef.current) {
             muzzleFlashRef.current.visible = false;
             console.log("Hiding muzzle flash");
           }
-        }, 100); // Extended for better visibility
+        }, 150); // Extended duration for better visibility
       }
       
       // Trigger shoot callback
@@ -84,12 +84,12 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
           if (muzzleFlashRef.current) {
             muzzleFlashRef.current.visible = true;
             
-            // Hide muzzle flash after a short time
+            // Hide muzzle flash after a longer time for better visibility
             setTimeout(() => {
               if (muzzleFlashRef.current) {
                 muzzleFlashRef.current.visible = false;
               }
-            }, 100);
+            }, 150);
           }
           
           // Trigger shoot callback
@@ -190,10 +190,10 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         <meshStandardMaterial color="#111111" />
       </mesh>
       
-      {/* Muzzle flash effect - positioned at front of gun barrel */}
-      <group ref={muzzleFlashRef} position={[0, 0, 0.4]}>
-        {/* Central flash at barrel tip */}
-        <mesh position={[0, 0, 0.15]}>
+      {/* Muzzle flash effect - positioned at the END of the barrel */}
+      <group ref={muzzleFlashRef} position={[0, 0, 0.35]}>
+        {/* Central flash at barrel tip, positioned FORWARD */}
+        <mesh position={[0, 0, 0.25]}>
           <coneGeometry args={[0.15, 0.3, 16]} />
           <meshStandardMaterial 
             color="#ffff00" 
@@ -204,8 +204,8 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
           />
         </mesh>
         
-        {/* Radial flare */}
-        <mesh position={[0, 0, 0.15]} rotation={[0, 0, Math.PI / 2]}>
+        {/* Radial flare at the front */}
+        <mesh position={[0, 0, 0.25]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.18, 0.06, 0.25, 16]} />
           <meshStandardMaterial 
             color="#ffcc00" 
@@ -216,8 +216,8 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
           />
         </mesh>
         
-        {/* Additional spark particles */}
-        <mesh position={[0, 0, 0.25]}>
+        {/* Additional spark particles at the front */}
+        <mesh position={[0, 0, 0.35]}>
           <octahedronGeometry args={[0.2, 0]} />
           <meshStandardMaterial 
             color="#ffffff" 
@@ -228,9 +228,9 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
           />
         </mesh>
         
-        {/* Light source - much brighter */}
+        {/* Light source at the front */}
         <pointLight
-          position={[0, 0, 0.25]}
+          position={[0, 0, 0.35]}
           color="#ffcc00"
           intensity={8}
           distance={10}
