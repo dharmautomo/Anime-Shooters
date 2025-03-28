@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1e3c" />
+      <stop offset="100%" stop-color="#0a0e24" />
+    </linearGradient>
+    
+    <!-- Anime glow effects -->
+    <filter id="glow1" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <!-- Particle pattern -->
+    <pattern id="particles" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="1" fill="#5c7bfc" opacity="0.5" />
+      <circle cx="30" cy="40" r="0.8" fill="#7588fb" opacity="0.4" />
+      <circle cx="60" cy="20" r="1.2" fill="#3f54cc" opacity="0.6" />
+      <circle cx="90" cy="60" r="0.6" fill="#627bfd" opacity="0.3" />
+      <circle cx="50" cy="80" r="1" fill="#4a61dd" opacity="0.5" />
+    </pattern>
+  </defs>
+  
+  <!-- Main background -->
+  <rect width="100%" height="100%" fill="url(#bgGradient)" />
+  
+  <!-- Particle overlay -->
+  <rect width="100%" height="100%" fill="url(#particles)" opacity="0.8" />
+  
+  <!-- Abstract anime-style elements -->
+  <!-- Distant mountain-like shapes for virtual landscape -->
+  <path d="M0,650 L220,590 L400,620 L600,570 L800,610 L1000,580 L1200,640 L1200,800 L0,800 Z" fill="#141b36" opacity="0.9" />
+  <path d="M0,680 L300,630 L500,650 L700,620 L900,650 L1200,680 L1200,800 L0,800 Z" fill="#0d1224" opacity="0.9" />
+  
+  <!-- Anime-style glowing elements -->
+  <!-- Central portal/weapon glow -->
+  <circle cx="600" cy="400" r="130" fill="#5e72e4" opacity="0.05" filter="url(#glow1)" />
+  <circle cx="600" cy="400" r="80" fill="#637aff" opacity="0.07" filter="url(#glow1)" />
+  
+  <!-- Energy blade/weapon elements -->
+  <path d="M500,450 L560,390 L600,430 L640,390 L700,450 L650,500 L550,500 Z" fill="#4a61dd" opacity="0.3" filter="url(#glow2)" />
+  
+  <!-- Abstract weapon sight/crosshair -->
+  <circle cx="600" cy="400" r="40" stroke="#b6c3ff" stroke-width="2" fill="none" opacity="0.6" />
+  <line x1="590" y1="360" x2="590" y2="380" stroke="#b6c3ff" stroke-width="2" opacity="0.8" />
+  <line x1="610" y1="360" x2="610" y2="380" stroke="#b6c3ff" stroke-width="2" opacity="0.8" />
+  <line x1="590" y1="420" x2="590" y2="440" stroke="#b6c3ff" stroke-width="2" opacity="0.8" />
+  <line x1="610" y1="420" x2="610" y2="440" stroke="#b6c3ff" stroke-width="2" opacity="0.8" />
+  <line x1="560" y1="400" x2="580" y2="400" stroke="#b6c3ff" stroke-width="2" opacity="0.8" />
+  <line x1="620" y1="400" x2="640" y2="400" stroke="#b6c3ff" stroke-width="2" opacity="0.8" />
+  
+  <!-- Energy lines -->
+  <path d="M100,700 C400,600 800,700 1100,600" stroke="#637aff" stroke-width="1" fill="none" opacity="0.3" />
+  <path d="M200,730 C500,650 700,730 1000,650" stroke="#4a61dd" stroke-width="1" fill="none" opacity="0.2" />
+  
+  <!-- Left & right floating geometric anime elements -->
+  <path d="M100,300 L150,250 L200,300 L150,350 Z" fill="#4a61dd" opacity="0.2" filter="url(#glow2)" />
+  <path d="M1050,350 L1100,300 L1150,350 L1100,400 Z" fill="#5e72e4" opacity="0.2" filter="url(#glow2)" />
+  
+  <!-- Geometric interface element hints -->
+  <rect x="100" y="150" width="150" height="5" fill="#5e72e4" opacity="0.6" rx="2" />
+  <rect x="100" y="165" width="80" height="5" fill="#5e72e4" opacity="0.4" rx="2" />
+  
+  <rect x="950" y="150" width="150" height="5" fill="#5e72e4" opacity="0.6" rx="2" />
+  <rect x="1020" y="165" width="80" height="5" fill="#5e72e4" opacity="0.4" rx="2" />
+  
+  <!-- Anime FPS elements -->
+  <path d="M200,700 L250,680 L300,700 L250,720 Z" fill="#4a61dd" opacity="0.4" />
+  <path d="M900,700 L950,680 L1000,700 L950,720 Z" fill="#4a61dd" opacity="0.4" />
+</svg>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
+  <defs>
+    <linearGradient id="characterGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5e72e4" />
+      <stop offset="100%" stop-color="#825ee4" />
+    </linearGradient>
+    
+    <filter id="characterGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Anime-style character silhouette -->
+  <g transform="translate(50, 20)" opacity="0.8" filter="url(#characterGlow)">
+    <!-- Head - Anime style with spiky hair -->
+    <path d="M150,70 
+             L120,40 L130,20 L110,30 L100,10 L90,35 L70,15 L80,40 L60,30 L80,60 
+             L60,70 L90,80 L80,100 L110,90 L120,110 L140,90 L160,110 L170,90 L200,100 L190,80 L220,70 
+             L200,60 L220,30 L200,40 L190,10 L180,35 L160,15 L150,40 Z" 
+          fill="url(#characterGradient)" opacity="0.6" />
+    
+    <!-- Face outline -->
+    <path d="M100,80 L140,80 L140,140 L100,140 Z" fill="url(#characterGradient)" opacity="0.8" />
+    
+    <!-- Eyes - glowing anime style -->
+    <ellipse cx="110" cy="100" rx="10" ry="5" fill="#b6c3ff" opacity="0.9" />
+    <ellipse cx="130" cy="100" rx="10" ry="5" fill="#b6c3ff" opacity="0.9" />
+    
+    <!-- Torso -->
+    <path d="M90,140 L150,140 L160,300 L80,300 Z" fill="url(#characterGradient)" opacity="0.7" />
+    
+    <!-- Shoulders & Arms -->
+    <path d="M90,140 L70,150 L60,200 L70,250 L90,240 L85,200 Z" fill="url(#characterGradient)" opacity="0.6" />
+    <path d="M150,140 L170,150 L180,200 L170,250 L150,240 L155,200 Z" fill="url(#characterGradient)" opacity="0.6" />
+    
+    <!-- Lower Arms -->
+    <path d="M70,250 L60,300 L40,350 L60,360 L80,320 L90,240 Z" fill="url(#characterGradient)" opacity="0.5" />
+    <path d="M170,250 L180,300 L200,350 L180,360 L160,320 L150,240 Z" fill="url(#characterGradient)" opacity="0.5" />
+    
+    <!-- Legs -->
+    <path d="M80,300 L60,450 L40,500 L70,510 L90,460 L110,460 L130,460 L150,510 L180,500 L160,450 L160,300 Z" fill="url(#characterGradient)" opacity="0.6" />
+    
+    <!-- Anime style energy/power lines -->
+    <path d="M90,160 L150,160" stroke="#b6c3ff" stroke-width="2" opacity="0.8" fill="none" />
+    <path d="M95,180 L145,180" stroke="#b6c3ff" stroke-width="1" opacity="0.6" fill="none" />
+    <path d="M100,200 L140,200" stroke="#b6c3ff" stroke-width="1" opacity="0.4" fill="none" />
+    
+    <!-- Anime-style accent details -->
+    <circle cx="120" cy="240" r="15" stroke="#b6c3ff" stroke-width="2" fill="none" opacity="0.5" />
+    <circle cx="120" cy="240" r="8" fill="#b6c3ff" opacity="0.3" />
+  </g>
+</svg>
