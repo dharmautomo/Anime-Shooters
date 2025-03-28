@@ -194,13 +194,13 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       playerRef.current.rotation.y = rotation;
     } else if (!isMainPlayer && playerRef.current) {
       // For other players, update the mesh position and rotation based on props
-      // Subtract 1.1 from y position to place the player properly on the ground
+      // Using y-offset of 0 as requested
       const yPos = (position instanceof THREE.Vector3 ? position.y : position[1]);
       console.log('Player position before adjustment:', yPos);
       
       playerRef.current.position.set(
         position instanceof THREE.Vector3 ? position.x : position[0],
-        yPos - 1.1,
+        yPos, // No adjustment to y-position
         position instanceof THREE.Vector3 ? position.z : position[2]
       );
       console.log('Player position after adjustment:', playerRef.current.position.y);
@@ -379,7 +379,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       {/* Player name tag (only for other players) - position adjusted above player */}
       {!isMainPlayer && (
         <sprite
-          position={[0, 2.0, 0]}
+          position={[0, 2.5, 0]}
           scale={[3, 0.8, 1]}
         >
           <spriteMaterial attach="material">
