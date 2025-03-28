@@ -59,11 +59,11 @@ const Login = ({ onLogin }: LoginProps) => {
   
   return (
     <div className="login-screen">
-      <div className="fps-counter">60 FPS (60-60)</div>
-      <div className="score-display-static">Score: 0</div>
-      
       <div className="login-content">
-        <h1 className="game-title">Anime Shooters</h1>
+        <h1 className="game-title">
+          <span>Anime</span>
+          <span>Shooters</span>
+        </h1>
         
         <div className="login-form">
           <div className="login-label">
@@ -96,17 +96,17 @@ const Login = ({ onLogin }: LoginProps) => {
         <div className="controls-guide">
           <h3>Game Controls</h3>
           
-          <p>WASD or Arrow Keys - Movement</p>
-          <p>Mouse - Aim Weapon</p>
-          <p>Left Click - Fire Weapon</p>
-          <p>R - Reload Ammo</p>
-          <p>Space - Jump</p>
+          <p><span className="control-key">W</span> Movement</p>
+          <p><span className="control-key">M</span> Look</p>
+          <p><span className="control-key">L</span> Shoot</p>
+          <p><span className="control-key">R</span> Reload</p>
+          <p><span className="control-key">↑</span> Jump</p>
           
           <div className="version-info">v1.0.0</div>
         </div>
       </div>
       
-      <div className="ammo-display">9 / 10</div>
+
     </div>
   );
 };

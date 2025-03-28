@@ -31,29 +31,29 @@ canvas {
   touch-action: none;
 }
 
-/* Login screen styles - Game FPS themed */
+/* Login screen styles - Anime themed */
 .login-screen {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: url('/images/game-style-bg.svg') no-repeat center center;
+  background: url('/images/sakura-background.svg') no-repeat center center;
   background-size: cover;
   padding: 0 20px;
   overflow: hidden;
   position: relative;
 }
 
-/* Weapon overlay element */
+/* Character overlay element */
 .login-screen::after {
   content: "";
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 400px;
-  height: 200px;
-  background: url('/images/game-weapon.svg') no-repeat bottom right;
+  width: 300px;
+  height: 500px;
+  background: url('/images/anime-character-with-gun.svg') no-repeat bottom right;
   background-size: contain;
   z-index: 1;
   pointer-events: none;
@@ -63,10 +63,12 @@ canvas {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   max-width: 100%;
   width: 100%;
   z-index: 10;
-  padding: 20px;
+  padding: 0;
+  margin-top: -80px;
 }
 
 /* Game-style HUD elements */
@@ -85,29 +87,27 @@ canvas {
 }
 
 .game-title {
-  font-size: 3rem;
+  font-size: 4rem;
   font-weight: 800;
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
   text-align: center;
   position: relative;
-  line-height: 1.2;
-  color: #ffffff;
-  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.8);
+  line-height: 0.9;
+  color: #ffda44;
+  text-shadow: 
+    -4px -4px 0 #d14b00,
+    4px -4px 0 #d14b00,
+    -4px 4px 0 #d14b00,
+    4px 4px 0 #d14b00,
+    0 5px 10px rgba(0, 0, 0, 0.8);
   letter-spacing: 2px;
   text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
 }
 
 .game-title::after {
-  content: "";
-  position: absolute;
-  bottom: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 4px;
-  background: #ffffff;
-  border-radius: 2px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  content: none;
 }
 
 /* FPS counter style like in the screenshot */
@@ -141,17 +141,18 @@ canvas {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.6);
   padding: 2rem;
   border-radius: 8px;
   width: 100%;
-  max-width: 400px;
+  max-width: 340px;
   margin-bottom: 2rem;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   position: relative;
   z-index: 100;
   overflow: hidden;
+  backdrop-filter: blur(5px);
 }
 
 .login-label {
@@ -199,12 +200,12 @@ canvas {
 }
 
 .login-screen button {
-  padding: 12px 24px;
-  background-color: #333333;
+  padding: 12px 28px;
+  background: linear-gradient(to bottom, #4a8af4, #1b61d1);
   color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  font-size: 1rem;
+  border: none;
+  border-radius: 30px;
+  font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s;
@@ -213,25 +214,25 @@ canvas {
   text-transform: uppercase;
   letter-spacing: 1px;
   position: relative;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .login-screen button:hover:not(:disabled) {
-  background-color: #444444;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
-  transform: translateY(-1px);
+  background: linear-gradient(to bottom, #5a94f8, #2c6dda);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
 }
 
 .login-screen button:active:not(:disabled) {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .login-screen button:disabled {
-  background-color: #222222;
+  background: linear-gradient(to bottom, #617287, #414e5f);
   cursor: not-allowed;
   opacity: 0.7;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
 .login-screen .controls-guide {
@@ -301,14 +302,30 @@ canvas {
   background-color: rgba(0, 0, 0, 0.7);
   padding: 1.5rem;
   border-radius: 4px;
-  text-align: center;
-  max-width: 400px;
+  text-align: left;
+  max-width: 280px;
   border: 2px solid rgba(255, 255, 255, 0.2);
-  margin-top: 20px;
-  position: relative;
+  margin-top: 0;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
   z-index: 50;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+}
+
+.control-key {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 28px;
+  height: 28px;
+  background-color: #ffffff;
+  color: #000000;
+  border-radius: 50%;
+  margin-right: 10px;
+  font-weight: bold;
+  font-size: 14px;
 }
 
 .login-screen h3 {
@@ -333,14 +350,14 @@ canvas {
   border-radius: 2px;
 }
 
-.login-screen p {
-  margin: 0.8rem 0;
+.login-screen .controls-guide p {
+  margin: 0.7rem 0;
   color: #ffffff;
-  font-size: 1rem;
+  font-size: 0.95rem;
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.5rem;
 }
 

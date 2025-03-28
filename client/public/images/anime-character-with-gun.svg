@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="600" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Anime character with gun -->
+  
+  <!-- Head -->
+  <ellipse cx="200" cy="150" rx="80" ry="85" fill="#ffd5c8"/>
+  
+  <!-- Hair -->
+  <path d="M130,100 Q160,60 200,70 Q240,60 270,100 L280,150 Q240,170 200,170 Q160,170 120,150 Z" fill="#4b3621"/>
+  <path d="M130,100 Q160,60 200,70 Q170,90 160,120 Q150,150 160,170 Q140,170 120,150 Z" fill="#3a2a1a"/>
+  <path d="M160,80 L175,100 L165,90 Z" fill="#4b3621"/>
+  <path d="M200,70 L210,90 L200,85 Z" fill="#4b3621"/>
+  <path d="M230,75 L240,95 L235,85 Z" fill="#4b3621"/>
+  
+  <!-- Eyes -->
+  <ellipse cx="170" cy="140" rx="15" ry="18" fill="white"/>
+  <ellipse cx="230" cy="140" rx="15" ry="18" fill="white"/>
+  <ellipse cx="170" cy="140" rx="8" ry="10" fill="#301e15"/>
+  <ellipse cx="230" cy="140" rx="8" ry="10" fill="#301e15"/>
+  <ellipse cx="173" cy="137" rx="3" ry="3" fill="white"/>
+  <ellipse cx="233" cy="137" rx="3" ry="3" fill="white"/>
+  
+  <!-- Eyebrows -->
+  <path d="M155,120 Q170,115 185,120" stroke="#3a2a1a" stroke-width="3" fill="none"/>
+  <path d="M215,120 Q230,115 245,120" stroke="#3a2a1a" stroke-width="3" fill="none"/>
+  
+  <!-- Mouth -->
+  <path d="M190,175 Q200,180 210,175" stroke="#ff9999" stroke-width="2" fill="none"/>
+  
+  <!-- Neck -->
+  <rect x="185" y="190" width="30" height="20" fill="#ffd5c8"/>
+  
+  <!-- Body -->
+  <path d="M150,210 L250,210 L270,370 L130,370 Z" fill="#4286f4"/>
+  <rect x="150" y="210" width="100" height="30" fill="#4286f4"/>
+  <rect x="170" y="210" width="60" height="140" fill="white"/>
+  
+  <!-- Arms -->
+  <path d="M150,210 L90,310 L100,330 L150,250 Z" fill="#4286f4"/>
+  <path d="M250,210 L310,310 L300,330 L250,250 Z" fill="#4286f4"/>
+  
+  <!-- Hands -->
+  <ellipse cx="95" cy="320" rx="15" ry="15" fill="#ffd5c8"/>
+  <ellipse cx="305" cy="320" rx="15" ry="15" fill="#ffd5c8"/>
+  
+  <!-- Pants -->
+  <path d="M130,370 L270,370 L250,500 L230,500 L200,430 L170,500 L150,500 Z" fill="#1f3a60"/>
+  
+  <!-- Shoes -->
+  <path d="M150,500 L170,500 L175,530 L145,530 Z" fill="#1a1a1a"/>
+  <path d="M230,500 L250,500 L255,530 L225,530 Z" fill="#1a1a1a"/>
+  
+  <!-- Gun -->
+  <rect x="275" cy="290" width="90" height="20" fill="#1a1a1a" transform="rotate(15, 275, 290)"/>
+  <rect x="315" cy="295" width="30" height="30" fill="#1a1a1a" transform="rotate(15, 315, 295)"/>
+  <rect x="325" cy="302" width="10" height="8" fill="#444444" transform="rotate(15, 325, 302)"/>
+</svg>

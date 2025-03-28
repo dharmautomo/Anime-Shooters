@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sky background -->
+  <rect width="1200" height="800" fill="#65b5d9"/>
+  
+  <!-- Distant mountains -->
+  <path d="M600,350 Q700,200 800,350 L800,450 L400,450 L400,350 Q500,250 600,350 Z" fill="#40a085" opacity="0.8"/>
+  <path d="M300,400 Q400,200 500,400 L500,450 L100,450 L100,400 Q200,300 300,400 Z" fill="#328a71" opacity="0.7"/>
+  <path d="M900,400 Q1000,250 1100,400 L1100,450 L700,450 L700,400 Q800,300 900,400 Z" fill="#328a71" opacity="0.7"/>
+  
+  <!-- Clouds -->
+  <path d="M200,150 Q250,100 300,150 Q350,100 400,150 Q425,125 450,150 Q475,125 500,150 Q525,125 550,150 Q575,100 600,150 Q610,140 620,150 L620,200 L180,200 L180,150 Q190,140 200,150 Z" fill="white" opacity="0.9"/>
+  <path d="M700,180 Q750,130 800,180 Q825,155 850,180 Q875,155 900,180 L900,230 L700,230 L700,180 Z" fill="white" opacity="0.9"/>
+  <path d="M400,100 Q450,50 500,100 Q525,75 550,100 L550,150 L400,150 L400,100 Z" fill="white" opacity="0.8"/>
+  
+  <!-- Green ground -->
+  <rect x="0" y="450" width="1200" height="350" fill="#78d64b"/>
+  
+  <!-- Path to village -->
+  <path d="M500,450 L700,450 L750,800 L450,800 Z" fill="#d9b566"/>
+  
+  <!-- Small houses -->
+  <rect x="450" y="600" width="50" height="40" fill="#e88c5c"/>
+  <polygon points="450,600 475,570 500,600" fill="#8b4513"/>
+  <rect x="460" y="615" width="15" height="25" fill="#4a2511"/>
+  
+  <rect x="550" y="610" width="55" height="35" fill="#e6a157"/>
+  <polygon points="550,610 577,575 605,610" fill="#a0522d"/>
+  <rect x="565" y="625" width="15" height="20" fill="#6b3c17"/>
+  
+  <rect x="650" y="605" width="60" height="40" fill="#edb067"/>
+  <polygon points="650,605 680,570 710,605" fill="#8b4513"/>
+  <rect x="670" y="620" width="20" height="25" fill="#4a2511"/>
+  
+  <!-- Cherry blossom trees on the left -->
+  <path d="M100,400 L120,450 L80,450 Z" fill="#814f35"/>
+  <path d="M100,300 L100,450" stroke="#814f35" stroke-width="10"/>
+  <circle cx="60" cy="280" r="40" fill="#ff9a9e"/>
+  <circle cx="100" cy="250" r="45" fill="#ff9a9e"/>
+  <circle cx="140" cy="280" r="40" fill="#ff9a9e"/>
+  <circle cx="70" cy="320" r="30" fill="#ff9a9e"/>
+  <circle cx="130" cy="320" r="30" fill="#ff9a9e"/>
+  
+  <path d="M250,380 L270,450 L230,450 Z" fill="#73462e"/>
+  <path d="M250,300 L250,450" stroke="#73462e" stroke-width="12"/>
+  <circle cx="200" cy="270" r="45" fill="#ff9a9e"/>
+  <circle cx="250" cy="240" r="50" fill="#ff9a9e"/>
+  <circle cx="300" cy="270" r="45" fill="#ff9a9e"/>
+  <circle cx="220" cy="320" r="35" fill="#ff9a9e"/>
+  <circle cx="280" cy="320" r="35" fill="#ff9a9e"/>
+  
+  <!-- Cherry blossom trees on the right -->
+  <path d="M900,400 L920,450 L880,450 Z" fill="#814f35"/>
+  <path d="M900,320 L900,450" stroke="#814f35" stroke-width="10"/>
+  <circle cx="860" cy="300" r="40" fill="#ff9a9e"/>
+  <circle cx="900" cy="270" r="45" fill="#ff9a9e"/>
+  <circle cx="940" cy="300" r="40" fill="#ff9a9e"/>
+  <circle cx="870" cy="340" r="30" fill="#ff9a9e"/>
+  <circle cx="930" cy="340" r="30" fill="#ff9a9e"/>
+  
+  <path d="M1050,380 L1070,450 L1030,450 Z" fill="#73462e"/>
+  <path d="M1050,300 L1050,450" stroke="#73462e" stroke-width="12"/>
+  <circle cx="1000" cy="270" r="45" fill="#ff9a9e"/>
+  <circle cx="1050" cy="240" r="50" fill="#ff9a9e"/>
+  <circle cx="1100" cy="270" r="45" fill="#ff9a9e"/>
+  <circle cx="1020" cy="320" r="35" fill="#ff9a9e"/>
+  <circle cx="1080" cy="320" r="35" fill="#ff9a9e"/>
+  
+  <!-- Cherry blossom petals falling -->
+  <circle cx="150" cy="150" r="3" fill="#ffccd0"/>
+  <circle cx="300" cy="200" r="2" fill="#ffccd0"/>
+  <circle cx="450" cy="250" r="3" fill="#ffccd0"/>
+  <circle cx="600" cy="300" r="2" fill="#ffccd0"/>
+  <circle cx="750" cy="350" r="3" fill="#ffccd0"/>
+  <circle cx="900" cy="200" r="2" fill="#ffccd0"/>
+  <circle cx="1050" cy="250" r="3" fill="#ffccd0"/>
+  <circle cx="200" cy="300" r="2" fill="#ffccd0"/>
+  <circle cx="350" cy="350" r="3" fill="#ffccd0"/>
+  <circle cx="500" cy="150" r="2" fill="#ffccd0"/>
+  <circle cx="650" cy="200" r="3" fill="#ffccd0"/>
+  <circle cx="800" cy="250" r="2" fill="#ffccd0"/>
+  <circle cx="950" cy="300" r="3" fill="#ffccd0"/>
+  <circle cx="1100" cy="350" r="2" fill="#ffccd0"/>
+  <circle cx="250" cy="150" r="3" fill="#ffccd0"/>
+  <circle cx="400" cy="200" r="2" fill="#ffccd0"/>
+  <circle cx="550" cy="250" r="3" fill="#ffccd0"/>
+  <circle cx="700" cy="300" r="2" fill="#ffccd0"/>
+  <circle cx="850" cy="350" r="3" fill="#ffccd0"/>
+  <circle cx="1000" cy="150" r="2" fill="#ffccd0"/>
+</svg>
