@@ -570,10 +570,11 @@ canvas {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: 9999; /* Make sure it's above everything else */
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 99999; /* Increased to ensure it's above everything else */
   font-family: 'Inter', system-ui, sans-serif;
-  pointer-events: auto; /* Ensure it can receive click events */
+  pointer-events: auto !important; /* Ensure it can receive click events */
+  user-select: none; /* Prevent text selection */
 }
 
 .game-start-container {
@@ -625,24 +626,72 @@ canvas {
 }
 
 .start-button {
-  padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #ff4136 0%, #d70466 100%);
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   cursor: pointer !important;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  letter-spacing: 2px;
+  box-shadow: 0 4px 12px rgba(255, 65, 54, 0.6), 0 0 20px rgba(255, 65, 54, 0.3);
   pointer-events: auto !important; /* Ensure it can receive click events */
-  z-index: 10000; /* Highest z-index */
+  z-index: 100000; /* Highest z-index */
+  position: relative;
+  overflow: hidden;
+  animation: pulse-glow 2s infinite;
+}
+
+.start-button::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(45deg);
+  pointer-events: none;
+  z-index: -1;
+  transition: all 0.5s ease;
 }
 
 .start-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(79, 70, 229, 0.5);
-  background: linear-gradient(135deg, #7172f2 0%, #5b53e8 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(255, 65, 54, 0.7), 0 0 30px rgba(255, 65, 54, 0.4);
+  background: linear-gradient(135deg, #ff5a4f 0%, #f02b7f 100%);
+}
+
+.start-button:hover::before {
+  animation: shine 1.5s infinite;
+}
+
+.start-button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+    top: -100%;
+  }
+  100% {
+    left: 100%;
+    top: 100%;
+  }
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 4px 12px rgba(255, 65, 54, 0.6), 0 0 20px rgba(255, 65, 54, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 15px rgba(255, 65, 54, 0.8), 0 0 30px rgba(255, 65, 54, 0.5);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(255, 65, 54, 0.6), 0 0 20px rgba(255, 65, 54, 0.3);
+  }
 }

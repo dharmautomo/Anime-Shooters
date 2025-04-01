@@ -2,11 +2,16 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePlayer } from '../lib/stores/usePlayer';
 import { useMultiplayer } from '../lib/stores/useMultiplayer';
+import { useGameControls } from '../lib/stores/useGameControls';
 
 const UI = () => {
   const { health, ammo, score } = usePlayer();
   const { killFeed } = useMultiplayer();
+  const { hasInteracted, isControlsLocked } = useGameControls();
   const [showControls, setShowControls] = useState(true);
+  const [showDebug, setShowDebug] = useState(false);
+  // For tracking if pointer lock is actually working via the native API
+  const [isPointerLocked, setIsPointerLocked] = useState<boolean>(!!document.pointerLockElement);
   
   // Toggle controls guide with ESC key
   useEffect(() => {
@@ -14,11 +19,17 @@ const UI = () => {
       if (e.key === 'Escape') {
         setShowControls(prev => !prev);
       }
+      
+      // Toggle debug with Shift+D
+      if (e.key === 'd' && e.shiftKey) {
+        setShowDebug(prev => !prev);
+        console.log("Debug info toggled:", !showDebug);
+      }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     
-    // Hide controls after 5 seconds
+    // Hide controls after 5 seconds (only initially)
     const timer = setTimeout(() => {
       setShowControls(false);
     }, 5000);
@@ -27,7 +38,42 @@ const UI = () => {
       window.removeEventListener('keydown', handleKeyDown);
       clearTimeout(timer);
     };
+  }, [showDebug]);
+  
+  // Monitor pointer lock status
+  useEffect(() => {
+    const handlePointerLockChange = () => {
+      const newLockedState = !!document.pointerLockElement;
+      setIsPointerLocked(newLockedState);
+      console.log("Pointer lock state changed:", newLockedState ? "LOCKED" : "UNLOCKED");
+    };
+
+    // Listen for pointer lock events
+    document.addEventListener('pointerlockchange', handlePointerLockChange);
+    document.addEventListener('mozpointerlockchange', handlePointerLockChange);
+    document.addEventListener('webkitpointerlockchange', handlePointerLockChange);
+    
+    return () => {
+      document.removeEventListener('pointerlockchange', handlePointerLockChange);
+      document.removeEventListener('mozpointerlockchange', handlePointerLockChange);
+      document.removeEventListener('webkitpointerlockchange', handlePointerLockChange);
+    };
   }, []);
+
+  // Force trigger a manual pointer lock
+  const triggerPointerLock = () => {
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      console.log("Manually requesting pointer lock");
+      try {
+        canvas.requestPointerLock();
+      } catch (e) {
+        console.error("Error requesting pointer lock:", e);
+      }
+    } else {
+      console.error("Canvas not found");
+    }
+  };
   
   // Create crosshair SVG
   const crosshairSvg = `
@@ -74,6 +120,7 @@ const UI = () => {
           <p>R - Reload</p>
           <p>Space - Jump</p>
           <p>ESC - Toggle this guide</p>
+          <p>Shift+D - Show debug info</p>
         </div>
       )}
       
@@ -87,6 +134,60 @@ const UI = () => {
           </div>
         ))}
       </div>
+      
+      {/* Debug UI - Toggle with Shift+D */}
+      {showDebug && (
+        <div 
+          className="debug-overlay"
+          style={{
+            position: 'fixed',
+            top: '100px',
+            right: '20px',
+            background: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            padding: '15px',
+            borderRadius: '5px',
+            zIndex: 10000,
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            fontFamily: 'monospace',
+            pointerEvents: 'auto'
+          }}
+        >
+          <h3 style={{ margin: '0 0 10px 0' }}>Debug Info</h3>
+          <div>
+            <p style={{ margin: '5px 0' }}>
+              hasInteracted: <span style={{ color: hasInteracted ? '#00ff00' : '#ff0000' }}>
+                {hasInteracted ? 'YES' : 'NO'}
+              </span>
+            </p>
+            <p style={{ margin: '5px 0' }}>
+              isControlsLocked: <span style={{ color: isControlsLocked ? '#00ff00' : '#ff0000' }}>
+                {isControlsLocked ? 'YES' : 'NO'}
+              </span>
+            </p>
+            <p style={{ margin: '5px 0' }}>
+              pointerLockElement: <span style={{ color: isPointerLocked ? '#00ff00' : '#ff0000' }}>
+                {isPointerLocked ? 'YES' : 'NO'}
+              </span>
+            </p>
+            <button 
+              onClick={triggerPointerLock}
+              style={{ 
+                background: '#ff4136',
+                color: 'white',
+                border: 'none',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginTop: '10px',
+                fontWeight: 'bold'
+              }}
+            >
+              Force Pointer Lock
+            </button>
+          </div>
+        </div>
+      )}
     </div>,
     document.body
   );

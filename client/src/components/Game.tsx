@@ -78,15 +78,49 @@ const Game = ({ username }: GameProps) => {
     if (hasInteracted && controlsRef.current && !isControlsLocked) {
       console.log('User has interacted, attempting to lock controls');
       
-      // Add a small delay to ensure the browser has registered the user interaction
-      setTimeout(() => {
+      // We'll try multiple times to ensure it works
+      const attemptLock = (attemptsLeft = 5) => {
         try {
-          console.log('Calling lock() on PointerLockControls');
+          console.log(`Calling lock() on PointerLockControls (attempts left: ${attemptsLeft})`);
           controlsRef.current.lock();
+          
+          // Check if it worked immediately
+          if (document.pointerLockElement) {
+            console.log('Pointer lock successful!');
+          } else if (attemptsLeft > 0) {
+            // Try again after a short delay
+            setTimeout(() => attemptLock(attemptsLeft - 1), 200);
+          } else {
+            console.error('Failed to lock controls after multiple attempts');
+          }
         } catch (error) {
           console.error('Failed to lock controls:', error);
+          if (attemptsLeft > 0) {
+            setTimeout(() => attemptLock(attemptsLeft - 1), 200);
+          }
         }
-      }, 100);
+      };
+      
+      // Start the first attempt after a short delay
+      setTimeout(() => attemptLock(), 200);
+      
+      // Also add a click handler on the document to help with pointer lock
+      const handleDocClick = () => {
+        if (!document.pointerLockElement && controlsRef.current) {
+          console.log('Document clicked, trying to lock pointer');
+          try {
+            controlsRef.current.lock();
+          } catch (e) {
+            console.error('Error when trying to lock on document click:', e);
+          }
+        }
+      };
+      
+      document.addEventListener('click', handleDocClick);
+      
+      return () => {
+        document.removeEventListener('click', handleDocClick);
+      };
     }
   }, [hasInteracted, isControlsLocked]);
 

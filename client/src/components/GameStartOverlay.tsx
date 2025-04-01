@@ -2,21 +2,32 @@ import React, { useEffect } from 'react';
 import { useGameControls } from '../lib/stores/useGameControls';
 
 const GameStartOverlay: React.FC = () => {
-  const { hasInteracted, setHasInteracted } = useGameControls();
+  const { hasInteracted, setHasInteracted, isControlsLocked } = useGameControls();
 
   // Add console logging for debugging
   useEffect(() => {
-    console.log("GameStartOverlay rendered, hasInteracted:", hasInteracted);
-  }, [hasInteracted]);
+    console.log("GameStartOverlay rendered, hasInteracted:", hasInteracted, "isControlsLocked:", isControlsLocked);
+  }, [hasInteracted, isControlsLocked]);
 
+  // If user has interacted and controls are locked, hide the overlay
   if (hasInteracted) {
     console.log("User has interacted, hiding overlay");
     return null;
   }
 
-  const handleStartGame = () => {
+  const handleStartGame = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log("START GAME button clicked");
+    
+    // Set user has interacted flag
     setHasInteracted(true);
+    
+    // Log that we're attempting to start the game
+    console.log("Game start triggered");
+
+    // Focus the document to ensure it can receive keyboard events
+    document.body.focus();
   };
 
   return (
@@ -33,7 +44,11 @@ const GameStartOverlay: React.FC = () => {
         <button 
           className="start-button" 
           onClick={handleStartGame}
-          style={{ cursor: 'pointer' }}
+          style={{ 
+            cursor: 'pointer',
+            position: 'relative',
+            zIndex: 10000
+          }}
         >
           START GAME
         </button>
