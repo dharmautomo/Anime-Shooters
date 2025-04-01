@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="550" viewBox="0 0 400 550" xmlns="http://www.w3.org/2000/svg">
+  <!-- Anime Character - Cute female character with gun -->
+  
+  <!-- Hair -->
+  <path d="M200,100 C140,100 100,150 100,220 L100,350 C110,380 140,400 180,410 C190,430 195,450 200,480 C205,450 210,430 220,410 C260,400 290,380 300,350 L300,220 C300,150 260,100 200,100 Z" fill="#8e67a2" />
+  
+  <!-- Hair highlights -->
+  <path d="M200,100 C190,110 180,130 175,160 C170,190 170,220 175,250 C180,280 190,310 200,330 C210,310 220,280 225,250 C230,220 230,190 225,160 C220,130 210,110 200,100 Z" fill="#a57ab8" />
+  
+  <!-- Face -->
+  <ellipse cx="200" cy="190" rx="60" ry="70" fill="#ffe6e6" />
+  
+  <!-- Eyes -->
+  <g id="eyes">
+    <!-- Left eye -->
+    <ellipse cx="175" cy="180" rx="15" ry="20" fill="white" />
+    <circle cx="175" cy="180" r="10" fill="#8b54a2" />
+    <circle cx="175" cy="178" r="5" fill="#5b3a77" />
+    <circle cx="170" cy="175" r="3" fill="white" />
+    
+    <!-- Right eye -->
+    <ellipse cx="225" cy="180" rx="15" ry="20" fill="white" />
+    <circle cx="225" cy="180" r="10" fill="#8b54a2" />
+    <circle cx="225" cy="178" r="5" fill="#5b3a77" />
+    <circle cx="220" cy="175" r="3" fill="white" />
+    
+    <!-- Eyelashes -->
+    <path d="M160,170 L155,165 M165,165 L158,160 M185,165 L190,160" stroke="black" stroke-width="1.5" />
+    <path d="M240,170 L245,165 M235,165 L242,160 M215,165 L210,160" stroke="black" stroke-width="1.5" />
+  </g>
+  
+  <!-- Mouth -->
+  <path d="M190,215 C195,220 205,220 210,215" stroke="#ff9eb5" stroke-width="2" fill="none" />
+  
+  <!-- Blush -->
+  <circle cx="170" cy="205" r="10" fill="#ffccd5" opacity="0.7" />
+  <circle cx="230" cy="205" r="10" fill="#ffccd5" opacity="0.7" />
+  
+  <!-- Neck -->
+  <path d="M190,250 L190,270 L210,270 L210,250" fill="#ffe6e6" />
+  
+  <!-- Body outline -->
+  <path d="M160,270 L160,390 C175,400 190,405 200,405 C210,405 225,400 240,390 L240,270 Z" fill="#fcbbc8" />
+  
+  <!-- Outfit details - Combat vest -->
+  <path d="M165,280 L165,380 C180,390 190,395 200,395 C210,395 220,390 235,380 L235,280 Z" fill="#7a4988" />
+  <path d="M165,280 L235,280 L235,290 L165,290 Z" fill="#624171" />
+  <path d="M190,290 L190,380 L210,380 L210,290 Z" fill="#624171" />
+  
+  <!-- Utility Belt -->
+  <rect x="160" y="350" width="80" height="15" fill="#b9a9c3" />
+  <circle cx="200" cy="357.5" r="5" fill="#624171" />
+  
+  <!-- Arms -->
+  <path d="M160,270 C150,280 145,290 140,320 C135,350 140,380 145,400" fill="none" stroke="#ffe6e6" stroke-width="20" stroke-linecap="round" />
+  <path d="M240,270 C250,280 255,290 260,320 C265,350 260,380 255,400" fill="none" stroke="#ffe6e6" stroke-width="20" stroke-linecap="round" />
+  
+  <!-- Hand with Gun -->
+  <g transform="translate(255, 400) rotate(10)">
+    <!-- Hand -->
+    <circle cx="0" cy="0" r="13" fill="#ffe6e6" />
+    
+    <!-- Gun -->
+    <rect x="10" y="-5" width="60" height="10" rx="2" fill="#333" />
+    <rect x="15" y="5" width="20" height="15" rx="2" fill="#333" />
+    <rect x="20" y="-15" width="5" height="10" fill="#333" />
+    <rect x="60" y="-3" width="10" height="6" fill="#555" />
+  </g>
+  
+  <!-- Other hand - Victory sign -->
+  <g transform="translate(145, 400) rotate(-10)">
+    <circle cx="0" cy="0" r="13" fill="#ffe6e6" />
+    <path d="M-5,-5 L-5,-20 M5,-5 L5,-20" stroke="#ffe6e6" stroke-width="6" stroke-linecap="round" />
+  </g>
+  
+  <!-- Speech Bubble -->
+  <g transform="translate(300, 150)">
+    <path d="M0,0 L80,0 A10,10 0 0 1 90,10 L90,40 A10,10 0 0 1 80,50 L30,50 L20,70 L20,50 L10,50 A10,10 0 0 1 0,40 L0,10 A10,10 0 0 1 10,0 Z" fill="white" stroke="#333" stroke-width="2" />
+    <text x="45" y="20" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" alignment-baseline="middle" font-weight="bold">READY TO</text>
+    <text x="45" y="35" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" alignment-baseline="middle" font-weight="bold">PLAY?</text>
+  </g>
+</svg>

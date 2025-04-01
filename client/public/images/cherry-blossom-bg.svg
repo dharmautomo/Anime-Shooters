@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#91d4fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0f2ff;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mountainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8d6b94;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#483248;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Sky background -->
+  <rect width="1600" height="900" fill="url(#skyGradient)" />
+  
+  <!-- Distant mountains -->
+  <path d="M0,900 L0,650 C100,600 200,620 300,590 C400,560 500,530 600,550 C700,570 800,590 900,570 C1000,550 1100,520 1200,540 C1300,560 1400,600 1500,590 C1560,585 1580,580 1600,570 L1600,900 Z" fill="url(#mountainGradient)" opacity="0.7" />
+  
+  <!-- Mid-distance hills -->
+  <path d="M0,900 L0,700 C100,680 200,720 300,700 C400,680 500,670 600,690 C700,710 800,730 900,710 C1000,690 1100,670 1200,690 C1300,710 1400,750 1500,730 C1560,720 1580,710 1600,700 L1600,900 Z" fill="#3f5c56" opacity="0.6" />
+  
+  <!-- Foreground land - Japanese village scenery -->
+  <path d="M0,900 L0,750 C100,780 200,800 300,780 C400,760 500,750 600,770 C700,790 800,810 900,790 C1000,770 1100,750 1200,770 C1300,790 1400,820 1500,800 C1560,790 1580,780 1600,770 L1600,900 Z" fill="#2b4c3f" />
+  
+  <!-- Village houses (simplified traditional Japanese style) -->
+  <!-- House 1 -->
+  <g transform="translate(200, 750)">
+    <rect x="0" y="0" width="80" height="60" fill="#d6b88f" />
+    <path d="M0,0 L40,-30 L80,0 Z" fill="#8c382c" />
+  </g>
+  
+  <!-- House 2 -->
+  <g transform="translate(350, 770)">
+    <rect x="0" y="0" width="100" height="50" fill="#e0c9a6" />
+    <path d="M0,0 L50,-40 L100,0 Z" fill="#783225" />
+  </g>
+  
+  <!-- House 3 -->
+  <g transform="translate(550, 760)">
+    <rect x="0" y="0" width="90" height="70" fill="#d1b993" />
+    <path d="M0,0 L45,-35 L90,0 Z" fill="#8c382c" />
+  </g>
+  
+  <!-- House 4 -->
+  <g transform="translate(750, 780)">
+    <rect x="0" y="0" width="110" height="55" fill="#e5c9a6" />
+    <path d="M0,0 L55,-45 L110,0 Z" fill="#8c382c" />
+  </g>
+  
+  <!-- Traditional shrine/temple -->
+  <g transform="translate(950, 720)">
+    <rect x="0" y="30" width="150" height="80" fill="#c13832" />
+    <path d="M-20,30 L75,-30 L170,30 Z" fill="#8c382c" />
+    <rect x="30" y="80" width="30" height="30" fill="#d6b88f" />
+    <rect x="90" y="80" width="30" height="30" fill="#d6b88f" />
+  </g>
+  
+  <!-- House 5 -->
+  <g transform="translate(1200, 770)">
+    <rect x="0" y="0" width="95" height="65" fill="#d6b88f" />
+    <path d="M0,0 L47.5,-38 L95,0 Z" fill="#783225" />
+  </g>
+  
+  <!-- House 6 -->
+  <g transform="translate(1400, 760)">
+    <rect x="0" y="0" width="80" height="60" fill="#e0c9a6" />
+    <path d="M0,0 L40,-30 L80,0 Z" fill="#8c382c" />
+  </g>
+  
+  <!-- Cherry Blossom Trees -->
+  <g transform="translate(150, 710)">
+    <rect x="25" y="40" width="10" height="50" fill="#7d5a4a" />
+    <ellipse cx="30" cy="30" rx="25" ry="25" fill="#ffdfef" />
+  </g>
+  
+  <g transform="translate(300, 730)">
+    <rect x="25" y="30" width="10" height="40" fill="#7d5a4a" />
+    <ellipse cx="30" cy="20" rx="20" ry="20" fill="#ffd6ea" />
+  </g>
+  
+  <g transform="translate(470, 720)">
+    <rect x="25" y="35" width="10" height="45" fill="#7d5a4a" />
+    <ellipse cx="30" cy="25" rx="22" ry="22" fill="#ffdfef" />
+  </g>
+  
+  <g transform="translate(670, 740)">
+    <rect x="25" y="30" width="10" height="40" fill="#7d5a4a" />
+    <ellipse cx="30" cy="20" rx="20" ry="20" fill="#ffd6ea" />
+  </g>
+  
+  <g transform="translate(850, 700)">
+    <rect x="25" y="40" width="10" height="50" fill="#7d5a4a" />
+    <ellipse cx="30" cy="30" rx="25" ry="25" fill="#ffdfef" />
+  </g>
+  
+  <g transform="translate(1100, 730)">
+    <rect x="25" y="35" width="10" height="45" fill="#7d5a4a" />
+    <ellipse cx="30" cy="25" rx="22" ry="22" fill="#ffd6ea" />
+  </g>
+  
+  <g transform="translate(1300, 720)">
+    <rect x="25" y="30" width="10" height="40" fill="#7d5a4a" />
+    <ellipse cx="30" cy="20" rx="20" ry="20" fill="#ffdfef" />
+  </g>
+  
+  <g transform="translate(1500, 710)">
+    <rect x="25" y="40" width="10" height="50" fill="#7d5a4a" />
+    <ellipse cx="30" cy="30" rx="25" ry="25" fill="#ffd6ea" />
+  </g>
+</svg>

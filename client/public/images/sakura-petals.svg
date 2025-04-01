@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single petal -->
+    <g id="petal">
+      <path d="M10,0 C15,5 15,15 10,20 C5,15 5,5 10,0 Z" fill="#ffcce6" opacity="0.85" />
+    </g>
+    
+    <!-- Small petal group -->
+    <g id="small-petal-group">
+      <use href="#petal" transform="rotate(0)" />
+      <use href="#petal" transform="rotate(72)" />
+      <use href="#petal" transform="rotate(144)" />
+      <use href="#petal" transform="rotate(216)" />
+      <use href="#petal" transform="rotate(288)" />
+    </g>
+    
+    <!-- Medium petal -->
+    <path id="medium-petal" d="M15,0 C22.5,7.5 22.5,22.5 15,30 C7.5,22.5 7.5,7.5 15,0 Z" fill="#ffc0e0" opacity="0.8" />
+    
+    <!-- Medium petal group -->
+    <g id="medium-petal-group">
+      <use href="#medium-petal" transform="rotate(0)" />
+      <use href="#medium-petal" transform="rotate(72)" />
+      <use href="#medium-petal" transform="rotate(144)" />
+      <use href="#medium-petal" transform="rotate(216)" />
+      <use href="#medium-petal" transform="rotate(288)" />
+    </g>
+    
+    <!-- Large petal -->
+    <path id="large-petal" d="M20,0 C30,10 30,30 20,40 C10,30 10,10 20,0 Z" fill="#ffb6dc" opacity="0.75" />
+    
+    <!-- Large petal group -->
+    <g id="large-petal-group">
+      <use href="#large-petal" transform="rotate(0)" />
+      <use href="#large-petal" transform="rotate(72)" />
+      <use href="#large-petal" transform="rotate(144)" />
+      <use href="#large-petal" transform="rotate(216)" />
+      <use href="#large-petal" transform="rotate(288)" />
+    </g>
+  </defs>
+  
+  <!-- Scattered Petals -->
+  <g transform="translate(100, 100)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(200, 150)">
+    <use href="#medium-petal-group" />
+  </g>
+  
+  <g transform="translate(300, 100)">
+    <use href="#large-petal-group" />
+  </g>
+  
+  <g transform="translate(400, 200)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(500, 150)">
+    <use href="#medium-petal-group" />
+  </g>
+  
+  <g transform="translate(600, 100)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(700, 200)">
+    <use href="#large-petal-group" />
+  </g>
+  
+  <g transform="translate(150, 300)">
+    <use href="#medium-petal-group" />
+  </g>
+  
+  <g transform="translate(250, 350)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(350, 300)">
+    <use href="#large-petal-group" />
+  </g>
+  
+  <g transform="translate(450, 350)">
+    <use href="#medium-petal-group" />
+  </g>
+  
+  <g transform="translate(550, 300)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(650, 350)">
+    <use href="#medium-petal-group" />
+  </g>
+  
+  <g transform="translate(100, 450)">
+    <use href="#large-petal-group" />
+  </g>
+  
+  <g transform="translate(200, 500)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(300, 450)">
+    <use href="#medium-petal-group" />
+  </g>
+  
+  <g transform="translate(400, 500)">
+    <use href="#large-petal-group" />
+  </g>
+  
+  <g transform="translate(500, 450)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(600, 500)">
+    <use href="#medium-petal-group" />
+  </g>
+  
+  <g transform="translate(700, 450)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(150, 600)">
+    <use href="#large-petal-group" />
+  </g>
+  
+  <g transform="translate(250, 650)">
+    <use href="#medium-petal-group" />
+  </g>
+  
+  <g transform="translate(350, 600)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(450, 650)">
+    <use href="#large-petal-group" />
+  </g>
+  
+  <g transform="translate(550, 600)">
+    <use href="#medium-petal-group" />
+  </g>
+  
+  <g transform="translate(650, 650)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(100, 700)">
+    <use href="#medium-petal-group" />
+  </g>
+  
+  <g transform="translate(300, 700)">
+    <use href="#small-petal-group" />
+  </g>
+  
+  <g transform="translate(500, 700)">
+    <use href="#large-petal-group" />
+  </g>
+  
+  <g transform="translate(700, 700)">
+    <use href="#medium-petal-group" />
+  </g>
+</svg>
