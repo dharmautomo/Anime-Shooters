@@ -1,7 +1,8 @@
+
 import { useEffect } from 'react';
 import { useGame } from '@/lib/stores/useGame';
 
-export function GameStartOverlay() {
+export default function GameStartOverlay() {
   const phase = useGame((state) => state.phase);
   const start = useGame((state) => state.start);
 
