@@ -6,7 +6,7 @@ interface LoginProps {
   onLogin: (username: string) => void;
 }
 
-export function Login({ onLogin }: LoginProps) {
+export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
