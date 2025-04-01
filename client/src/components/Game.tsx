@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PointerLockControls, Stats, useKeyboardControls } from '@react-three/drei';
@@ -9,6 +9,7 @@ import Weapon from './Weapon';
 import Bullet from './Bullet';
 import { usePlayer } from '../lib/stores/usePlayer';
 import { Controls } from '../App';
+import { useGameControls } from '../lib/stores/useGameControls';
 
 interface GameProps {
   username: string;
@@ -35,20 +36,24 @@ const Game = ({ username }: GameProps) => {
     reloadAmmo,
     resetPlayer
   } = usePlayer();
+  const { 
+    hasInteracted, 
+    setControlsLocked, 
+    isControlsLocked 
+  } = useGameControls();
 
   // Initialize player controls
   useEffect(() => {
     if (controlsRef.current) {
       controlsRef.current.addEventListener('lock', () => {
         console.log('Controls locked');
+        setControlsLocked(true);
       });
       
       controlsRef.current.addEventListener('unlock', () => {
         console.log('Controls unlocked');
+        setControlsLocked(false);
       });
-      
-      // Lock controls on first render
-      controlsRef.current.lock();
     }
 
     // Reset player on game start
@@ -61,7 +66,19 @@ const Game = ({ username }: GameProps) => {
         controlsRef.current.removeEventListener('unlock', () => {});
       }
     };
-  }, [resetPlayer]);
+  }, [resetPlayer, setControlsLocked]);
+  
+  // Attempt to lock controls when user has interacted
+  useEffect(() => {
+    if (hasInteracted && controlsRef.current && !isControlsLocked) {
+      console.log('User has interacted, attempting to lock controls');
+      try {
+        controlsRef.current.lock();
+      } catch (error) {
+        console.error('Failed to lock controls:', error);
+      }
+    }
+  }, [hasInteracted, isControlsLocked]);
 
   // Get keyboard controls state
   const [, getKeys] = useKeyboardControls<Controls>();
@@ -91,6 +108,9 @@ const Game = ({ username }: GameProps) => {
   // Update player position and camera
   useFrame((state, delta) => {
     if (!controlsRef.current) return;
+    
+    // Only process movement when controls are locked (pointer lock is active)
+    if (!isControlsLocked || !hasInteracted) return;
     
     // Get the current keyboard state
     const { 

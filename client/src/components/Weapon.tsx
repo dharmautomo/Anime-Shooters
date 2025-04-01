@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useKeyboardControls } from '@react-three/drei';
 import { Controls } from '../App';
 import { useAudio } from '../lib/stores/useAudio';
+import { useGameControls } from '../lib/stores/useGameControls';
 
 interface WeaponProps {
   position: [number, number, number];
@@ -19,6 +20,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
   const [isShooting, setIsShooting] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
   const { playHit, playSuccess, playSound } = useAudio();
+  const { hasInteracted, isControlsLocked } = useGameControls();
   
   // Get keyboard/mouse controls
   const shoot = useKeyboardControls<Controls>(state => state.shoot);
@@ -35,6 +37,9 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
   
   // Handle shooting
   useEffect(() => {
+    // Only allow shooting when controls are locked and user has interacted
+    if (!hasInteracted || !isControlsLocked) return;
+    
     if (shoot && !isShooting && !isReloading && ammo > 0) {
       setIsShooting(true);
       
@@ -76,11 +81,14 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       console.log("Click - empty gun");
       playSuccess();
     }
-  }, [shoot, isShooting, isReloading, ammo, playHit, playSuccess, playSound, onShoot]);
+  }, [shoot, isShooting, isReloading, ammo, playHit, playSuccess, playSound, onShoot, hasInteracted, isControlsLocked]);
   
   // Handle mouse input for shooting (additional method)
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
+      // Only allow shooting when controls are locked and user has interacted
+      if (!hasInteracted || !isControlsLocked) return;
+      
       if (e.button === 0) { // Left mouse button
         if (!isShooting && !isReloading && ammo > 0) {
           console.log("Mouse click - shooting");
@@ -126,10 +134,13 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     return () => {
       window.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [isShooting, isReloading, ammo, playHit, playSound, onShoot]);
+  }, [isShooting, isReloading, ammo, playHit, playSound, onShoot, hasInteracted, isControlsLocked]);
   
   // Handle reloading
   useEffect(() => {
+    // Only allow reloading when controls are locked and user has interacted
+    if (!hasInteracted || !isControlsLocked) return;
+    
     if (reload && !isReloading && ammo < 10) {
       setIsReloading(true);
       
@@ -143,7 +154,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         setIsReloading(false);
       }, 1500);
     }
-  }, [reload, isReloading, ammo, playSuccess, playSound]);
+  }, [reload, isReloading, ammo, playSuccess, playSound, hasInteracted, isControlsLocked]);
   
   // Make weapon and muzzle flash follow the camera
   useFrame(() => {
