@@ -31,12 +31,43 @@ const keyMap = [
   { name: Controls.reload, keys: ['KeyR'] },
 ];
 
+// Helper function to parse URL parameters
+const getUrlParams = () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  return {
+    username: searchParams.get('username'),
+    comingFromPortal: searchParams.get('portal') === 'true',
+    color: searchParams.get('color'),
+    speed: searchParams.get('speed'),
+    referrer: searchParams.get('ref'),
+  };
+};
+
 // Main App component
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [username, setUsername] = useState<string>("");
+  const [portalReferrer, setPortalReferrer] = useState<string | null>(null);
   const { initializeSocket } = useMultiplayer();
   const { setPlayerName } = usePlayer();
+
+  // Handle URL parameters for portal functionality
+  useEffect(() => {
+    const params = getUrlParams();
+
+    // Check if the user came from a portal
+    if (params.comingFromPortal && params.username) {
+      console.log("User entered from a portal:", params);
+      
+      // Auto-login if coming from a portal
+      handleLogin(params.username);
+      
+      // Store the referrer for return portal
+      if (params.referrer) {
+        setPortalReferrer(params.referrer);
+      }
+    }
+  }, []);
 
   // Handle login
   const handleLogin = (name: string) => {

@@ -1,7 +1,24 @@
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import Portal from './Portal';
+import { useEffect, useState } from 'react';
+
+// Helper function to check if coming from portal
+const isComingFromPortal = () => {
+  return new URLSearchParams(window.location.search).get('portal') === 'true';
+};
 
 const World = () => {
+  const [referrerUrl, setReferrerUrl] = useState<string | null>(null);
+  
+  // Get the referrer from URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      setReferrerUrl(ref);
+    }
+  }, []);
   // Load textures
   const grassTexture = useTexture('/textures/grass.png');
   const woodTexture = useTexture('/textures/wood.jpg');
@@ -177,6 +194,23 @@ const World = () => {
           side={THREE.BackSide}
         />
       </mesh>
+      
+      {/* Exit Portal - Leads to the Vibeverse */}
+      <Portal 
+        position={[0, 1, -15]} 
+        destination="http://portal.pieter.com" 
+        isEntry={false} 
+      />
+      
+      {/* Entry Portal - If coming from another game */}
+      {isComingFromPortal() && referrerUrl && (
+        <Portal 
+          position={[0, 1, 15]} 
+          destination={referrerUrl} 
+          isEntry={true}
+          referrer={referrerUrl} 
+        />
+      )}
     </>
   );
 };
