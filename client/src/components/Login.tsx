@@ -59,54 +59,99 @@ const Login = ({ onLogin }: LoginProps) => {
   
   return (
     <div className="login-screen">
-      <div className="login-content">
+      {/* Anime Character Silhouettes */}
+      <div className="anime-character left"></div>
+      <div className="anime-character right"></div>
+      
+      {/* Floating Sakura Petals */}
+      <div className="sakura-petals"></div>
+      
+      {/* Vibe Jam Badge */}
+      <div className="vibe-jam-badge">
+        Vibe Jam 2025
+      </div>
+      
+      <div className="login-container">
         <h1 className="game-title">
-          <span>Anime</span>
-          <span>Shooters</span>
+          <span className="title-top">Anime</span>
+          <span className="title-bottom">Shooters</span>
         </h1>
         
-        <div className="login-form">
-          <div className="login-label">
-            <span>Enter your username</span>
+        <div className="login-card">
+          <div className="card-header">
+            <div className="card-decoration left"></div>
+            <h2>Enter Battle</h2>
+            <div className="card-decoration right"></div>
           </div>
           
-          <input
-            id="username-input"
-            type="text"
-            placeholder="Player Name"
-            value={username}
-            onChange={handleUsernameChange}
-            onKeyDown={handleKeyDown}
-            maxLength={15}
-            className={error ? 'input-error' : ''}
-            disabled={isLoading}
-          />
-          
-          {error && <div className="error-message">{error}</div>}
-          
-          <button 
-            onClick={handleSubmit}
-            disabled={!username.trim() || isLoading}
-            className={isLoading ? 'loading' : ''}
-          >
-            {isLoading ? 'Loading...' : 'START GAME'}
-          </button>
+          <div className="login-form">
+            <div className="form-group">
+              <label htmlFor="username-input">Choose your username</label>
+              <div className="input-wrapper">
+                <input
+                  id="username-input"
+                  type="text"
+                  placeholder="Fighter Name"
+                  value={username}
+                  onChange={handleUsernameChange}
+                  onKeyDown={handleKeyDown}
+                  maxLength={15}
+                  className={error ? 'input-error' : ''}
+                  disabled={isLoading}
+                />
+              </div>
+              {error && <div className="error-message">{error}</div>}
+            </div>
+            
+            <button 
+              onClick={handleSubmit}
+              disabled={!username.trim() || isLoading}
+              className={`primary-button ${isLoading ? 'loading' : ''}`}
+            >
+              {isLoading ? 'Preparing...' : 'START BATTLE'}
+            </button>
+          </div>
         </div>
         
-        <div className="controls-guide">
-          <h3>Game Controls</h3>
+        <div className="controls-panel">
+          <div className="controls-header">
+            <span className="icon-controller"></span>
+            <h3>Game Controls</h3>
+            <span className="icon-controller"></span>
+          </div>
           
-          <p><span className="control-key">W</span> Movement</p>
-          <p><span className="control-key">M</span> Look</p>
-          <p><span className="control-key">L</span> Shoot</p>
-          <p><span className="control-key">R</span> Reload</p>
-          <p><span className="control-key">↑</span> Jump</p>
+          <div className="controls-grid">
+            <div className="control-item">
+              <span className="control-key">W</span>
+              <span className="control-label">Movement</span>
+            </div>
+            <div className="control-item">
+              <span className="control-key">M</span>
+              <span className="control-label">Look</span>
+            </div>
+            <div className="control-item">
+              <span className="control-key">L</span>
+              <span className="control-label">Shoot</span>
+            </div>
+            <div className="control-item">
+              <span className="control-key">R</span>
+              <span className="control-label">Reload</span>
+            </div>
+            <div className="control-item">
+              <span className="control-key">↑</span>
+              <span className="control-label">Jump</span>
+            </div>
+          </div>
           
           <div className="version-info">v1.0.0</div>
         </div>
       </div>
-      
 
+      {/* Portal Info */}
+      <div className="portal-info">
+        <span className="portal-icon"></span>
+        <p>Connected to Vibeverse Portals</p>
+      </div>
     </div>
   );
 };
