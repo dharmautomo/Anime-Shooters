@@ -79,13 +79,14 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const speed = 0.1;
   const jumpHeight = 0.2;
 
-  // Create name tag texture
+  // Create name tag texture - update when health changes
   useEffect(() => {
     if (!isMainPlayer && username) {
+      console.log(`Updating name tag for player ${username} with health: ${health}`);
       const canvas = createNameTag(username, health);
       setNameTagCanvas(canvas);
     }
-  }, [isMainPlayer, username, health]);
+  }, [isMainPlayer, username, health]); // Health is a dependency so it updates when health changes
 
   // Handle animations based on player state
   useEffect(() => {

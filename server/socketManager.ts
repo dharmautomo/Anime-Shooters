@@ -83,14 +83,37 @@ export class SocketManager {
       }) => {
         const { playerId, damage, shooterId } = data;
         
+        console.log(`Hit event received: Player ${playerId} hit by ${shooterId} for ${damage} damage`);
+        
+        // Get the player before the damage
+        const playerBefore = this.gameState.getPlayer(playerId);
+        if (!playerBefore) {
+          console.log(`Player ${playerId} not found in game state`);
+          return;
+        }
+        
+        console.log(`Player ${playerId} health before: ${playerBefore.health}`);
+        
         // Update player health in game state
         const playerKilled = this.gameState.damagePlayer(playerId, damage);
+        
+        // Get updated player data
+        const playerAfter = this.gameState.getPlayer(playerId);
+        console.log(`Player ${playerId} health after: ${playerAfter?.health}`);
         
         // Notify the hit player
         this.io.to(playerId).emit('playerHit', { playerId, damage });
         
+        // Broadcast player update to all clients to ensure health synchronization
+        if (playerAfter) {
+          console.log(`Broadcasting player update for ${playerId} with health ${playerAfter.health}`);
+          this.io.emit('playerUpdated', playerAfter);
+        }
+        
         // If player was killed
         if (playerKilled) {
+          console.log(`Player ${playerId} was killed by ${shooterId}`);
+          
           // Broadcast kill to all players
           this.io.emit('playerKilled', {
             killer: shooterId,
@@ -99,11 +122,13 @@ export class SocketManager {
           
           // Respawn player after delay
           setTimeout(() => {
+            console.log(`Respawning player ${playerId}`);
             this.gameState.respawnPlayer(playerId);
             
             // Notify about respawn
             const respawnedPlayer = this.gameState.getPlayer(playerId);
             if (respawnedPlayer) {
+              console.log(`Broadcasting respawn for player ${playerId} with health ${respawnedPlayer.health}`);
               this.io.emit('playerUpdated', respawnedPlayer);
             }
           }, 3000);

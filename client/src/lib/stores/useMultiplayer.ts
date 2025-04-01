@@ -171,14 +171,22 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
     
     // Handle player updates
     socket.on('playerUpdated', (playerData: PlayerData) => {
+      console.log(`Received player update for ${playerData.id}, health: ${playerData.health}`);
+      
       set((state) => {
         // Only update if this is another player (not ourselves)
-        if (playerData.id !== socket.id && state.otherPlayers[playerData.id]) {
+        if (playerData.id !== socket.id) {
+          console.log(`Updating other player ${playerData.id} in state, health: ${playerData.health}`);
+          
+          // Create player entry if it doesn't exist yet
+          const existingPlayer = state.otherPlayers[playerData.id];
+          
           return {
             otherPlayers: {
               ...state.otherPlayers,
               [playerData.id]: {
-                ...state.otherPlayers[playerData.id],
+                id: playerData.id,
+                username: playerData.username || (existingPlayer ? existingPlayer.username : 'Unknown'),
                 position: new THREE.Vector3(
                   playerData.position.x,
                   playerData.position.y,
@@ -186,7 +194,6 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
                 ),
                 rotation: playerData.rotation,
                 health: playerData.health,
-                username: playerData.username || state.otherPlayers[playerData.id].username,
               },
             },
           };
@@ -230,9 +237,31 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
     
     // Handle player hit
     socket.on('playerHit', (data: { playerId: string, damage: number }) => {
+      console.log(`Hit event received for player ${data.playerId}, damage: ${data.damage}`);
+      
       // If we were hit
       if (data.playerId === socket.id) {
+        console.log(`Taking damage locally: ${data.damage}`);
         usePlayer.getState().takeDamage(data.damage);
+      } else {
+        // Update other player's health locally for immediate visual feedback
+        console.log(`Updating other player's health due to hit: ${data.playerId}`);
+        set(state => {
+          const otherPlayer = state.otherPlayers[data.playerId];
+          if (otherPlayer) {
+            console.log(`Other player ${data.playerId} current health: ${otherPlayer.health}, applying damage: ${data.damage}`);
+            return {
+              otherPlayers: {
+                ...state.otherPlayers,
+                [data.playerId]: {
+                  ...otherPlayer,
+                  health: Math.max(0, otherPlayer.health - data.damage)
+                }
+              }
+            };
+          }
+          return state;
+        });
       }
     });
     
@@ -335,20 +364,42 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
     const { socket, otherPlayers } = get();
     const { playerId, takeDamage } = usePlayer.getState();
     
+    console.log("Checking bullet collision - bullet position:", bulletPosition, "owner:", bulletOwner);
+    console.log("Other players count:", Object.keys(otherPlayers).length);
+    
     // Check collision with other players
     for (const [id, player] of Object.entries(otherPlayers)) {
-      if (player.health <= 0) continue; // Skip dead players
+      console.log(`Checking collision with player ${id}, health: ${player.health}, position:`, player.position);
+      if (player.health <= 0) {
+        console.log(`Player ${id} is already dead, skipping`);
+        continue; // Skip dead players
+      }
       
+      // Use a larger collision radius for better hit detection
       const distance = bulletPosition.distanceTo(player.position);
+      console.log(`Distance to player ${id}:`, distance);
       
-      if (distance < 1.0) {
+      // Use 1.5 units for a more generous hit box
+      if (distance < 1.5) {
         // Hit another player
+        console.log(`COLLISION DETECTED with player ${id}! Emitting hitPlayer event, damage: 25`);
         if (socket && socket.connected) {
           socket.emit('hitPlayer', {
             playerId: id,
             damage: 25,
             shooterId: bulletOwner,
           });
+          
+          // Update the player's health locally to ensure visual feedback
+          set(state => ({
+            otherPlayers: {
+              ...state.otherPlayers,
+              [id]: {
+                ...state.otherPlayers[id],
+                health: Math.max(0, state.otherPlayers[id].health - 25)
+              }
+            }
+          }));
         }
         return true;
       }
@@ -357,10 +408,13 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
     // Check collision with main player (if bullet isn't from main player)
     if (bulletOwner !== playerId) {
       const playerPosition = usePlayer.getState().position;
+      // Use the same generous hit box for the main player
       const distance = bulletPosition.distanceTo(playerPosition);
+      console.log("Distance to main player:", distance);
       
-      if (distance < 1.0 && usePlayer.getState().health > 0) {
+      if (distance < 1.5 && usePlayer.getState().health > 0) {
         // Apply damage locally
+        console.log("COLLISION with main player! Taking damage: 25");
         takeDamage(25);
         
         // Notify server
