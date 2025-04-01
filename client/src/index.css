@@ -571,8 +571,9 @@ canvas {
   justify-content: center;
   align-items: center;
   background-color: rgba(0, 0, 0, 0.8);
-  z-index: 1000;
+  z-index: 9999; /* Make sure it's above everything else */
   font-family: 'Inter', system-ui, sans-serif;
+  pointer-events: auto; /* Ensure it can receive click events */
 }
 
 .game-start-container {
@@ -588,6 +589,8 @@ canvas {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(79, 70, 229, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.2);
   text-align: center;
+  pointer-events: auto; /* Ensure it can receive click events */
+  z-index: 10000; /* Highest z-index */
 }
 
 .game-start-container h1 {
@@ -629,11 +632,13 @@ canvas {
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
-  cursor: pointer;
+  cursor: pointer !important;
   transition: all 0.2s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  pointer-events: auto !important; /* Ensure it can receive click events */
+  z-index: 10000; /* Highest z-index */
 }
 
 .start-button:hover {

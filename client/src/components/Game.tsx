@@ -44,16 +44,21 @@ const Game = ({ username }: GameProps) => {
 
   // Initialize player controls
   useEffect(() => {
+    // Define the event handlers separately so we can properly remove them
+    const handleLock = () => {
+      console.log('Controls locked');
+      setControlsLocked(true);
+    };
+    
+    const handleUnlock = () => {
+      console.log('Controls unlocked');
+      setControlsLocked(false);
+    };
+    
     if (controlsRef.current) {
-      controlsRef.current.addEventListener('lock', () => {
-        console.log('Controls locked');
-        setControlsLocked(true);
-      });
-      
-      controlsRef.current.addEventListener('unlock', () => {
-        console.log('Controls unlocked');
-        setControlsLocked(false);
-      });
+      // Add event listeners for pointer lock events
+      controlsRef.current.addEventListener('lock', handleLock);
+      controlsRef.current.addEventListener('unlock', handleUnlock);
     }
 
     // Reset player on game start
@@ -62,8 +67,8 @@ const Game = ({ username }: GameProps) => {
     // Clean up on unmount
     return () => {
       if (controlsRef.current) {
-        controlsRef.current.removeEventListener('lock', () => {});
-        controlsRef.current.removeEventListener('unlock', () => {});
+        controlsRef.current.removeEventListener('lock', handleLock);
+        controlsRef.current.removeEventListener('unlock', handleUnlock);
       }
     };
   }, [resetPlayer, setControlsLocked]);
@@ -72,11 +77,16 @@ const Game = ({ username }: GameProps) => {
   useEffect(() => {
     if (hasInteracted && controlsRef.current && !isControlsLocked) {
       console.log('User has interacted, attempting to lock controls');
-      try {
-        controlsRef.current.lock();
-      } catch (error) {
-        console.error('Failed to lock controls:', error);
-      }
+      
+      // Add a small delay to ensure the browser has registered the user interaction
+      setTimeout(() => {
+        try {
+          console.log('Calling lock() on PointerLockControls');
+          controlsRef.current.lock();
+        } catch (error) {
+          console.error('Failed to lock controls:', error);
+        }
+      }, 100);
     }
   }, [hasInteracted, isControlsLocked]);
 
