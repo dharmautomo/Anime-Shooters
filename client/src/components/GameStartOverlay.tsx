@@ -1,60 +1,35 @@
-import React, { useEffect } from 'react';
-import { useGameControls } from '../lib/stores/useGameControls';
+import { useEffect } from 'react';
+import { useGame } from '@/lib/stores/useGame';
 
-const GameStartOverlay: React.FC = () => {
-  const { hasInteracted, setHasInteracted, isControlsLocked } = useGameControls();
+export function GameStartOverlay() {
+  const phase = useGame((state) => state.phase);
+  const start = useGame((state) => state.start);
 
-  // Add console logging for debugging
   useEffect(() => {
-    console.log("GameStartOverlay rendered, hasInteracted:", hasInteracted, "isControlsLocked:", isControlsLocked);
-  }, [hasInteracted, isControlsLocked]);
+    const handleClick = () => {
+      if (phase === 'ready') {
+        start();
+      }
+    };
 
-  // If user has interacted and controls are locked, hide the overlay
-  if (hasInteracted) {
-    console.log("User has interacted, hiding overlay");
-    return null;
-  }
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, [phase, start]);
 
-  const handleStartGame = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("START GAME button clicked");
-    
-    // Set user has interacted flag
-    setHasInteracted(true);
-    
-    // Log that we're attempting to start the game
-    console.log("Game start triggered");
-
-    // Focus the document to ensure it can receive keyboard events
-    document.body.focus();
-  };
+  if (phase !== 'ready') return null;
 
   return (
-    <div className="game-start-overlay">
-      <div className="game-start-container">
-        <h1>FPS Game</h1>
-        <p>Click to play</p>
-        <p className="controls-info">
-          <span>WASD / Arrow Keys: Move</span>
-          <span>Mouse: Look around</span>
-          <span>Left Click: Shoot</span>
-          <span>R: Reload</span>
-        </p>
-        <button 
-          className="start-button" 
-          onClick={handleStartGame}
-          style={{ 
-            cursor: 'pointer',
-            position: 'relative',
-            zIndex: 10000
-          }}
-        >
-          START GAME
-        </button>
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-black/80 text-white">
+      <h1 className="text-5xl font-bold mb-8">FPS Game</h1>
+      <div className="space-y-4 text-lg text-center">
+        <p>WASD / Arrow Keys: Move</p>
+        <p>Mouse: Look around</p>
+        <p>Left Click: Shoot</p>
+        <p>R: Reload</p>
       </div>
+      <button className="mt-8 px-8 py-4 text-2xl bg-red-500 rounded-lg hover:bg-red-600 transition-colors">
+        START GAME
+      </button>
     </div>
   );
-};
-
-export default GameStartOverlay;
+}
