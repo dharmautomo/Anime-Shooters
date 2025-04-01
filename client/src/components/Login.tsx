@@ -192,13 +192,7 @@ export default function Login({ onLogin }: LoginProps) {
         </div>
       </div>
       
-      {/* Style additions for float animation */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-15px); }
-        }
-      `}</style>
+      {/* Removed inline styles - using global CSS */}
     </div>
   );
 }
