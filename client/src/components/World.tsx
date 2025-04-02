@@ -119,8 +119,8 @@ const World = () => {
           
           return (
             <group key={`big-tree-${i}`} position={[pos[0], pos[1], pos[2]]}>
-              {/* Trunk */}
-              <mesh position={[0, 2, 0]} castShadow receiveShadow>
+              {/* Trunk - properly grounded by positioning at trunkHeight/2 */}
+              <mesh position={[0, trunkHeight/2, 0]} castShadow receiveShadow>
                 <cylinderGeometry args={[trunkTopRadius, trunkBottomRadius, trunkHeight, 8]} />
                 <meshStandardMaterial color={trunkColor} />
               </mesh>
@@ -229,7 +229,8 @@ const World = () => {
         // Return the JSX with stable values
         return trees.map((tree, i) => (
           <group key={`small-tree-${i}`} position={tree.position}>
-            <mesh position={[0, 1.5, 0]} castShadow>
+            {/* Position trunk at trunkHeight/2 to ensure proper grounding */}
+            <mesh position={[0, tree.trunk.height/2, 0]} castShadow>
               <cylinderGeometry args={[
                 tree.trunk.topRadius, 
                 tree.trunk.bottomRadius, 
@@ -238,7 +239,8 @@ const World = () => {
               ]} />
               <meshStandardMaterial color={tree.trunk.color} />
             </mesh>
-            <mesh position={[0, tree.foliage.y, 0]} castShadow>
+            {/* Update foliage y position to be relative to new trunk position */}
+            <mesh position={[0, tree.trunk.height + tree.foliage.size * 0.5, 0]} castShadow>
               <sphereGeometry args={[tree.foliage.size, 16, 16]} />
               <meshStandardMaterial color={tree.foliage.color} />
             </mesh>
@@ -262,10 +264,15 @@ const World = () => {
               // Add more randomness to mountain positions
               const offsetX = (Math.sin(i * 152.76) * 15);
               
+              // Calculate cone size and height for proper grounding
+              const baseRadius = 8 + (i % 3 * 2);
+              const height = 12 + (i % 4 * 3);
+              
               return (
                 <group key={`bg-mountain-${i}`} position={[x + offsetX, 0, -120]}>
-                  <mesh position={[0, 7 + (i % 4 * 2), 0]} castShadow>
-                    <coneGeometry args={[8 + (i % 3 * 2), 12 + (i % 4 * 3), 5]} />
+                  {/* Position y=height/2 to ensure the cone's base is at ground level */}
+                  <mesh position={[0, height/2, 0]} castShadow>
+                    <coneGeometry args={[baseRadius, height, 5]} />
                     <meshStandardMaterial color={farMountainColor} />
                   </mesh>
                 </group>
@@ -277,10 +284,15 @@ const World = () => {
               // Add more randomness to mountain positions
               const offsetX = (Math.cos(i * 89.43) * 12);
               
+              // Calculate cone size and height for proper grounding
+              const baseRadius = 7 + (i % 3 * 2);
+              const height = 10 + (i % 3 * 4);
+              
               return (
                 <group key={`mid-mountain-${i}`} position={[x + offsetX, 0, -90]}>
-                  <mesh position={[0, 5 + (i % 3 * 2), 0]} castShadow>
-                    <coneGeometry args={[7 + (i % 3 * 2), 10 + (i % 3 * 4), 5]} />
+                  {/* Position y=height/2 to ensure the cone's base is at ground level */}
+                  <mesh position={[0, height/2, 0]} castShadow>
+                    <coneGeometry args={[baseRadius, height, 5]} />
                     <meshStandardMaterial color={mountainColor} />
                   </mesh>
                 </group>
