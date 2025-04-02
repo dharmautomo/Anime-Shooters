@@ -248,9 +248,9 @@ const World = () => {
       
       {/* MOUNTAINS - using useMemo to prevent re-rendering */}
       {useMemo(() => {
-        // Mountain positions 
-        const farMountainPositions = [-60, -45, -30, -15, 0, 15, 30, 45, 60];
-        const midMountainPositions = [-50, -35, -20, -5, 10, 25, 40, 55];
+        // Mountain positions with more spacing
+        const farMountainPositions = [-120, -90, -60, -30, 0, 30, 60, 90, 120];
+        const midMountainPositions = [-100, -70, -40, -10, 20, 50, 80, 110];
         
         // Dimmer color for distant mountains
         const farMountainColor = new THREE.Color(mountainColor).multiplyScalar(0.9);
@@ -258,24 +258,34 @@ const World = () => {
         return (
           <>
             {/* Far background mountains */}
-            {farMountainPositions.map((x, i) => (
-              <group key={`bg-mountain-${i}`} position={[x, 0, -80]}>
-                <mesh position={[0, 7 + (i % 4 * 2), 0]} castShadow>
-                  <coneGeometry args={[8 + (i % 3 * 2), 12 + (i % 4 * 3), 5]} />
-                  <meshStandardMaterial color={farMountainColor} />
-                </mesh>
-              </group>
-            ))}
+            {farMountainPositions.map((x, i) => {
+              // Add more randomness to mountain positions
+              const offsetX = (Math.sin(i * 152.76) * 15);
+              
+              return (
+                <group key={`bg-mountain-${i}`} position={[x + offsetX, 0, -120]}>
+                  <mesh position={[0, 7 + (i % 4 * 2), 0]} castShadow>
+                    <coneGeometry args={[8 + (i % 3 * 2), 12 + (i % 4 * 3), 5]} />
+                    <meshStandardMaterial color={farMountainColor} />
+                  </mesh>
+                </group>
+              );
+            })}
             
             {/* Mid-range mountains */}
-            {midMountainPositions.map((x, i) => (
-              <group key={`mid-mountain-${i}`} position={[x, 0, -60]}>
-                <mesh position={[0, 5 + (i % 3 * 2), 0]} castShadow>
-                  <coneGeometry args={[7 + (i % 3 * 2), 10 + (i % 3 * 4), 5]} />
-                  <meshStandardMaterial color={mountainColor} />
-                </mesh>
-              </group>
-            ))}
+            {midMountainPositions.map((x, i) => {
+              // Add more randomness to mountain positions
+              const offsetX = (Math.cos(i * 89.43) * 12);
+              
+              return (
+                <group key={`mid-mountain-${i}`} position={[x + offsetX, 0, -90]}>
+                  <mesh position={[0, 5 + (i % 3 * 2), 0]} castShadow>
+                    <coneGeometry args={[7 + (i % 3 * 2), 10 + (i % 3 * 4), 5]} />
+                    <meshStandardMaterial color={mountainColor} />
+                  </mesh>
+                </group>
+              );
+            })}
           </>
         );
       }, [mountainColor])}
@@ -296,9 +306,13 @@ const World = () => {
           [68, 0, 33], [102, 0, 58], [78, 0, 78], [58, 0, 102]
         ];
         
-        // Process all hills
+        // Process all hills with additional random offsets
         const processHills = (hillPositions, side) => {
           return hillPositions.map((pos, i) => {
+            // Add stable random offsets for more random spread
+            const offsetX = (Math.sin(i * 123.45) * 10 - 5);
+            const offsetZ = (Math.cos(i * 78.91) * 10 - 5);
+            
             // Compute stable properties
             const height = 1.5 + (i % 3);
             const size = 3 + (i % 4);
@@ -306,7 +320,7 @@ const World = () => {
             const colorBlend = Math.abs(Math.sin(i * 123.456)) * 0.3;
             
             return (
-              <group key={`hill-${side}-${i}`} position={[pos[0], pos[1], pos[2]]}>
+              <group key={`hill-${side}-${i}`} position={[pos[0] + offsetX, pos[1], pos[2] + offsetZ]}>
                 <mesh position={[0, height, 0]} castShadow receiveShadow>
                   <sphereGeometry args={[size, 16, 16]} />
                   <meshStandardMaterial 
