@@ -21,20 +21,14 @@ const World = () => {
   }, []);
   // Load textures
   const grassTexture = useTexture('/textures/grass.png');
-  const woodTexture = useTexture('/textures/wood.jpg');
   const sandTexture = useTexture('/textures/sand.jpg');
   const skyTexture = useTexture('/textures/sky.png');
   
   // Repeat textures
   grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
   grassTexture.repeat.set(30, 30);
-  woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
-  woodTexture.repeat.set(2, 2);
   
   // Colors for countryside aesthetic
-  const roofColor = new THREE.Color('#cc6633'); // Terracotta roof
-  const houseColor = new THREE.Color('#f3e7d3'); // Cream colored house
-  const barnColor = new THREE.Color('#8B4513'); // Brown barn
   const mountainColor = new THREE.Color('#5c8474'); // Green-blue mountains
   const pathColor = new THREE.Color('#d9be7c'); // Sandy path
   
@@ -81,63 +75,7 @@ const World = () => {
         />
       </mesh>
       
-      {/* FARMHOUSE */}
-      <group position={[-10, 0, -20]}>
-        {/* Main house structure */}
-        <mesh position={[0, 1, 0]} castShadow receiveShadow>
-          <boxGeometry args={[6, 2, 3]} />
-          <meshStandardMaterial color={houseColor} />
-        </mesh>
-        
-        {/* Roof */}
-        <mesh position={[0, 2.5, 0]} rotation={[0, 0, 0]} castShadow>
-          <coneGeometry args={[4, 2, 4]} />
-          <meshStandardMaterial color={roofColor} />
-        </mesh>
-        
-        {/* Door */}
-        <mesh position={[0, 0.7, 1.51]} castShadow>
-          <boxGeometry args={[1, 1.6, 0.1]} />
-          <meshStandardMaterial color="#614126" />
-        </mesh>
-        
-        {/* Windows */}
-        <mesh position={[-1.5, 1.2, 1.51]} castShadow>
-          <boxGeometry args={[0.8, 0.8, 0.05]} />
-          <meshStandardMaterial color="#add8e6" />
-        </mesh>
-        <mesh position={[1.5, 1.2, 1.51]} castShadow>
-          <boxGeometry args={[0.8, 0.8, 0.05]} />
-          <meshStandardMaterial color="#add8e6" />
-        </mesh>
-        
-        {/* Chimney */}
-        <mesh position={[2, 2.5, 0]} castShadow>
-          <boxGeometry args={[0.6, 1.5, 0.6]} />
-          <meshStandardMaterial color="#8B4513" />
-        </mesh>
-      </group>
-      
-      {/* BARN */}
-      <group position={[15, 0, -15]}>
-        {/* Main barn structure */}
-        <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
-          <boxGeometry args={[8, 3, 6]} />
-          <meshStandardMaterial map={woodTexture} color={barnColor} />
-        </mesh>
-        
-        {/* Barn roof */}
-        <mesh position={[0, 3.5, 0]} rotation={[0, 0, 0]} castShadow>
-          <coneGeometry args={[5, 3, 4]} />
-          <meshStandardMaterial color="#4d3319" />
-        </mesh>
-        
-        {/* Barn entrance */}
-        <mesh position={[0, 1.5, 3.01]} castShadow>
-          <boxGeometry args={[4, 2.5, 0.1]} />
-          <meshStandardMaterial color="#3b2c1d" />
-        </mesh>
-      </group>
+      {/* Houses and barn have been removed */}
       
       {/* BIG TREE */}
       <group position={[-15, 0, -10]}>
