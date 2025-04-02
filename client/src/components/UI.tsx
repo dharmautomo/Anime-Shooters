@@ -91,19 +91,30 @@ const UI = () => {
       {/* Health bar */}
       <div className="health-bar">
         <div className="health-bar-fill" style={{ width: `${health}%` }}></div>
+        <div style={{ 
+          position: "absolute", 
+          width: "200px", 
+          textAlign: "center", 
+          lineHeight: "30px",
+          fontSize: "14px",
+          fontWeight: "bold",
+          color: "white",
+          textShadow: "0 0 2px black"
+        }}>
+          Health: {health}/100
+        </div>
       </div>
       
       {/* Ammo counter with reload indicator */}
       <div className="ammo-counter">
         <div style={{ 
-          position: "absolute", 
           width: "100%", 
           textAlign: "center", 
-          lineHeight: "10px",
-          fontSize: "10px",
-          fontWeight: "bold"
+          fontSize: "14px",
+          fontWeight: "bold",
+          textShadow: "0 0 2px black"
         }}>
-          {ammo} / 10
+          Ammo: {ammo} / 10
         </div>
         {ammo === 0 && <div className="reload-indicator">Press R to reload!</div>}
       </div>
@@ -116,7 +127,15 @@ const UI = () => {
       
       {/* Score display */}
       <div className="score-display">
-        Score: {score}
+        <div style={{ 
+          width: "100%", 
+          textAlign: "center", 
+          fontSize: "14px",
+          fontWeight: "bold",
+          textShadow: "0 0 2px black"
+        }}>
+          Score: {score}
+        </div>
       </div>
       
       {/* Controls guide */}

@@ -438,13 +438,15 @@ canvas {
 
 .health-bar {
   position: absolute;
-  bottom: 20px;
+  top: 20px;
   left: 20px;
   width: 200px;
-  height: 10px;
+  height: 30px;
   background-color: rgba(0, 0, 0, 0.5);
   border-radius: 5px;
   overflow: hidden;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .health-bar-fill {
@@ -455,10 +457,10 @@ canvas {
 
 .ammo-counter {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  top: 60px;
+  left: 20px;
   width: 200px;
-  height: 10px;
+  height: 30px;
   background-color: rgba(0, 0, 0, 0.5);
   border-radius: 5px;
   color: white;
@@ -466,14 +468,16 @@ canvas {
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .reload-indicator {
   color: #ff6b6b;
   font-weight: bold;
   position: absolute;
-  bottom: 35px;
-  right: 20px;
+  top: 95px;
+  left: 20px;
   animation: pulse 1.5s infinite;
   text-shadow: 0 0 8px rgba(255, 107, 107, 0.7);
 }
@@ -488,9 +492,17 @@ canvas {
   position: absolute;
   top: 20px;
   right: 20px;
-  font-size: 1.5rem;
-  color: #fff;
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  width: 200px;
+  height: 30px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .controls-guide {
@@ -506,7 +518,7 @@ canvas {
 
 .kill-feed {
   position: absolute;
-  top: 20px;
+  top: 100px;
   left: 20px;
   max-width: 250px;
   display: flex;
