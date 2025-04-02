@@ -82,13 +82,15 @@ const UI = () => {
           position: "absolute", 
           width: "200px", 
           textAlign: "center", 
-          lineHeight: "30px",
+          lineHeight: "16px",
           fontSize: "14px",
           fontWeight: "bold",
           color: "white",
-          textShadow: "0 0 2px black"
+          textShadow: "0 0 2px black",
+          paddingTop: "2px"
         }}>
-          Health: {health}/100
+          <span style={{display: 'block'}}>Health</span>
+          <span style={{display: 'block', fontSize: '12px'}}>{health}/100</span>
         </div>
       </div>
       
