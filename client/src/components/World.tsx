@@ -306,7 +306,7 @@ const World = () => {
           [68, 0, 33], [102, 0, 58], [78, 0, 78], [58, 0, 102]
         ];
         
-        // Process all hills with additional random offsets
+        // Process all hills with additional random offsets, ensuring they're grounded
         const processHills = (hillPositions, side) => {
           return hillPositions.map((pos, i) => {
             // Add stable random offsets for more random spread
@@ -314,8 +314,11 @@ const World = () => {
             const offsetZ = (Math.cos(i * 78.91) * 10 - 5);
             
             // Compute stable properties
-            const height = 1.5 + (i % 3);
             const size = 3 + (i % 4);
+            // Calculate height based on the size to ensure the hill is properly grounded
+            // This places the bottom of the sphere at ground level regardless of size
+            const height = size * 0.5; // Half the size to keep the bottom at ground level
+            
             // Generate a deterministic color value between 0-0.3
             const colorBlend = Math.abs(Math.sin(i * 123.456)) * 0.3;
             
