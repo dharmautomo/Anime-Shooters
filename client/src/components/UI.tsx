@@ -90,14 +90,13 @@ const UI = () => {
           left: 0,
           zIndex: 10,
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
           justifyContent: "center",
           alignItems: "center",
           height: "100%",
           pointerEvents: "none"
         }}>
-          <span>Health</span>
-          <span style={{fontSize: '12px'}}>{health}/100</span>
+          <span>Health: {health}/100</span>
         </div>
       </div>
       
@@ -112,7 +111,7 @@ const UI = () => {
           color: "white",
           textShadow: "0 0 3px black, 0 0 3px black, 0 0 3px black",
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
           justifyContent: "center",
           alignItems: "center",
           height: "100%",
@@ -121,8 +120,7 @@ const UI = () => {
           left: 0,
           pointerEvents: "none"
         }}>
-          <span>Ammo</span>
-          <span style={{fontSize: '12px'}}>{ammo}/10</span>
+          <span>Ammo: {ammo}/10</span>
         </div>
         {ammo === 0 && <div className="reload-indicator">Press R to reload!</div>}
       </div>
@@ -144,7 +142,7 @@ const UI = () => {
           color: "white",
           textShadow: "0 0 3px black, 0 0 3px black, 0 0 3px black",
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
           justifyContent: "center",
           alignItems: "center",
           height: "100%",
@@ -153,8 +151,7 @@ const UI = () => {
           left: 0,
           pointerEvents: "none"
         }}>
-          <span>Score</span>
-          <span style={{fontSize: '12px'}}>{score}</span>
+          <span>Score: {score}</span>
         </div>
       </div>
       
