@@ -82,15 +82,21 @@ const UI = () => {
           position: "absolute", 
           width: "200px", 
           textAlign: "center", 
-          lineHeight: "16px",
+          lineHeight: "14px",
           fontSize: "14px",
           fontWeight: "bold",
           color: "white",
-          textShadow: "0 0 2px black",
-          paddingTop: "2px"
+          textShadow: "0 0 3px black, 0 0 3px black, 0 0 3px black",
+          top: 0,
+          left: 0,
+          zIndex: 10,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          height: "100%"
         }}>
-          <span style={{display: 'block'}}>Health</span>
-          <span style={{display: 'block', fontSize: '12px'}}>{health}/100</span>
+          <div>Health</div>
+          <div style={{fontSize: '12px'}}>{health}/100</div>
         </div>
       </div>
       
@@ -101,9 +107,16 @@ const UI = () => {
           textAlign: "center", 
           fontSize: "14px",
           fontWeight: "bold",
-          textShadow: "0 0 2px black"
+          textShadow: "0 0 3px black, 0 0 3px black, 0 0 3px black",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          height: "100%",
+          zIndex: 10,
+          position: "relative"
         }}>
-          Ammo: {ammo} / 10
+          <div>Ammo</div>
+          <div style={{fontSize: '12px'}}>{ammo}/10</div>
         </div>
         {ammo === 0 && <div className="reload-indicator">Press R to reload!</div>}
       </div>
@@ -121,9 +134,16 @@ const UI = () => {
           textAlign: "center", 
           fontSize: "14px",
           fontWeight: "bold",
-          textShadow: "0 0 2px black"
+          textShadow: "0 0 3px black, 0 0 3px black, 0 0 3px black",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          height: "100%",
+          zIndex: 10,
+          position: "relative"
         }}>
-          Score: {score}
+          <div>Score</div>
+          <div style={{fontSize: '12px'}}>{score}</div>
         </div>
       </div>
       
