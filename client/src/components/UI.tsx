@@ -95,7 +95,16 @@ const UI = () => {
       
       {/* Ammo counter with reload indicator */}
       <div className="ammo-counter">
-        {ammo} / 10
+        <div style={{ 
+          position: "absolute", 
+          width: "100%", 
+          textAlign: "center", 
+          lineHeight: "10px",
+          fontSize: "10px",
+          fontWeight: "bold"
+        }}>
+          {ammo} / 10
+        </div>
         {ammo === 0 && <div className="reload-indicator">Press R to reload!</div>}
       </div>
       
