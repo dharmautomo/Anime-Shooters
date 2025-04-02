@@ -107,26 +107,7 @@ function App() {
     };
   }, [isLoggedIn]);
 
-  // Manual pointer lock helper
-  const requestPointerLock = () => {
-    console.log("Manual pointer lock requested");
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      try {
-        canvas.requestPointerLock = canvas.requestPointerLock || 
-                                    (canvas as any).mozRequestPointerLock || 
-                                    (canvas as any).webkitRequestPointerLock;
-        
-        // Request pointer lock on the canvas
-        canvas.requestPointerLock();
-        console.log("Requested pointer lock on canvas");
-      } catch (error) {
-        console.error("Error requesting pointer lock:", error);
-      }
-    } else {
-      console.error("Canvas not found");
-    }
-  };
+
 
   return (
     <>
@@ -167,25 +148,7 @@ function App() {
           <UI />
           <AudioManager />
           
-          {/* Emergency pointer lock button */}
-          <button 
-            onClick={requestPointerLock}
-            style={{
-              position: 'fixed',
-              bottom: '50px',
-              right: '20px',
-              padding: '10px 15px',
-              background: 'rgba(79, 70, 229, 0.8)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              zIndex: 10000,
-              fontWeight: 'bold'
-            }}
-          >
-            Lock Controls
-          </button>
+
         </KeyboardControls>
       )}
       <a target="_blank" href="https://jam.pieter.com" style={{fontFamily: 'system-ui, sans-serif', position: 'fixed', bottom: '-1px', right: '-1px', padding: '7px', fontSize: '14px', fontWeight: 'bold', background: '#fff', color: '#000', textDecoration: 'none', zIndex: 10000, borderTopLeftRadius: '12px', border: '1px solid #fff'}}>🕹️ Vibe Jam 2025</a>
