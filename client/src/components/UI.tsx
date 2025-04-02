@@ -60,20 +60,7 @@ const UI = () => {
     };
   }, []);
 
-  // Force trigger a manual pointer lock
-  const triggerPointerLock = () => {
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      console.log("Manually requesting pointer lock");
-      try {
-        canvas.requestPointerLock();
-      } catch (e) {
-        console.error("Error requesting pointer lock:", e);
-      }
-    } else {
-      console.error("Canvas not found");
-    }
-  };
+
   
   // Create crosshair SVG
   const crosshairSvg = `
@@ -198,21 +185,6 @@ const UI = () => {
                 {isPointerLocked ? 'YES' : 'NO'}
               </span>
             </p>
-            <button 
-              onClick={triggerPointerLock}
-              style={{ 
-                background: '#ff4136',
-                color: 'white',
-                border: 'none',
-                padding: '8px 12px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                marginTop: '10px',
-                fontWeight: 'bold'
-              }}
-            >
-              Force Pointer Lock
-            </button>
           </div>
         </div>
       )}
