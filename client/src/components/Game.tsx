@@ -59,6 +59,17 @@ const Game = ({ username }: GameProps) => {
       // Add event listeners for pointer lock events
       controlsRef.current.addEventListener('lock', handleLock);
       controlsRef.current.addEventListener('unlock', handleUnlock);
+      
+      // Initialize camera to look forward instead of down
+      camera.rotation.set(0, 0, 0); // Reset all rotation (pitch, yaw, roll)
+      
+      // Reset the PointerLockControls internal state
+      if (controlsRef.current.getObject) {
+        const controlObject = controlsRef.current.getObject();
+        if (controlObject) {
+          controlObject.rotation.set(0, 0, 0);
+        }
+      }
     }
 
     // Reset player on game start
@@ -71,7 +82,7 @@ const Game = ({ username }: GameProps) => {
         controlsRef.current.removeEventListener('unlock', handleUnlock);
       }
     };
-  }, [resetPlayer, setControlsLocked]);
+  }, [camera, resetPlayer, setControlsLocked]);
   
   // Attempt to lock controls when user has interacted
   useEffect(() => {
@@ -82,11 +93,23 @@ const Game = ({ username }: GameProps) => {
       const attemptLock = (attemptsLeft = 5) => {
         try {
           console.log(`Calling lock() on PointerLockControls (attempts left: ${attemptsLeft})`);
+          
+          // Ensure camera is looking forward when controls are first locked
+          camera.rotation.set(0, 0, 0);
+          
           controlsRef.current.lock();
           
           // Check if it worked immediately
           if (document.pointerLockElement) {
             console.log('Pointer lock successful!');
+            
+            // Additional reset after successful lock
+            if (controlsRef.current.getObject) {
+              const controlObject = controlsRef.current.getObject();
+              if (controlObject) {
+                controlObject.rotation.x = 0; // Ensure pitch is reset (looking forward)
+              }
+            }
           } else if (attemptsLeft > 0) {
             // Try again after a short delay
             setTimeout(() => attemptLock(attemptsLeft - 1), 200);
@@ -122,7 +145,7 @@ const Game = ({ username }: GameProps) => {
         document.removeEventListener('click', handleDocClick);
       };
     }
-  }, [hasInteracted, isControlsLocked]);
+  }, [camera, hasInteracted, isControlsLocked]);
 
   // Get keyboard controls state
   const [, getKeys] = useKeyboardControls<Controls>();
