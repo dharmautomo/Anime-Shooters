@@ -46,50 +46,9 @@ canvas {
   font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* Anime Characters on sides */
-.anime-character {
-  position: absolute;
-  height: 100vh;
-  width: 25vw;
-  z-index: 1;
-  opacity: 0.85;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
+/* Removed anime characters */
 
-.anime-character.left {
-  left: 0;
-  bottom: 0;
-  background: url('/images/anime-character.svg') no-repeat bottom left;
-  background-size: contain;
-  transform: scaleX(-1);
-}
-
-.anime-character.right {
-  right: 0;
-  bottom: 0;
-  background: url('/images/anime-character-with-gun.svg') no-repeat bottom right;
-  background-size: contain;
-}
-
-/* Floating sakura petals animation */
-.sakura-petals {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: url('/images/sakura-background.svg') repeat;
-  background-size: 800px;
-  opacity: 0.08;
-  animation: float-petals 40s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes float-petals {
-  0% { background-position: 0 0; }
-  100% { background-position: 100% 100%; }
-}
+/* Removed sakura petals animation */
 
 /* Vibe Jam Badge */
 .vibe-jam-badge {

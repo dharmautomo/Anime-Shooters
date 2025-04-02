@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
@@ -8,31 +8,6 @@ interface LoginProps {
 
 export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('');
-  const [petalsPosition, setPetalsPosition] = useState({ x: 0, y: 0 });
-  const [cloudsPosition, setCloudsPosition] = useState({ x: 0 });
-
-  // Animate the floating elements (petals and clouds)
-  useEffect(() => {
-    // Animate falling petals
-    const petalInterval = setInterval(() => {
-      setPetalsPosition(prev => ({
-        x: (prev.x + 0.2) % 100,
-        y: (prev.y + 0.2) % 100
-      }));
-    }, 50);
-    
-    // Animate drifting clouds
-    const cloudInterval = setInterval(() => {
-      setCloudsPosition(prev => ({
-        x: (prev.x + 0.05) % 100
-      }));
-    }, 50);
-    
-    return () => {
-      clearInterval(petalInterval);
-      clearInterval(cloudInterval);
-    };
-  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,23 +18,21 @@ export default function Login({ onLogin }: LoginProps) {
 
   return (
     <div className="login-screen">
-      {/* Japanese village background with cherry blossoms */}
+      {/* Simple gradient background */}
       <div 
-        className="japanese-bg"
+        className="gradient-bg"
         style={{ 
-          backgroundImage: `url('/images/cherry-blossom-bg.svg')`,
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
           position: 'absolute',
           top: 0,
           left: 0,
           width: '100%',
           height: '100%',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center bottom',
           zIndex: 1
         }}
       />
       
-      {/* Animated floating clouds */}
+      {/* Animated floating clouds - keeping this for some subtle background */}
       <div 
         className="floating-clouds"
         style={{ 
@@ -71,44 +44,8 @@ export default function Login({ onLogin }: LoginProps) {
           height: '100%',
           backgroundSize: '150%',
           backgroundRepeat: 'repeat-x',
-          backgroundPosition: `${-cloudsPosition.x}% 0%`,
-          opacity: 0.7,
+          opacity: 0.3,
           zIndex: 2
-        }}
-      />
-      
-      {/* Falling cherry blossom petals */}
-      <div 
-        className="falling-petals"
-        style={{ 
-          backgroundImage: `url('/images/sakura-petals.svg')`,
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundSize: '120%',
-          backgroundPosition: `${-petalsPosition.x}% ${petalsPosition.y}%`,
-          opacity: 0.6,
-          zIndex: 3,
-          pointerEvents: 'none'
-        }}
-      />
-      
-      {/* Anime mascot character */}
-      <div 
-        className="anime-mascot"
-        style={{ 
-          backgroundImage: `url('/images/anime-mascot.svg')`,
-          position: 'absolute',
-          bottom: '-40px',
-          right: '50px',
-          width: '400px',
-          height: '550px',
-          backgroundSize: 'contain',
-          backgroundRepeat: 'no-repeat',
-          zIndex: 4,
-          animation: 'float 3s ease-in-out infinite'
         }}
       />
       
