@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { PointerLockControls, Stats, useKeyboardControls } from '@react-three/drei';
+import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
 import { useMultiplayer } from '../lib/stores/useMultiplayer';
 import Player from './Player';
 import World from './World';
@@ -253,7 +253,6 @@ const Game = ({ username }: GameProps) => {
 
   return (
     <>
-      <Stats />
       <PointerLockControls ref={controlsRef} />
       
       {/* Game world with environment and obstacles */}
