@@ -442,17 +442,20 @@ canvas {
   left: 20px;
   width: 200px;
   height: 30px;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: #666666;
   border-radius: 5px;
   overflow: hidden;
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
 }
 
 .health-bar-fill {
   height: 100%;
   background-color: #ff6b6b;
   transition: width 0.3s;
+  position: relative;
+  z-index: 1;
 }
 
 .ammo-counter {

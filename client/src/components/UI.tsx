@@ -80,7 +80,7 @@ const UI = () => {
         <div className="health-bar-fill" style={{ width: `${health}%` }}></div>
         <div style={{ 
           position: "absolute", 
-          width: "200px", 
+          width: "100%", 
           textAlign: "center", 
           fontSize: "14px",
           fontWeight: "bold",
@@ -93,7 +93,8 @@ const UI = () => {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          height: "100%"
+          height: "100%",
+          pointerEvents: "none"
         }}>
           <span>Health</span>
           <span style={{fontSize: '12px'}}>{health}/100</span>
@@ -103,10 +104,12 @@ const UI = () => {
       {/* Ammo counter with reload indicator */}
       <div className="ammo-counter">
         <div style={{ 
+          position: "absolute",
           width: "100%", 
           textAlign: "center", 
           fontSize: "14px",
           fontWeight: "bold",
+          color: "white",
           textShadow: "0 0 3px black, 0 0 3px black, 0 0 3px black",
           display: "flex",
           flexDirection: "column",
@@ -114,7 +117,9 @@ const UI = () => {
           alignItems: "center",
           height: "100%",
           zIndex: 10,
-          position: "relative"
+          top: 0,
+          left: 0,
+          pointerEvents: "none"
         }}>
           <span>Ammo</span>
           <span style={{fontSize: '12px'}}>{ammo}/10</span>
@@ -131,10 +136,12 @@ const UI = () => {
       {/* Score display */}
       <div className="score-display">
         <div style={{ 
+          position: "absolute",
           width: "100%", 
           textAlign: "center", 
           fontSize: "14px",
           fontWeight: "bold",
+          color: "white",
           textShadow: "0 0 3px black, 0 0 3px black, 0 0 3px black",
           display: "flex",
           flexDirection: "column",
@@ -142,7 +149,9 @@ const UI = () => {
           alignItems: "center",
           height: "100%",
           zIndex: 10,
-          position: "relative"
+          top: 0,
+          left: 0,
+          pointerEvents: "none"
         }}>
           <span>Score</span>
           <span style={{fontSize: '12px'}}>{score}</span>
