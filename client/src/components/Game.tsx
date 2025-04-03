@@ -322,7 +322,10 @@ const Game = ({ username }: GameProps) => {
         position={[0.35, -0.25, -0.4]} 
         rotation={[0, Math.PI, 0]}
         ammo={ammo}
-        onShoot={shootBullet}
+        onShoot={() => {
+          // Call the shootBullet function directly
+          shootBullet();
+        }}
       />
     </>
   );
