@@ -10,12 +10,6 @@ interface LoginProps {
 export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('');
   const isMobile = useIsMobile();
-
-  // Add device-specific default username
-  useEffect(() => {
-    const defaultName = isMobile ? 'MobileGamer' : 'DesktopPlayer';
-    setUsername(defaultName);
-  }, [isMobile]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +102,7 @@ export default function Login({ onLogin }: LoginProps) {
       />
       
       {/* Mobile orientation message */}
-      {isMobile && (
+      {isMobile && window.innerHeight > window.innerWidth && (
         <div className="orientation-message" style={{
           position: 'absolute',
           top: 0,
@@ -124,10 +118,7 @@ export default function Login({ onLogin }: LoginProps) {
           zIndex: 1000,
           padding: '20px',
           textAlign: 'center',
-          fontSize: '1.2rem',
-          // Only show in portrait mode
-          // This is approximate - window.matchMedia would be better but requires client rendering
-          display: window.innerHeight > window.innerWidth ? 'flex' : 'none'
+          fontSize: '1.2rem'
         }}>
           <div style={{ marginBottom: '20px' }}>📱 ↔️</div>
           <h2 style={{ marginBottom: '10px' }}>Please Rotate Your Device</h2>
