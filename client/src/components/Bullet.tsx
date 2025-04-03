@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useAudio } from '../lib/stores/useAudio';
@@ -16,18 +16,23 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
   // Store the bullet ID for later use with removal - ensure we always have an ID
   const bulletId = useRef(id || `bullet-${Math.random().toString(36).substring(2, 9)}`);
   const bulletRef = useRef<THREE.Mesh>(null);
-  const initialPos = useRef(
-    position instanceof THREE.Vector3 
+  const groupRef = useRef<THREE.Group>(null);
+  const collisionChecked = useRef<boolean>(false);
+  
+  // Convert position and velocity to Vector3 if they aren't already
+  const initialPos = useMemo(() => {
+    return position instanceof THREE.Vector3 
       ? new THREE.Vector3().copy(position) 
-      : new THREE.Vector3(position[0], position[1], position[2])
-  );
+      : new THREE.Vector3(position[0], position[1], position[2]);
+  }, [position]);
   
-  const velocityVector = useRef(
-    velocity instanceof THREE.Vector3 
+  const velocityVector = useMemo(() => {
+    return velocity instanceof THREE.Vector3 
       ? new THREE.Vector3().copy(velocity) 
-      : new THREE.Vector3(velocity[0], velocity[1], velocity[2])
-  );
+      : new THREE.Vector3(velocity[0], velocity[1], velocity[2]);
+  }, [velocity]);
   
+  // Get necessary functions from stores
   const multiplayerState = useMultiplayer(state => ({
     checkBulletCollision: state.checkBulletCollision,
     removeBullet: state.removeBullet
@@ -35,24 +40,28 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
   const playerState = usePlayer(state => ({
     playerId: state.playerId
   }));
-  const { playHit, playSound } = useAudio();
+  const { playSound } = useAudio();
   
-  // Bullet lifetime and speed
+  // Bullet settings
   const lifetime = useRef(3000); // 3 seconds
   const speed = 2.0; // Slightly reduced speed to make bullets more visible
   
   // Logging for debug - check bullet initialization
   useEffect(() => {
-    console.log(`Bullet initialized: ID ${bulletId.current}, owner: ${owner}, position:`, initialPos.current);
-  }, [owner]);
+    console.log(`Bullet initialized: ID ${bulletId.current}, owner: ${owner}, position:`, initialPos);
+  }, [owner, initialPos]);
   
-  // Set up bullet
+  // Set up bullet and play sound
   useEffect(() => {
     // Play shooting sound when bullet is created (only for bullets that are not owned by other players)
     if (owner === playerState.playerId) {
       // Use direct Web Audio API for more reliable sound
       console.log(`Owner's bullet - playing gunshot sound for bullet ${bulletId.current}`);
-      playSound('gunshot');
+      try {
+        playSound('gunshot');
+      } catch (error) {
+        console.error(`Error playing gunshot sound: ${error}`);
+      }
     }
     
     // Start lifetime countdown
@@ -69,28 +78,117 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [multiplayerState.removeBullet, owner, playerState.playerId, playHit, playSound]);
+  }, [multiplayerState.removeBullet, owner, playerState.playerId, playSound]);
+  
+  // Set up the initial position of all bullet elements
+  useEffect(() => {
+    if (groupRef.current) {
+      // Set initial position for all items in the group
+      const basePosition = initialPos.clone();
+      // Position the main bullet
+      if (bulletRef.current) {
+        bulletRef.current.position.copy(basePosition);
+      }
+      
+      // Update trail positions based on the base position
+      if (groupRef.current.children.length > 1) {
+        const trailElements = groupRef.current.children.slice(1); // Skip the main bullet
+        
+        // Bullet base
+        if (trailElements[0]) {
+          trailElements[0].position.set(
+            basePosition.x, 
+            basePosition.y, 
+            basePosition.z - 0.15
+          );
+        }
+        
+        // First smoke trail
+        if (trailElements[1]) {
+          trailElements[1].position.set(
+            basePosition.x, 
+            basePosition.y, 
+            basePosition.z - 0.25
+          );
+        }
+        
+        // Second smoke trail
+        if (trailElements[2]) {
+          trailElements[2].position.set(
+            basePosition.x, 
+            basePosition.y, 
+            basePosition.z - 0.4
+          );
+        }
+        
+        // Point light
+        if (trailElements[3]) {
+          trailElements[3].position.copy(basePosition);
+        }
+      }
+    }
+  }, [initialPos]);
   
   // Update bullet position each frame
   useFrame(() => {
-    if (bulletRef.current) {
-      // Move bullet in its velocity direction
-      const movement = velocityVector.current.clone().multiplyScalar(speed);
-      bulletRef.current.position.add(movement);
-      
-      // Log bullet position occasionally to debug movement
-      if (Math.random() < 0.01) {
-        console.log(`Bullet ${bulletId.current} position:`, 
-          bulletRef.current.position.x,
-          bulletRef.current.position.y,
-          bulletRef.current.position.z
-        );
-      }
-      
-      // Check for collisions with players
+    if (!bulletRef.current || !groupRef.current) return;
+    
+    // Move bullet in its velocity direction
+    const movement = velocityVector.clone().multiplyScalar(speed);
+    
+    // Update bullet position
+    bulletRef.current.position.add(movement);
+    const currentPosition = bulletRef.current.position.clone();
+    
+    // Occasional debug log
+    if (Math.random() < 0.005) { // Reduced frequency to 0.5% to avoid console spam
+      console.log(`Bullet ${bulletId.current} position:`, 
+        currentPosition.x,
+        currentPosition.y,
+        currentPosition.z
+      );
+    }
+    
+    // Update the position of all bullet parts to match the main bullet
+    const trailElements = groupRef.current.children.slice(1); // Skip the main bullet
+    
+    // Update bullet base position
+    if (trailElements[0]) {
+      trailElements[0].position.set(
+        currentPosition.x, 
+        currentPosition.y, 
+        currentPosition.z - 0.15
+      );
+    }
+    
+    // Update first smoke trail position
+    if (trailElements[1]) {
+      trailElements[1].position.set(
+        currentPosition.x, 
+        currentPosition.y, 
+        currentPosition.z - 0.25
+      );
+    }
+    
+    // Update second smoke trail position
+    if (trailElements[2]) {
+      trailElements[2].position.set(
+        currentPosition.x, 
+        currentPosition.y, 
+        currentPosition.z - 0.4
+      );
+    }
+    
+    // Update light position
+    if (trailElements[3]) {
+      trailElements[3].position.copy(currentPosition);
+    }
+    
+    // Check for collisions with players - throttle checks to every other frame
+    if (!collisionChecked.current) {
       try {
         const collision = multiplayerState.checkBulletCollision(
-          bulletRef.current.position,
+          currentPosition,
           owner
         );
         
@@ -102,17 +200,23 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       } catch (error) {
         console.error(`Error checking bullet collision for ${bulletId.current}:`, error);
       }
+      
+      // Toggle the flag
+      collisionChecked.current = true;
+    } else {
+      // Reset the flag for the next frame
+      collisionChecked.current = false;
     }
   });
   
   return (
-    <group>
+    <group ref={groupRef}>
       {/* Main bullet - larger and more visible projectile */}
       <mesh 
         ref={bulletRef} 
-        position={initialPos.current}
+        position={initialPos}
         rotation={[Math.PI/2, 0, 0]} // Rotated to align with flight direction
-        userData={{ isBullet: true, owner }}
+        userData={{ isBullet: true, owner, id: bulletId.current }}
       >
         {/* Bullet is elongated with a pointed tip - increased size */}
         <cylinderGeometry args={[0.08, 0.12, 0.3, 8]} />
@@ -126,13 +230,7 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       </mesh>
       
       {/* Bullet base with bright color */}
-      <mesh
-        position={[
-          initialPos.current.x,
-          initialPos.current.y,
-          initialPos.current.z - 0.15
-        ]}
-      >
+      <mesh>
         <cylinderGeometry args={[0.12, 0.12, 0.05, 8]} />
         <meshStandardMaterial 
           color="#ff3d00" // Bright orange-red
@@ -144,13 +242,7 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       </mesh>
       
       {/* Enhanced smoke/fire trail */}
-      <mesh
-        position={[
-          initialPos.current.x, 
-          initialPos.current.y, 
-          initialPos.current.z - 0.25
-        ]}
-      >
+      <mesh>
         <sphereGeometry args={[0.15, 12, 12]} />
         <meshStandardMaterial 
           color="#ff9d00" 
@@ -162,13 +254,7 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       </mesh>
       
       {/* Secondary smoke trail */}
-      <mesh
-        position={[
-          initialPos.current.x, 
-          initialPos.current.y, 
-          initialPos.current.z - 0.4
-        ]}
-      >
+      <mesh>
         <sphereGeometry args={[0.12, 10, 10]} />
         <meshStandardMaterial 
           color="#aaaaaa" 
@@ -179,7 +265,6 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       
       {/* Stronger glow/light */}
       <pointLight
-        position={initialPos.current}
         color="#ff7700"
         intensity={1.5}
         distance={3}
