@@ -101,30 +101,7 @@ export default function Login({ onLogin }: LoginProps) {
         }}
       />
       
-      {/* Mobile orientation message */}
-      {isMobile && window.innerHeight > window.innerWidth && (
-        <div className="orientation-message" style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          color: 'white',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-          padding: '20px',
-          textAlign: 'center',
-          fontSize: '1.2rem'
-        }}>
-          <div style={{ marginBottom: '20px' }}>📱 ↔️</div>
-          <h2 style={{ marginBottom: '10px' }}>Please Rotate Your Device</h2>
-          <p>This game plays best in landscape mode.</p>
-        </div>
-      )}
+      {/* Mobile orientation message removed */}
       
       {/* Login form container */}
       <div className="login-container" style={containerStyle}>
@@ -244,20 +221,6 @@ export default function Login({ onLogin }: LoginProps) {
           )}
           
           <div className="version-info">v1.0.1 • FPS Multiplayer{isMobile ? ' (Mobile)' : ''}</div>
-          
-          {/* Mobile device warning */}
-          {isMobile && (
-            <div className="mobile-notice" style={{ 
-              marginTop: "10px", 
-              padding: "10px", 
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
-              borderRadius: "5px",
-              fontSize: "0.8rem",
-              textAlign: "center"
-            }}>
-              Touch controls will appear automatically during gameplay. For best experience, rotate your device to landscape mode.
-            </div>
-          )}
         </div>
       </div>
       
