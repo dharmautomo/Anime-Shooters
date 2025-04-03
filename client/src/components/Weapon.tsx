@@ -66,7 +66,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     }
   }, []);
   
-  // Handle shooting through keyboard controls
+  // Handle shooting through keyboard controls (including J key)
   useEffect(() => {
     // Only allow shooting when controls are locked and user has interacted
     if (!hasInteracted || !isControlsLocked) return;
@@ -74,7 +74,10 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     if (shoot && !isShooting && !isReloading && ammo > 0) {
       setIsShooting(true);
       
-      console.log("🔫 KEYBOARD SHOOT - Starting shooting process. Current ammo:", ammo);
+      // Check which key was pressed (J key or other key mapped to shoot)
+      const isJKeyPressed = document.querySelector("body")?.getAttribute("data-pressed-j") === "true";
+      console.log("🔫 KEYBOARD SHOOT - Starting shooting process. Current ammo:", ammo, 
+                 isJKeyPressed ? " (J key pressed)" : " (Regular key press)");
       
       // Play gunshot sound
       playSound('gunshot');
@@ -92,7 +95,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       }
       
       // CENTRALIZED AMMO MANAGEMENT:
-      // This is the only place where ammo gets decremented
+      // This is the only place where ammo gets decremented when using keyboard controls
       try {
         const playerStore = require('../lib/stores/usePlayer').usePlayer;
         const currentAmmo = playerStore.getState().ammo;

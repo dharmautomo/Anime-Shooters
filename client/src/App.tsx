@@ -32,7 +32,7 @@ const keyMap = [
   { name: Controls.left, keys: ['ArrowLeft', 'KeyA'] },
   { name: Controls.right, keys: ['ArrowRight', 'KeyD'] },
   { name: Controls.jump, keys: ['Space'] },
-  { name: Controls.shoot, keys: ['click'] },
+  { name: Controls.shoot, keys: ['click', 'KeyJ'] }, // Added J key as an alternative to mouse click
   { name: Controls.reload, keys: ['KeyR'] },
 ];
 
@@ -95,6 +95,30 @@ function App() {
     window.addEventListener("contextmenu", handleContextMenu);
     return () => {
       window.removeEventListener("contextmenu", handleContextMenu);
+    };
+  }, []);
+  
+  // Track J key specifically for better shooting diagnostics
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'KeyJ') {
+        console.log("J KEY PRESSED - Direct keyboard shoot trigger");
+        document.body.setAttribute('data-pressed-j', 'true');
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'KeyJ') {
+        document.body.setAttribute('data-pressed-j', 'false');
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
 
