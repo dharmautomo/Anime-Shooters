@@ -10,9 +10,12 @@ interface BulletProps {
   position: THREE.Vector3 | [number, number, number];
   velocity: THREE.Vector3 | [number, number, number];
   owner: string;
+  id?: string; // Add optional ID parameter
 }
 
-const Bullet = ({ position, velocity, owner }: BulletProps) => {
+const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
+  // Store the bullet ID for later use with removal
+  const bulletId = useRef(id || Math.random().toString(36).substring(2, 9));
   const bulletRef = useRef<THREE.Mesh>(null);
   const initialPos = useRef(
     position instanceof THREE.Vector3 

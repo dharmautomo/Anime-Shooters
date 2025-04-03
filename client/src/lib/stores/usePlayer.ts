@@ -93,26 +93,13 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         const bulletPosition = position.clone().add(direction.clone().multiplyScalar(0.5));
         bulletPosition.y += 1.5; // Eye height
         
-        // Add bullet to multiplayer store - do this synchronously to avoid race condition
-        const addBulletImmediate = () => {
-          try {
-            // Use dynamic import for module
-            import('./useMultiplayer').then(module => {
-              const { addBullet } = module.useMultiplayer.getState();
-              
-              // Actually create the bullet
-              const bulletId = addBullet(bulletPosition, direction, playerId);
-              console.log('Created bullet with ID:', bulletId, 'at position:', bulletPosition);
-            }).catch(err => {
-              console.error('Error importing useMultiplayer:', err);
-            });
-          } catch (error) {
-            console.error('Error creating bullet:', error);
-          }
-        };
+        // Import useMultiplayer directly (it's safe - circular dependencies are handled by JS module system)
+        const { useMultiplayer } = require('./useMultiplayer');
+        const { addBullet } = useMultiplayer.getState();
         
-        // Call immediately to create the bullet
-        addBulletImmediate();
+        // Actually create the bullet
+        const bulletId = addBullet(bulletPosition, direction, playerId);
+        console.log('Created bullet with ID:', bulletId, 'at position:', bulletPosition);
         
         console.log('Shot bullet with direction:', direction);
         return true;

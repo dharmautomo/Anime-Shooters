@@ -303,11 +303,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       {/* Enhanced brighter muzzle flash */}
       <group 
         ref={muzzleFlashRef} 
-        position={[
-          weaponRef.current ? weaponRef.current.position.x : 0, 
-          weaponRef.current ? weaponRef.current.position.y : 0.01, 
-          weaponRef.current ? weaponRef.current.position.z + 0.3 : 0
-        ]}
+        position={[0, 0, 0]} // Initialize with zero position, will be updated in useFrame
         rotation={rotation}
       >
         {/* Main flash cone - larger and brighter */}
