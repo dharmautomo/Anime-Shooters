@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { usePlayer } from '../lib/stores/usePlayer';
 import { useMultiplayer } from '../lib/stores/useMultiplayer';
 import { useGameControls } from '../lib/stores/useGameControls';
 
+// Create stable selector functions outside the component to prevent infinite loops
+const healthSelector = (state: any) => state.health;
+const ammoSelector = (state: any) => state.ammo;
+const scoreSelector = (state: any) => state.score;
+
 const UI = () => {
-  // Get the latest player state including ammo (cache the selector function to avoid infinite loops)
-  const playerState = usePlayer(state => ({
-    health: state.health,
-    ammo: state.ammo,
-    score: state.score
-  }));
-  const { health, ammo, score } = playerState;
+  // Get the latest player state using individual selectors 
+  const health = usePlayer(healthSelector);
+  const ammo = usePlayer(ammoSelector);
+  const score = usePlayer(scoreSelector);
   const { killFeed } = useMultiplayer();
   const { hasInteracted, isControlsLocked } = useGameControls();
   const [showControls, setShowControls] = useState(true);
