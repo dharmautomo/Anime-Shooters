@@ -67,12 +67,12 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const accentColor = getColor(60);
 
   // Get keyboard controls for main player
-  const forward = useKeyboardControls<Controls>(state => state.forward);
-  const backward = useKeyboardControls<Controls>(state => state.backward);
-  const left = useKeyboardControls<Controls>(state => state.left);
-  const right = useKeyboardControls<Controls>(state => state.right);
-  const jump = useKeyboardControls<Controls>(state => state.jump);
-  const shoot = useKeyboardControls<Controls>(state => state.shoot);
+  const forward = useKeyboardControls<typeof Controls>(state => state.forward);
+  const backward = useKeyboardControls<typeof Controls>(state => state.backward);
+  const left = useKeyboardControls<typeof Controls>(state => state.left);
+  const right = useKeyboardControls<typeof Controls>(state => state.right);
+  const jump = useKeyboardControls<typeof Controls>(state => state.jump);
+  const shoot = useKeyboardControls<typeof Controls>(state => state.shoot);
 
   // Movement parameters
   const speed = 0.1;
