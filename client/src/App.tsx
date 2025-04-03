@@ -4,6 +4,7 @@ import { KeyboardControls } from "@react-three/drei";
 import Game from "./components/Game";
 import Login from "./components/Login";
 import { usePlayer, useMultiplayer } from "./lib/stores/initializeStores";
+import { useGameControls } from "./lib/stores/useGameControls";
 import AudioManager from "./components/AudioManager";
 import UI from "./components/UI";
 import GameStartOverlay from "./components/GameStartOverlay";
@@ -153,14 +154,24 @@ function App() {
               antialias: true,
               powerPreference: "default"
             }}
-            onClick={() => {
-              console.log("Canvas clicked, attempting pointer lock");
-              const canvas = document.querySelector('canvas');
-              if (canvas && !document.pointerLockElement) {
+            onClick={(e) => {
+              console.log("Canvas clicked directly");
+              // Get game state
+              const { hasInteracted, isControlsLocked } = useGameControls.getState();
+              const { shootBullet } = usePlayer.getState();
+              
+              // Attempt direct shot if pointer is locked
+              if (document.pointerLockElement && hasInteracted && isControlsLocked) {
+                console.log("Direct shooting attempt from Canvas click");
+                shootBullet();
+              }
+              
+              // Try to lock pointer if not already locked
+              if (!document.pointerLockElement) {
                 try {
-                  canvas.requestPointerLock();
-                } catch (e) {
-                  console.error("Error in canvas click handler:", e);
+                  e.currentTarget.requestPointerLock();
+                } catch (err) {
+                  console.error("Pointer lock failed:", err);
                 }
               }
             }}
