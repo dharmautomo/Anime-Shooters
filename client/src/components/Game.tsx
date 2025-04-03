@@ -11,6 +11,7 @@ import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { useIsMobile } from '../hooks/use-is-mobile';
+import { useAudio } from '../lib/stores/useAudio';
 
 interface GameProps {
   username: string;
@@ -56,6 +57,9 @@ const Game = ({ username }: GameProps) => {
     setControlsLocked, 
     isControlsLocked 
   } = useGameControls();
+  
+  // Get audio function
+  const { playSound } = useAudio();
 
   // Initialize player controls
   useEffect(() => {
@@ -395,11 +399,9 @@ const Game = ({ username }: GameProps) => {
         // Set reloading flag
         isCurrentlyReloading = true;
         
-        // Play reload sound (using global audio function)
+        // Play reload sound
         try {
-          // Import audio store to play reload sound
-          const { useAudio } = require('../lib/stores/useAudio');
-          const { playSound } = useAudio.getState();
+          // Use the imported audio function
           setTimeout(() => {
             playSound('reload');
           }, 100);
@@ -426,7 +428,7 @@ const Game = ({ username }: GameProps) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [reloadAmmo, ammo, isControlsLocked, hasInteracted]);
+  }, [reloadAmmo, ammo, isControlsLocked, hasInteracted, playSound]);
   
   // Space key as backup shooting method
   useEffect(() => {
