@@ -135,18 +135,25 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     const handleMouseDown = (e: MouseEvent) => {
       if (e.button === 0) { // Left mouse button
         console.log("🖱️ Left mouse button click detected");
-        handleShootAttempt();
+        e.stopPropagation(); // Prevent event bubbling
+        if (hasInteracted && isControlsLocked) {
+          console.log("Mouse shoot conditions met, attempting shot");
+          handleShootAttempt();
+        } else {
+          console.log("Shot blocked: Controls not locked:", !isControlsLocked, 
+                     "or no interaction:", !hasInteracted);
+        }
       }
     };
     
-    // Add the event listener
-    window.addEventListener('mousedown', handleMouseDown);
+    // Add the event listener to window to capture all clicks
+    window.addEventListener('mousedown', handleMouseDown, true);
     
     // Cleanup
     return () => {
-      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousedown', handleMouseDown, true);
     };
-  }, [isShooting, isReloading, ammo, hasInteracted, isControlsLocked]);
+  }, [handleShootAttempt, isShooting, isReloading, ammo, hasInteracted, isControlsLocked]);
   
   // Handle reloading
   useEffect(() => {
