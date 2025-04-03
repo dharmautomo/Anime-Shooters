@@ -369,7 +369,7 @@ const World = () => {
       
       {/* Exit Portal - Leads to the Vibeverse */}
       <Portal 
-        position={[0, 1, -15]} 
+        position={[0, 1.5, -15]} 
         destination="http://portal.pieter.com" 
         isEntry={false} 
       />
@@ -377,7 +377,7 @@ const World = () => {
       {/* Entry Portal - If coming from another game */}
       {isComingFromPortal() && referrerUrl && (
         <Portal 
-          position={[0, 1, 15]} 
+          position={[0, 1.5, 15]} 
           destination={referrerUrl} 
           isEntry={true}
           referrer={referrerUrl} 
