@@ -484,4 +484,16 @@ useMultiplayer.subscribe(state => {
   storeContext.multiplayerStore = state;
 });
 
+// Function to explicitly refresh store references
+const refreshStoreReferences = () => {
+  console.log("Refreshing store references");
+  storeContext.playerStore = usePlayer.getState();
+  storeContext.multiplayerStore = useMultiplayer.getState();
+};
+
+refreshStoreReferences();
+
+// Export this function so it can be called from other components if needed
+export { refreshStoreReferences };
+
 console.log("✅ Game stores initialized successfully");
