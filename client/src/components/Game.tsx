@@ -10,6 +10,7 @@ import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
+import { useIsMobile } from '../hooks/use-is-mobile';
 
 interface GameProps {
   username: string;
@@ -18,6 +19,20 @@ interface GameProps {
 const Game = ({ username }: GameProps) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
+  const isMobile = useIsMobile();
+  
+  // Touch controls state for mobile devices
+  const [touchControls, setTouchControls] = useState({
+    forward: false,
+    backward: false,
+    left: false,
+    right: false,
+  });
+  const [isShooting, setIsShooting] = useState(false);
+  const [touchStartPos, setTouchStartPos] = useState<{x: number, y: number} | null>(null);
+  const lastTouchUpdateTime = useRef(0);
+  const touchRotationSpeed = 0.05;
+  
   const { 
     otherPlayers, 
     bullets,
@@ -85,9 +100,222 @@ const Game = ({ username }: GameProps) => {
   }, [camera, resetPlayer, setControlsLocked]);
   
   // Attempt to lock controls when user has interacted
+  // Set up mobile touch controls
   useEffect(() => {
+    if (!isMobile) return;
+    
+    // Create fixed mobile touch controls for movement
+    const createMobileTouchControls = () => {
+      // Create container
+      const controlsContainer = document.createElement('div');
+      controlsContainer.style.position = 'fixed';
+      controlsContainer.style.bottom = '20px';
+      controlsContainer.style.left = '20px';
+      controlsContainer.style.zIndex = '1000';
+      controlsContainer.id = 'mobile-controls';
+      
+      // Create directional buttons
+      const createButton = (id: string, text: string, top: string, left: string) => {
+        const button = document.createElement('div');
+        button.id = id;
+        button.innerText = text;
+        button.style.position = 'absolute';
+        button.style.top = top;
+        button.style.left = left;
+        button.style.width = '60px';
+        button.style.height = '60px';
+        button.style.backgroundColor = 'rgba(255,255,255,0.3)';
+        button.style.borderRadius = '30px';
+        button.style.display = 'flex';
+        button.style.justifyContent = 'center';
+        button.style.alignItems = 'center';
+        button.style.fontSize = '24px';
+        button.style.fontWeight = 'bold';
+        button.style.color = 'white';
+        button.style.userSelect = 'none';
+        button.style.touchAction = 'manipulation';
+        return button;
+      };
+      
+      // Forward button (top)
+      const forwardBtn = createButton('mobile-forward', '↑', '0px', '60px');
+      controlsContainer.appendChild(forwardBtn);
+      
+      // Left button (left)
+      const leftBtn = createButton('mobile-left', '←', '60px', '0px');
+      controlsContainer.appendChild(leftBtn);
+      
+      // Right button (right)
+      const rightBtn = createButton('mobile-right', '→', '60px', '120px');
+      controlsContainer.appendChild(rightBtn);
+      
+      // Backward button (bottom)
+      const backwardBtn = createButton('mobile-backward', '↓', '120px', '60px');
+      controlsContainer.appendChild(backwardBtn);
+      
+      // Create shoot button (right side of screen)
+      const shootBtn = document.createElement('div');
+      shootBtn.id = 'mobile-shoot';
+      shootBtn.innerText = '🔫';
+      shootBtn.style.position = 'fixed';
+      shootBtn.style.bottom = '20px';
+      shootBtn.style.right = '20px';
+      shootBtn.style.width = '80px';
+      shootBtn.style.height = '80px';
+      shootBtn.style.backgroundColor = 'rgba(255,0,0,0.3)';
+      shootBtn.style.borderRadius = '40px';
+      shootBtn.style.display = 'flex';
+      shootBtn.style.justifyContent = 'center';
+      shootBtn.style.alignItems = 'center';
+      shootBtn.style.fontSize = '40px';
+      shootBtn.style.color = 'white';
+      shootBtn.style.userSelect = 'none';
+      shootBtn.style.touchAction = 'manipulation';
+      
+      // Create reload button (above shoot button)
+      const reloadBtn = document.createElement('div');
+      reloadBtn.id = 'mobile-reload';
+      reloadBtn.innerText = '🔄';
+      reloadBtn.style.position = 'fixed';
+      reloadBtn.style.bottom = '110px';
+      reloadBtn.style.right = '20px';
+      reloadBtn.style.width = '60px';
+      reloadBtn.style.height = '60px';
+      reloadBtn.style.backgroundColor = 'rgba(0,255,0,0.3)';
+      reloadBtn.style.borderRadius = '30px';
+      reloadBtn.style.display = 'flex';
+      reloadBtn.style.justifyContent = 'center';
+      reloadBtn.style.alignItems = 'center';
+      reloadBtn.style.fontSize = '30px';
+      reloadBtn.style.color = 'white';
+      reloadBtn.style.userSelect = 'none';
+      reloadBtn.style.touchAction = 'manipulation';
+      
+      // Add the controls to the page
+      document.body.appendChild(controlsContainer);
+      document.body.appendChild(shootBtn);
+      document.body.appendChild(reloadBtn);
+      
+      // Set up touch event handlers
+      const setupTouchHandler = (element: HTMLElement, controlKey: keyof typeof touchControls, start: () => void, end: () => void) => {
+        element.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          start();
+        });
+        
+        element.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          end();
+        });
+      };
+      
+      // Setup movement touch handlers
+      setupTouchHandler(
+        forwardBtn, 
+        'forward',
+        () => setTouchControls(prev => ({ ...prev, forward: true })),
+        () => setTouchControls(prev => ({ ...prev, forward: false }))
+      );
+      
+      setupTouchHandler(
+        backwardBtn, 
+        'backward',
+        () => setTouchControls(prev => ({ ...prev, backward: true })),
+        () => setTouchControls(prev => ({ ...prev, backward: false }))
+      );
+      
+      setupTouchHandler(
+        leftBtn, 
+        'left',
+        () => setTouchControls(prev => ({ ...prev, left: true })),
+        () => setTouchControls(prev => ({ ...prev, left: false }))
+      );
+      
+      setupTouchHandler(
+        rightBtn, 
+        'right',
+        () => setTouchControls(prev => ({ ...prev, right: true })),
+        () => setTouchControls(prev => ({ ...prev, right: false }))
+      );
+      
+      // Setup shoot and reload buttons
+      shootBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        setIsShooting(true);
+        shootBullet();
+      });
+      
+      shootBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        setIsShooting(false);
+      });
+      
+      reloadBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (ammo < 10) reloadAmmo();
+      });
+      
+      // Setup screen touch for camera rotation
+      document.addEventListener('touchstart', (e) => {
+        // Only process touches in the center area of the screen (for camera control)
+        if (e.touches[0].clientX > window.innerWidth/4 && 
+            e.touches[0].clientX < window.innerWidth * 3/4 &&
+            e.touches[0].clientY > window.innerHeight/4 &&
+            e.touches[0].clientY < window.innerHeight * 3/4) {
+          setTouchStartPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+        }
+      });
+      
+      document.addEventListener('touchmove', (e) => {
+        if (touchStartPos) {
+          const currentX = e.touches[0].clientX;
+          const currentY = e.touches[0].clientY;
+          
+          // Calculate how much the touch has moved
+          const deltaX = currentX - touchStartPos.x;
+          
+          // Update camera rotation based on touch movement
+          if (Math.abs(deltaX) > 5) { // Only rotate if moved significantly
+            const newRotationY = rotation + (deltaX * touchRotationSpeed * -0.01);
+            updateRotation(newRotationY);
+            
+            // Reset touch start position to current position
+            setTouchStartPos({ x: currentX, y: currentY });
+          }
+        }
+      });
+      
+      document.addEventListener('touchend', () => {
+        setTouchStartPos(null);
+      });
+    };
+    
+    // On mobile, immediately set controls as locked (we don't use pointer lock)
+    if (hasInteracted && !isControlsLocked) {
+      console.log('Mobile device detected, setting controls as locked');
+      setControlsLocked(true);
+      createMobileTouchControls();
+    }
+    
+    return () => {
+      // Clean up mobile controls on unmount
+      const controlsContainer = document.getElementById('mobile-controls');
+      const shootBtn = document.getElementById('mobile-shoot');
+      const reloadBtn = document.getElementById('mobile-reload');
+      
+      if (controlsContainer) document.body.removeChild(controlsContainer);
+      if (shootBtn) document.body.removeChild(shootBtn);
+      if (reloadBtn) document.body.removeChild(reloadBtn);
+    };
+  }, [isMobile, hasInteracted, isControlsLocked, shootBullet, ammo, reloadAmmo, rotation, updateRotation]);
+  
+  // Handle desktop pointer lock
+  useEffect(() => {
+    // Skip on mobile devices since we don't use pointer lock there
+    if (isMobile) return;
+    
     if (hasInteracted && controlsRef.current && !isControlsLocked) {
-      console.log('User has interacted, attempting to lock controls');
+      console.log('Desktop user has interacted, attempting to lock controls');
       
       // We'll try multiple times to ensure it works
       const attemptLock = (attemptsLeft = 5) => {
@@ -145,7 +373,7 @@ const Game = ({ username }: GameProps) => {
         document.removeEventListener('click', handleDocClick);
       };
     }
-  }, [camera, hasInteracted, isControlsLocked]);
+  }, [camera, hasInteracted, isControlsLocked, isMobile]);
 
   // Get keyboard controls state
   const [, getKeys] = useKeyboardControls();
@@ -216,24 +444,16 @@ const Game = ({ username }: GameProps) => {
 
   // Update player position and camera
   useFrame((state, delta) => {
-    if (!controlsRef.current) return;
+    if (!hasInteracted) return;
+    if (!isMobile && !controlsRef.current) return;
     
-    // Only process movement when controls are locked (pointer lock is active)
-    if (!isControlsLocked || !hasInteracted) return;
+    // On mobile we don't need pointer lock, on desktop we do
+    if (!isMobile && !isControlsLocked) return;
     
-    // Get the current keyboard state with proper type casting
-    const { 
-      forward, 
-      backward, 
-      left, 
-      right, 
-      jump 
-    } = getKeys() as KeyMapping;
-
     // Calculate movement direction based on camera orientation
     const direction = new THREE.Vector3();
     const sideDirection = new THREE.Vector3();
-    const rotation = new THREE.Euler(0, 0, 0, 'YXZ');
+    const rotationEuler = new THREE.Euler(0, 0, 0, 'YXZ');
     
     // Get camera direction
     camera.getWorldDirection(direction);
@@ -244,11 +464,37 @@ const Game = ({ username }: GameProps) => {
     sideDirection.copy(direction).cross(new THREE.Vector3(0, 1, 0));
     
     // Get camera rotation
-    rotation.setFromQuaternion(camera.quaternion);
+    rotationEuler.setFromQuaternion(camera.quaternion);
     
-    // Update player position based on key presses
+    // Update player position based on controls
     const moveSpeed = 5 * delta; // Speed multiplier
     const newPosition = position.clone();
+    
+    // Get movement input from either keyboard or touch controls
+    let controlInput;
+    
+    if (isMobile) {
+      // Use touch controls on mobile
+      controlInput = {
+        forward: touchControls.forward,
+        backward: touchControls.backward,
+        left: touchControls.left,
+        right: touchControls.right,
+        jump: false // Mobile doesn't have jump yet
+      };
+      
+      // Auto-shoot if shoot button is being held and we're not at zero ammo
+      if (isShooting && ammo > 0 && Date.now() - lastTouchUpdateTime.current > 500) {
+        lastTouchUpdateTime.current = Date.now();
+        shootBullet();
+      }
+    } else {
+      // Use keyboard controls on desktop
+      controlInput = getKeys() as KeyMapping;
+    }
+    
+    // Apply movement based on inputs (keyboard or touch)
+    const { forward, backward, left, right, jump } = controlInput;
     
     // Forward/backward movement
     if (forward) {
@@ -275,7 +521,7 @@ const Game = ({ username }: GameProps) => {
     updatePosition(newPosition);
     
     // Update player rotation (only Y component for horizontal rotation)
-    updateRotation(rotation.y);
+    updateRotation(rotationEuler.y);
     
     // Update camera position to match player position
     camera.position.copy(new THREE.Vector3(
@@ -288,7 +534,7 @@ const Game = ({ username }: GameProps) => {
     const currentTime = state.clock.getElapsedTime() * 1000;
     if (currentTime - lastUpdateRef.current > 100) {
       // Send position updates to multiplayer state (which forwards to server)
-      updatePlayerPosition(newPosition, rotation.y);
+      updatePlayerPosition(newPosition, rotationEuler.y);
       lastUpdateRef.current = currentTime;
     }
   });
@@ -323,7 +569,8 @@ const Game = ({ username }: GameProps) => {
 
   return (
     <>
-      <PointerLockControls ref={controlsRef} />
+      {/* Only use PointerLockControls on desktop */}
+      {!isMobile && <PointerLockControls ref={controlsRef} />}
       
       {/* Game world with environment and obstacles */}
       <World />
@@ -348,8 +595,8 @@ const Game = ({ username }: GameProps) => {
         />
       ))}
       
-      {/* Render active bullets */}
-      {bullets.map((bullet) => (
+      {/* Render active bullets - optimize for mobile */}
+      {bullets.slice(0, isMobile ? 10 : 20).map((bullet) => (
         <Bullet 
           key={bullet.id}
           id={bullet.id} // Pass bullet ID explicitly
@@ -369,6 +616,32 @@ const Game = ({ username }: GameProps) => {
           shootBullet();
         }}
       />
+
+      {/* Add mobile game stats text UI */}
+      {isMobile && (
+        <mesh position={[0, 0, -1]} renderOrder={1000}>
+          <sprite scale={[1, 0.5, 1]} position={[0, 0.5, 0]}>
+            <spriteMaterial transparent depthTest={false}>
+              <canvasTexture attach="map" args={[
+                (() => {
+                  // Create a canvas to show ammo and health stats
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 256;
+                  canvas.height = 128;
+                  const ctx = canvas.getContext('2d')!;
+                  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                  ctx.fillRect(0, 0, canvas.width, canvas.height);
+                  ctx.font = '24px Arial';
+                  ctx.fillStyle = 'white';
+                  ctx.textAlign = 'center';
+                  ctx.fillText(`Ammo: ${ammo}/10 | Health: ${health}`, canvas.width/2, canvas.height/2);
+                  return canvas;
+                })()
+              ]} />
+            </spriteMaterial>
+          </sprite>
+        </mesh>
+      )}
     </>
   );
 };

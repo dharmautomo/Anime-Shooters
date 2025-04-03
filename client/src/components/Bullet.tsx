@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useAudio } from '../lib/stores/useAudio';
 import { useMultiplayer, usePlayer } from '../lib/stores/initializeStores';
 import { checkCollision } from '../lib/utils/collisionDetection';
+import { useIsMobile, usePerformanceSettings } from '../hooks/use-is-mobile';
 
 interface BulletProps {
   position: THREE.Vector3 | [number, number, number];
@@ -18,6 +19,14 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
   const bulletRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
   const collisionChecked = useRef<boolean>(false);
+  
+  // Get device-specific performance settings
+  const isMobile = useIsMobile();
+  const { particleDetail } = usePerformanceSettings();
+  
+  // Calculate throttle rate for mobile optimization
+  const collisionThrottleRate = isMobile ? 3 : 2; // Check collision less frequently on mobile
+  const frameCounter = useRef(0);
   
   // Convert position and velocity to Vector3 if they aren't already
   const initialPos = useMemo(() => {
@@ -42,21 +51,24 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
   }));
   const { playSound } = useAudio();
   
-  // Bullet settings
-  const lifetime = useRef(3000); // 3 seconds
-  const speed = 2.0; // Slightly reduced speed to make bullets more visible
+  // Bullet settings - adjust for mobile
+  const lifetime = useRef(isMobile ? 2500 : 3000); // Shorter lifetime on mobile
+  const speed = isMobile ? 2.2 : 2.0; // Slightly faster on mobile so bullets don't stay on screen as long
   
-  // Logging for debug - check bullet initialization
+  // Reduce logging on mobile devices
+  const shouldLog = !isMobile || Math.random() < 0.001;
+  
+  // Minimal logging for debug - check bullet initialization
   useEffect(() => {
-    console.log(`Bullet initialized: ID ${bulletId.current}, owner: ${owner}, position:`, initialPos);
-  }, [owner, initialPos]);
+    if (shouldLog) {
+      console.log(`Bullet initialized: ID ${bulletId.current}, owner: ${owner}`);
+    }
+  }, [owner, shouldLog]);
   
   // Set up bullet and play sound
   useEffect(() => {
     // Play shooting sound when bullet is created (only for bullets that are not owned by other players)
     if (owner === playerState.playerId) {
-      // Use direct Web Audio API for more reliable sound
-      console.log(`Owner's bullet - playing gunshot sound for bullet ${bulletId.current}`);
       try {
         playSound('gunshot');
       } catch (error) {
@@ -66,10 +78,11 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
     
     // Start lifetime countdown
     const timeoutId = setTimeout(() => {
-      // Use the stored bullet ID for removing
-      console.log(`Bullet with ID ${bulletId.current} expired after ${lifetime.current}ms and will be removed`);
       try {
         multiplayerState.removeBullet(bulletId.current);
+        if (shouldLog) {
+          console.log(`Bullet ${bulletId.current} expired after ${lifetime.current}ms`);
+        }
       } catch (error) {
         console.error(`Failed to remove expired bullet ${bulletId.current}:`, error);
       }
@@ -78,7 +91,7 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [multiplayerState.removeBullet, owner, playerState.playerId, playSound]);
+  }, [multiplayerState.removeBullet, owner, playerState.playerId, playSound, shouldLog]);
   
   // Set up the initial position of all bullet elements
   useEffect(() => {
@@ -103,7 +116,7 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
           );
         }
         
-        // First smoke trail
+        // First smoke trail - only on non-mobile or high-end mobile
         if (trailElements[1]) {
           trailElements[1].position.set(
             basePosition.x, 
@@ -112,8 +125,8 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
           );
         }
         
-        // Second smoke trail
-        if (trailElements[2]) {
+        // Second smoke trail - only on non-mobile
+        if (!isMobile && trailElements[2]) {
           trailElements[2].position.set(
             basePosition.x, 
             basePosition.y, 
@@ -122,16 +135,19 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
         }
         
         // Point light
-        if (trailElements[3]) {
-          trailElements[3].position.copy(basePosition);
+        if (trailElements[trailElements.length - 1]) {
+          trailElements[trailElements.length - 1].position.copy(basePosition);
         }
       }
     }
-  }, [initialPos]);
+  }, [initialPos, isMobile]);
   
   // Update bullet position each frame
   useFrame(() => {
     if (!bulletRef.current || !groupRef.current) return;
+    
+    // Count frames for throttling
+    frameCounter.current = (frameCounter.current + 1) % collisionThrottleRate;
     
     // Move bullet in its velocity direction
     const movement = velocityVector.clone().multiplyScalar(speed);
@@ -140,12 +156,12 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
     bulletRef.current.position.add(movement);
     const currentPosition = bulletRef.current.position.clone();
     
-    // Occasional debug log
-    if (Math.random() < 0.005) { // Reduced frequency to 0.5% to avoid console spam
+    // Super occasional debug log - much less on mobile
+    if (!isMobile && Math.random() < 0.001) {
       console.log(`Bullet ${bulletId.current} position:`, 
-        currentPosition.x,
-        currentPosition.y,
-        currentPosition.z
+        currentPosition.x.toFixed(2),
+        currentPosition.y.toFixed(2),
+        currentPosition.z.toFixed(2)
       );
     }
     
@@ -161,7 +177,7 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       );
     }
     
-    // Update first smoke trail position
+    // Update first smoke trail position if it exists
     if (trailElements[1]) {
       trailElements[1].position.set(
         currentPosition.x, 
@@ -170,8 +186,8 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       );
     }
     
-    // Update second smoke trail position
-    if (trailElements[2]) {
+    // Update second smoke trail position - skip on mobile
+    if (!isMobile && trailElements[2]) {
       trailElements[2].position.set(
         currentPosition.x, 
         currentPosition.y, 
@@ -179,13 +195,14 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       );
     }
     
-    // Update light position
-    if (trailElements[3]) {
-      trailElements[3].position.copy(currentPosition);
+    // Update light position (always last element)
+    const lightIndex = isMobile ? 2 : 3;
+    if (trailElements[lightIndex]) {
+      trailElements[lightIndex].position.copy(currentPosition);
     }
     
-    // Check for collisions with players - throttle checks to every other frame
-    if (!collisionChecked.current) {
+    // Check for collisions with players - throttle checks more aggressively on mobile
+    if (frameCounter.current === 0) {
       try {
         const collision = multiplayerState.checkBulletCollision(
           currentPosition,
@@ -194,20 +211,20 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
         
         // If collision occurred, remove the bullet
         if (collision) {
-          console.log(`Bullet with ID ${bulletId.current} collided and will be removed`);
+          if (shouldLog) {
+            console.log(`Bullet ${bulletId.current} collided`);
+          }
           multiplayerState.removeBullet(bulletId.current);
         }
       } catch (error) {
         console.error(`Error checking bullet collision for ${bulletId.current}:`, error);
       }
-      
-      // Toggle the flag
-      collisionChecked.current = true;
-    } else {
-      // Reset the flag for the next frame
-      collisionChecked.current = false;
     }
   });
+  
+  // Reduce geometry details based on device
+  const cylinderSegments = isMobile ? 6 : 8;
+  const sphereSegments = isMobile ? particleDetail : 12;
   
   return (
     <group ref={groupRef}>
@@ -218,56 +235,65 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
         rotation={[Math.PI/2, 0, 0]} // Rotated to align with flight direction
         userData={{ isBullet: true, owner, id: bulletId.current }}
       >
-        {/* Bullet is elongated with a pointed tip - increased size */}
-        <cylinderGeometry args={[0.08, 0.12, 0.3, 8]} />
+        {/* Bullet is elongated with a pointed tip - optimized for mobile */}
+        <cylinderGeometry args={[0.08, 0.12, 0.3, cylinderSegments]} />
         <meshStandardMaterial 
           color="#f7d359" // More visible bright gold color
           emissive="#ff6a00" // Orange glow
           emissiveIntensity={0.5}
           metalness={0.8}
           roughness={0.2}
+          fog={false} // Disable fog for better performance
+          flatShading={isMobile} // Use flat shading on mobile
         />
       </mesh>
       
       {/* Bullet base with bright color */}
       <mesh>
-        <cylinderGeometry args={[0.12, 0.12, 0.05, 8]} />
+        <cylinderGeometry args={[0.12, 0.12, 0.05, cylinderSegments]} />
         <meshStandardMaterial 
           color="#ff3d00" // Bright orange-red
           emissive="#ff0000" // Red glow
           emissiveIntensity={0.7}
           metalness={0.9}
           roughness={0.1}
+          fog={false}
+          flatShading={isMobile}
         />
       </mesh>
       
-      {/* Enhanced smoke/fire trail */}
+      {/* Enhanced smoke/fire trail - only one trail on mobile */}
       <mesh>
-        <sphereGeometry args={[0.15, 12, 12]} />
+        <sphereGeometry args={[0.15, sphereSegments, sphereSegments]} />
         <meshStandardMaterial 
           color="#ff9d00" 
           emissive="#ff4500"
           emissiveIntensity={0.8}
           transparent={true}
           opacity={0.6}
+          fog={false}
+          flatShading={isMobile}
         />
       </mesh>
       
-      {/* Secondary smoke trail */}
-      <mesh>
-        <sphereGeometry args={[0.12, 10, 10]} />
-        <meshStandardMaterial 
-          color="#aaaaaa" 
-          transparent={true}
-          opacity={0.5}
-        />
-      </mesh>
+      {/* Secondary smoke trail - only on desktop */}
+      {!isMobile && (
+        <mesh>
+          <sphereGeometry args={[0.12, sphereSegments, sphereSegments]} />
+          <meshStandardMaterial 
+            color="#aaaaaa" 
+            transparent={true}
+            opacity={0.5}
+            fog={false}
+          />
+        </mesh>
+      )}
       
-      {/* Stronger glow/light */}
+      {/* Optimized glow/light - use different intensity based on device */}
       <pointLight
         color="#ff7700"
-        intensity={1.5}
-        distance={3}
+        intensity={isMobile ? 1.0 : 1.5}
+        distance={isMobile ? 2 : 3}
         decay={2}
       />
     </group>
