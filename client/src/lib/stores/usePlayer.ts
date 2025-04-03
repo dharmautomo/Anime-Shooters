@@ -72,11 +72,13 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   shootBullet: () => {
     const { ammo, isAlive, position, playerId } = get();
     
+    console.log("shootBullet called - Current ammo:", ammo, "isAlive:", isAlive);
+    
     // Only shoot if player has ammo and is alive
     if (ammo > 0 && isAlive) {
-      // Reduce ammo
+      // Reduce ammo - MOST IMPORTANT PART!
       set({ ammo: ammo - 1 });
-      console.log(`Bullet fired. Ammo reduced from ${ammo} to ${ammo - 1}`);
+      console.log(`⚡ Bullet fired. Ammo reduced from ${ammo} to ${ammo - 1}`);
       
       // Get camera direction for bullet direction
       const canvas = document.querySelector('canvas');
@@ -101,9 +103,16 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         const bulletId = addBullet(bulletPosition, direction, playerId);
         console.log('Created bullet with ID:', bulletId, 'at position:', bulletPosition);
         
+        // Double check the ammo was actually decremented
+        console.log('After bullet creation - Current ammo:', get().ammo);
+        
         console.log('Shot bullet with direction:', direction);
         return true;
+      } else {
+        console.error("Failed to shoot - camera not found!");
       }
+    } else {
+      console.log("Cannot shoot - either no ammo or player is dead. Ammo:", ammo, "isAlive:", isAlive);
     }
     
     return false;

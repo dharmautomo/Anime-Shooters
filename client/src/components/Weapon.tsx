@@ -64,7 +64,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     if (shoot && !isShooting && !isReloading && ammo > 0) {
       setIsShooting(true);
       
-      console.log("Shooting weapon!");
+      console.log("Shooting weapon! Current ammo:", ammo);
       
       // Play gunshot sound using Web Audio API
       playSound('gunshot');
@@ -90,8 +90,20 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         console.log("Muzzle flash ref is not available!");
       }
       
+      // Get direct access to player store for ammo updates
+      const playerStore = require('../lib/stores/usePlayer').usePlayer;
+      const currentAmmo = playerStore.getState().ammo;
+      
+      console.log("Before shooting: Current ammo in store:", currentAmmo);
+      
       // Trigger shoot callback
-      onShoot();
+      const success = onShoot();
+      
+      // Log the result of the shoot operation
+      console.log("Shoot callback result:", success);
+      
+      // Verify ammo was decremented correctly
+      console.log("After shooting: Current ammo in store:", playerStore.getState().ammo);
       
       // Cooldown before next shot - increased to match muzzle flash duration
       setTimeout(() => {
@@ -112,7 +124,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       
       if (e.button === 0) { // Left mouse button
         if (!isShooting && !isReloading && ammo > 0) {
-          console.log("Mouse click - shooting");
+          console.log("Mouse click - shooting! Current ammo:", ammo);
           setIsShooting(true);
           
           // Play gunshot sound using Web Audio API
@@ -139,13 +151,29 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
             console.log("MOUSE CLICK: Muzzle flash ref is not available!");
           }
           
-          // Trigger shoot callback
-          onShoot();
+          // Direct access to player store to ensure ammo is updated
+          const playerStore = require('../lib/stores/usePlayer').usePlayer;
+          const currentAmmo = playerStore.getState().ammo;
+          
+          console.log("MOUSE: Before shooting: Current ammo in store:", currentAmmo);
+          
+          // Trigger shoot callback with direct tracking
+          const success = onShoot();
+          
+          // Log the result of the shoot operation
+          console.log("MOUSE: Shoot callback result:", success);
+          
+          // Verify ammo was decremented correctly
+          console.log("MOUSE: After shooting: Current ammo in store:", playerStore.getState().ammo);
           
           // Cooldown before next shot - increased to match muzzle flash duration
           setTimeout(() => {
             setIsShooting(false);
           }, 350);
+        } else if (ammo === 0 && !isReloading) {
+          // Click sound for empty gun
+          console.log("Mouse click - empty gun");
+          playSuccess();
         }
       }
     };
@@ -155,7 +183,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     return () => {
       window.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [isShooting, isReloading, ammo, playHit, playSound, onShoot, hasInteracted, isControlsLocked]);
+  }, [isShooting, isReloading, ammo, playHit, playSuccess, playSound, onShoot, hasInteracted, isControlsLocked]);
   
   // Handle reloading
   useEffect(() => {
