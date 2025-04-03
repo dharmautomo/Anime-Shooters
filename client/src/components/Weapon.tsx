@@ -64,11 +64,10 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     if (shoot && !isShooting && !isReloading && ammo > 0) {
       setIsShooting(true);
       
-      console.log("Shooting weapon! Current ammo:", ammo);
+      console.log("🔫 SHOOT KEY PRESSED - Shooting weapon! Current ammo:", ammo);
       
       // Play gunshot sound using Web Audio API
       playSound('gunshot');
-      console.log("GUNSHOT SOUND PLAYED DIRECTLY");
       
       // Show muzzle flash with extensive logging
       if (muzzleFlashRef.current) {
@@ -79,33 +78,39 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
           muzzleFlashRef.current.position.z
         );
         
-        // Hide muzzle flash after an even longer time for better visibility
+        // Hide muzzle flash after an extended duration
         setTimeout(() => {
           if (muzzleFlashRef.current) {
             muzzleFlashRef.current.visible = false;
-            console.log("Hiding muzzle flash");
           }
-        }, 350); // Extended duration for better visibility
-      } else {
-        console.log("Muzzle flash ref is not available!");
+        }, 350);
       }
       
-      // Get direct access to player store for ammo updates
-      const playerStore = require('../lib/stores/usePlayer').usePlayer;
-      const currentAmmo = playerStore.getState().ammo;
+      // DIRECT APPROACH - Manually decrement ammo to ensure it works
+      // This bypasses any potential issues with the callback chain
+      try {
+        // Import is wrapped in try-catch to handle any potential errors
+        const playerStore = require('../lib/stores/usePlayer').usePlayer;
+        const currentAmmo = playerStore.getState().ammo;
+        
+        console.log("🔢 Before shooting: Current ammo in store:", currentAmmo);
+        
+        // Directly set the ammo value (bypassing any issues with the callback)
+        playerStore.setState({ ammo: Math.max(0, currentAmmo - 1) });
+        
+        // Verify ammo was decremented
+        console.log("🔢 After direct ammo update: New ammo count:", playerStore.getState().ammo);
+        
+        // Still call the original onShoot callback for other functionality (bullet creation, etc.)
+        onShoot();
+      } catch (error) {
+        console.error("Failed to update ammo directly:", error);
+        
+        // Fall back to just using the callback if direct access fails
+        onShoot();
+      }
       
-      console.log("Before shooting: Current ammo in store:", currentAmmo);
-      
-      // Trigger shoot callback
-      const success = onShoot();
-      
-      // Log the result of the shoot operation
-      console.log("Shoot callback result:", success);
-      
-      // Verify ammo was decremented correctly
-      console.log("After shooting: Current ammo in store:", playerStore.getState().ammo);
-      
-      // Cooldown before next shot - increased to match muzzle flash duration
+      // Cooldown before next shot
       setTimeout(() => {
         setIsShooting(false);
       }, 350);
@@ -124,12 +129,11 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       
       if (e.button === 0) { // Left mouse button
         if (!isShooting && !isReloading && ammo > 0) {
-          console.log("Mouse click - shooting! Current ammo:", ammo);
+          console.log("🖱️ MOUSE CLICK - shooting! Current ammo:", ammo);
           setIsShooting(true);
           
           // Play gunshot sound using Web Audio API
           playSound('gunshot');
-          console.log("GUNSHOT SOUND PLAYED DIRECTLY");
           
           // Show muzzle flash with extensive logging
           if (muzzleFlashRef.current) {
@@ -144,27 +148,32 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
             setTimeout(() => {
               if (muzzleFlashRef.current) {
                 muzzleFlashRef.current.visible = false;
-                console.log("Mouse click - hiding muzzle flash");
               }
             }, 350);
-          } else {
-            console.log("MOUSE CLICK: Muzzle flash ref is not available!");
           }
           
-          // Direct access to player store to ensure ammo is updated
-          const playerStore = require('../lib/stores/usePlayer').usePlayer;
-          const currentAmmo = playerStore.getState().ammo;
-          
-          console.log("MOUSE: Before shooting: Current ammo in store:", currentAmmo);
-          
-          // Trigger shoot callback with direct tracking
-          const success = onShoot();
-          
-          // Log the result of the shoot operation
-          console.log("MOUSE: Shoot callback result:", success);
-          
-          // Verify ammo was decremented correctly
-          console.log("MOUSE: After shooting: Current ammo in store:", playerStore.getState().ammo);
+          // DIRECT APPROACH - Manually decrement ammo to ensure it works
+          try {
+            // Import is wrapped in try-catch to handle any potential errors
+            const playerStore = require('../lib/stores/usePlayer').usePlayer;
+            const currentAmmo = playerStore.getState().ammo;
+            
+            console.log("🖱️ 🔢 MOUSE: Before direct ammo update: Current ammo:", currentAmmo);
+            
+            // Directly set the ammo value (bypassing any issues with the callback)
+            playerStore.setState({ ammo: Math.max(0, currentAmmo - 1) });
+            
+            // Verify ammo was decremented
+            console.log("🖱️ 🔢 MOUSE: After direct ammo update: New ammo count:", playerStore.getState().ammo);
+            
+            // Still call onShoot for bullet creation
+            onShoot();
+          } catch (error) {
+            console.error("Failed to update ammo directly in mouse handler:", error);
+            
+            // Fallback to just the callback if direct access fails
+            onShoot();
+          }
           
           // Cooldown before next shot - increased to match muzzle flash duration
           setTimeout(() => {

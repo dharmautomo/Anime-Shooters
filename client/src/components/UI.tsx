@@ -6,7 +6,11 @@ import { useGameControls } from '../lib/stores/useGameControls';
 
 // Create stable selector functions outside the component to prevent infinite loops
 const healthSelector = (state: any) => state.health;
-const ammoSelector = (state: any) => state.ammo;
+const ammoSelector = (state: any) => {
+  // Log every time ammo is accessed to verify it's being updated correctly
+  console.log("🎯 UI - Reading current ammo value:", state.ammo);
+  return state.ammo;
+};
 const scoreSelector = (state: any) => state.score;
 
 const UI = () => {

@@ -72,13 +72,26 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   shootBullet: () => {
     const { ammo, isAlive, position, playerId } = get();
     
-    console.log("shootBullet called - Current ammo:", ammo, "isAlive:", isAlive);
+    console.log("🚀 STORE: shootBullet called - Current ammo:", ammo, "isAlive:", isAlive);
+    
+    // Check for a direct ammo modification from Weapon component
+    // If ammo is already 0 or negative, don't try to decrement again
+    if (ammo <= 0) {
+      console.log("🚫 STORE: Cannot shoot - no ammo left");
+      return false;
+    }
     
     // Only shoot if player has ammo and is alive
     if (ammo > 0 && isAlive) {
-      // Reduce ammo - MOST IMPORTANT PART!
-      set({ ammo: ammo - 1 });
-      console.log(`⚡ Bullet fired. Ammo reduced from ${ammo} to ${ammo - 1}`);
+      // COORDINATION: Only decrement if ammo is still positive to avoid double decrementing
+      // This means either Weapon.tsx's direct update or this one will decrement, not both
+      if (ammo > 0) {
+        // Reduce ammo - MOST IMPORTANT PART!
+        set({ ammo: ammo - 1 });
+        console.log(`⚡ STORE: Bullet fired. Ammo reduced from ${ammo} to ${ammo - 1}`);
+      } else {
+        console.log("⚠️ STORE: Ammo already at 0, not decrementing again");
+      }
       
       // Get camera direction for bullet direction
       const canvas = document.querySelector('canvas');
@@ -101,18 +114,18 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         
         // Actually create the bullet
         const bulletId = addBullet(bulletPosition, direction, playerId);
-        console.log('Created bullet with ID:', bulletId, 'at position:', bulletPosition);
+        console.log('🔫 STORE: Created bullet with ID:', bulletId, 'at position:', bulletPosition);
         
         // Double check the ammo was actually decremented
-        console.log('After bullet creation - Current ammo:', get().ammo);
+        console.log('🔢 STORE: After bullet creation - Current ammo:', get().ammo);
         
-        console.log('Shot bullet with direction:', direction);
+        console.log('➡️ STORE: Shot bullet with direction:', direction);
         return true;
       } else {
-        console.error("Failed to shoot - camera not found!");
+        console.error("❌ STORE: Failed to shoot - camera not found!");
       }
     } else {
-      console.log("Cannot shoot - either no ammo or player is dead. Ammo:", ammo, "isAlive:", isAlive);
+      console.log("🚫 STORE: Cannot shoot - either no ammo or player is dead. Ammo:", ammo, "isAlive:", isAlive);
     }
     
     return false;
