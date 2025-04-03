@@ -106,7 +106,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     playSound('gunshot');
     
     // Create bullet via store - THIS WILL DECREMENT AMMO in the store
-    const success = usePlayer.shootBullet();
+    const success = usePlayer.getState().shootBullet();
     
     // Call the onShoot callback provided by parent (for any additional effects)
     if (success) {
@@ -167,7 +167,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       
       // Schedule the actual ammo reload halfway through the animation
       setTimeout(() => {
-        usePlayer.reloadAmmo();
+        usePlayer.getState().reloadAmmo();
         console.log('Reloaded ammo to 10');
       }, 750);
       
