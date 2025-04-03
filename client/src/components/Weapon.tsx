@@ -105,13 +105,9 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     // Play sound (only here - bullet won't play it)
     playSound('gunshot');
     
-    // Create bullet via store - THIS WILL DECREMENT AMMO in the store
-    const success = usePlayer.getState().shootBullet();
-    
-    // Call the onShoot callback provided by parent (for any additional effects)
-    if (success) {
-      onShoot();
-    }
+    // Call the onShoot callback provided by parent
+    // This will handle the actual bullet creation
+    onShoot();
     
     // Set cooldown 
     setTimeout(() => {
