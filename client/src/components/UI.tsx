@@ -236,6 +236,31 @@ const UI = () => {
           </div>
         </div>
       )}
+
+      {/* Debug Shoot Button - only shown in debug mode */}
+      {showDebug && (
+        <button 
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '20px',
+            padding: '10px',
+            background: 'red',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            zIndex: 10000,
+            cursor: 'pointer'
+          }}
+          onClick={() => {
+            console.log("🔫 DEBUG: Manual shoot button clicked");
+            // Force a shot
+            usePlayer.getState().shootBullet();
+          }}
+        >
+          FORCE SHOOT
+        </button>
+      )}
     </div>,
     document.body
   );
