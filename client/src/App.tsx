@@ -11,15 +11,19 @@ import GameStartOverlay from "./components/GameStartOverlay";
 import "@fontsource/inter";
 
 // Define control keys for the game
-export enum Controls {
-  forward = 'forward',
-  backward = 'backward',
-  left = 'left',
-  right = 'right',
-  jump = 'jump',
-  shoot = 'shoot',
-  reload = 'reload',
-}
+// Note: Defining as const object instead of enum to prevent Fast Refresh issues
+export const Controls = {
+  forward: 'forward',
+  backward: 'backward',
+  left: 'left',
+  right: 'right',
+  jump: 'jump',
+  shoot: 'shoot',
+  reload: 'reload',
+} as const;
+
+// Type for Controls
+export type ControlsType = typeof Controls[keyof typeof Controls];
 
 // Define key mappings
 const keyMap = [

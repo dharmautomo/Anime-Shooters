@@ -5,6 +5,7 @@ import { useKeyboardControls } from '@react-three/drei';
 import { Controls } from '../App';
 import { useAudio } from '../lib/stores/useAudio';
 import { useGameControls } from '../lib/stores/useGameControls';
+import { KeyMapping } from '../lib/utils';
 
 interface WeaponProps {
   position: [number, number, number];
@@ -22,9 +23,9 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
   const { playHit, playSuccess, playSound } = useAudio();
   const { hasInteracted, isControlsLocked } = useGameControls();
   
-  // Get keyboard/mouse controls
-  const shoot = useKeyboardControls<Controls>(state => state.shoot);
-  const reload = useKeyboardControls<Controls>(state => state.reload);
+  // Get keyboard/mouse controls using KeyMapping to avoid type issues
+  const shoot = useKeyboardControls(state => (state as KeyMapping).shoot);
+  const reload = useKeyboardControls(state => (state as KeyMapping).reload);
   
   // Handle muzzle flash effect
   useEffect(() => {

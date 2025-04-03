@@ -76,7 +76,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     if (ammo > 0 && isAlive) {
       // Reduce ammo
       set({ ammo: ammo - 1 });
-      console.log(`Bullet fired. Ammo reduced from ${ammo} to ${ammo - 1}`)
+      console.log(`Bullet fired. Ammo reduced from ${ammo} to ${ammo - 1}`);
       
       // Get camera direction for bullet direction
       const canvas = document.querySelector('canvas');
@@ -93,13 +93,26 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         const bulletPosition = position.clone().add(direction.clone().multiplyScalar(0.5));
         bulletPosition.y += 1.5; // Eye height
         
-        // Add bullet to multiplayer store
-        // Import the useMultiplayer store at the top of the file and use it directly
-        // This is a workaround for circular dependencies
-        import('./useMultiplayer').then(module => {
-          const { addBullet } = module.useMultiplayer.getState();
-          addBullet(bulletPosition, direction, playerId);
-        });
+        // Add bullet to multiplayer store - do this synchronously to avoid race condition
+        const addBulletImmediate = () => {
+          try {
+            // Use dynamic import for module
+            import('./useMultiplayer').then(module => {
+              const { addBullet } = module.useMultiplayer.getState();
+              
+              // Actually create the bullet
+              const bulletId = addBullet(bulletPosition, direction, playerId);
+              console.log('Created bullet with ID:', bulletId, 'at position:', bulletPosition);
+            }).catch(err => {
+              console.error('Error importing useMultiplayer:', err);
+            });
+          } catch (error) {
+            console.error('Error creating bullet:', error);
+          }
+        };
+        
+        // Call immediately to create the bullet
+        addBulletImmediate();
         
         console.log('Shot bullet with direction:', direction);
         return true;

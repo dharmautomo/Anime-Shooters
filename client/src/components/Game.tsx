@@ -10,6 +10,7 @@ import Bullet from './Bullet';
 import { usePlayer } from '../lib/stores/usePlayer';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
+import { KeyMapping } from '../lib/utils';
 
 interface GameProps {
   username: string;
@@ -148,7 +149,7 @@ const Game = ({ username }: GameProps) => {
   }, [camera, hasInteracted, isControlsLocked]);
 
   // Get keyboard controls state
-  const [, getKeys] = useKeyboardControls<Controls>();
+  const [, getKeys] = useKeyboardControls();
   const { updatePlayerPosition } = useMultiplayer();
   
   // Track the last time we sent a position update to the server
@@ -179,14 +180,14 @@ const Game = ({ username }: GameProps) => {
     // Only process movement when controls are locked (pointer lock is active)
     if (!isControlsLocked || !hasInteracted) return;
     
-    // Get the current keyboard state
+    // Get the current keyboard state with proper type casting
     const { 
       forward, 
       backward, 
       left, 
       right, 
       jump 
-    } = getKeys();
+    } = getKeys() as KeyMapping;
 
     // Calculate movement direction based on camera orientation
     const direction = new THREE.Vector3();

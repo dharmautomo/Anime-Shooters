@@ -10,4 +10,16 @@ const getLocalStorage = (key: string): any =>
 const setLocalStorage = (key: string, value: any): void =>
   window.localStorage.setItem(key, JSON.stringify(value));
 
+// Type safe helper for handling React Three Fiber KeyboardControls
+export type KeyMapping = {
+  forward?: boolean;
+  backward?: boolean;
+  left?: boolean;
+  right?: boolean;
+  jump?: boolean;
+  shoot?: boolean;
+  reload?: boolean;
+  [key: string]: boolean | undefined;
+};
+
 export { getLocalStorage, setLocalStorage };

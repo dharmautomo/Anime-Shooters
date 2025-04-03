@@ -313,24 +313,35 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
     const { socket } = get();
     const bulletId = Math.random().toString(36).substring(2, 9);
     
+    console.log(`Creating bullet ${bulletId} at position:`, position, 'direction:', direction, 'owner:', owner);
+    
     // Normalize direction vector
     const normalizedDirection = direction.clone().normalize();
     
     // Add bullet locally
-    set((state) => ({
-      bullets: [
-        ...state.bullets,
-        {
-          id: bulletId,
-          position: position.clone(),
-          velocity: normalizedDirection.clone(),
-          owner,
-        },
-      ],
-    }));
+    set((state) => {
+      console.log(`Adding bullet ${bulletId} to local state. Current bullets count:`, state.bullets.length);
+      return {
+        bullets: [
+          ...state.bullets,
+          {
+            id: bulletId,
+            position: position.clone(),
+            velocity: normalizedDirection.clone(),
+            owner,
+          },
+        ],
+      };
+    });
+    
+    // Log bullet state after adding
+    const updatedBullets = get().bullets;
+    console.log(`After adding: total bullets count:`, updatedBullets.length);
+    console.log(`New bullet in state:`, updatedBullets.find(b => b.id === bulletId));
     
     // Send to server
     if (socket && socket.connected) {
+      console.log(`Sending bullet ${bulletId} to server`);
       socket.emit('createBullet', {
         id: bulletId,
         position: { x: position.x, y: position.y, z: position.z },
@@ -341,6 +352,8 @@ export const useMultiplayer = create<MultiplayerState>((set, get) => ({
         },
         owner,
       });
+    } else {
+      console.warn('Socket not connected - bullet only added locally');
     }
     
     return bulletId;
