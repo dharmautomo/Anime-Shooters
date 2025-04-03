@@ -134,14 +134,52 @@ function App() {
     };
   }, [isLoggedIn]);
 
-  // Make player store accessible globally for debugging
+  // Make stores accessible globally for debugging
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Expose player store globally
       (window as any).usePlayer = usePlayer;
+      
+      // Expose multiplayer store globally
+      (window as any).useMultiplayer = useMultiplayer;
+      
+      // Add debug helper functions
+      (window as any).getBullets = () => {
+        const bullets = useMultiplayer.getState().bullets;
+        console.log("Current bullets:", bullets);
+        return bullets;
+      };
+      
+      (window as any).getGameState = () => {
+        const playerState = usePlayer.getState();
+        const multiplayerState = useMultiplayer.getState();
+        const gameControlState = useGameControls.getState();
+        
+        console.log("Player state:", playerState);
+        console.log("Multiplayer state:", multiplayerState);
+        console.log("Game controls state:", gameControlState);
+        
+        return {
+          player: playerState,
+          multiplayer: multiplayerState,
+          controls: gameControlState
+        };
+      };
+      
+      console.log("Debug tools available in console:");
+      console.log("- usePlayer: Access player store");
+      console.log("- useMultiplayer: Access multiplayer store");
+      console.log("- getBullets(): Get current bullets");
+      console.log("- getGameState(): Get all game state");
+      console.log("- window.testShoot(): Test shooting with error handling");
+      console.log("- window.shootBullet(): Direct shooting");
     }
     
     return () => {
-      // Clean up if needed
+      if (typeof window !== 'undefined') {
+        delete (window as any).getBullets;
+        delete (window as any).getGameState;
+      }
     };
   }, []);
 
