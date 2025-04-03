@@ -32,7 +32,7 @@ const Bullet = ({ position, velocity, owner }: BulletProps) => {
   
   // Bullet lifetime and speed
   const lifetime = useRef(3000); // 3 seconds
-  const speed = 2.5; // Increased bullet speed for better gameplay
+  const speed = 2.0; // Slightly reduced speed to make bullets more visible
   
   // Set up bullet
   useEffect(() => {
@@ -79,60 +79,82 @@ const Bullet = ({ position, velocity, owner }: BulletProps) => {
   
   return (
     <group>
-      {/* Main bullet - realistic metal projectile */}
+      {/* Main bullet - larger and more visible projectile */}
       <mesh 
         ref={bulletRef} 
         position={initialPos.current}
         rotation={[Math.PI/2, 0, 0]} // Rotated to align with flight direction
         userData={{ isBullet: true, owner }}
       >
-        {/* Bullet is elongated with a pointed tip */}
-        <cylinderGeometry args={[0.05, 0.07, 0.2, 8]} />
+        {/* Bullet is elongated with a pointed tip - increased size */}
+        <cylinderGeometry args={[0.08, 0.12, 0.3, 8]} />
         <meshStandardMaterial 
-          color="#b39b6f" 
+          color="#f7d359" // More visible bright gold color
+          emissive="#ff6a00" // Orange glow
+          emissiveIntensity={0.5}
           metalness={0.8}
           roughness={0.2}
         />
       </mesh>
       
-      {/* Bullet base (shell casing color) */}
+      {/* Bullet base with bright color */}
       <mesh
         position={[
           initialPos.current.x,
           initialPos.current.y,
-          initialPos.current.z - 0.1
+          initialPos.current.z - 0.15
         ]}
       >
-        <cylinderGeometry args={[0.07, 0.07, 0.03, 8]} />
+        <cylinderGeometry args={[0.12, 0.12, 0.05, 8]} />
         <meshStandardMaterial 
-          color="#d4af37" 
+          color="#ff3d00" // Bright orange-red
+          emissive="#ff0000" // Red glow
+          emissiveIntensity={0.7}
           metalness={0.9}
           roughness={0.1}
         />
       </mesh>
       
-      {/* Subtle smoke trail */}
+      {/* Enhanced smoke/fire trail */}
       <mesh
         position={[
           initialPos.current.x, 
           initialPos.current.y, 
-          initialPos.current.z - 0.15
+          initialPos.current.z - 0.25
         ]}
       >
-        <sphereGeometry args={[0.06, 8, 8]} />
+        <sphereGeometry args={[0.15, 12, 12]} />
         <meshStandardMaterial 
-          color="#aaaaaa" 
+          color="#ff9d00" 
+          emissive="#ff4500"
+          emissiveIntensity={0.8}
           transparent={true}
-          opacity={0.4}
+          opacity={0.6}
         />
       </mesh>
       
-      {/* Very subtle glow/light */}
+      {/* Secondary smoke trail */}
+      <mesh
+        position={[
+          initialPos.current.x, 
+          initialPos.current.y, 
+          initialPos.current.z - 0.4
+        ]}
+      >
+        <sphereGeometry args={[0.12, 10, 10]} />
+        <meshStandardMaterial 
+          color="#aaaaaa" 
+          transparent={true}
+          opacity={0.5}
+        />
+      </mesh>
+      
+      {/* Stronger glow/light */}
       <pointLight
         position={initialPos.current}
-        color="#fffaf0"
-        intensity={0.8}
-        distance={2}
+        color="#ff7700"
+        intensity={1.5}
+        distance={3}
         decay={2}
       />
     </group>

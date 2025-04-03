@@ -58,13 +58,13 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
           muzzleFlashRef.current.position.z
         );
         
-        // Hide muzzle flash after a much longer time for better visibility
+        // Hide muzzle flash after an even longer time for better visibility
         setTimeout(() => {
           if (muzzleFlashRef.current) {
             muzzleFlashRef.current.visible = false;
             console.log("Hiding muzzle flash");
           }
-        }, 250); // Much longer duration for better visibility
+        }, 350); // Extended duration for better visibility
       } else {
         console.log("Muzzle flash ref is not available!");
       }
@@ -72,10 +72,10 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       // Trigger shoot callback
       onShoot();
       
-      // Cooldown before next shot
+      // Cooldown before next shot - increased to match muzzle flash duration
       setTimeout(() => {
         setIsShooting(false);
-      }, 250);
+      }, 350);
     } else if (shoot && ammo === 0 && !isReloading) {
       // Click sound for empty gun
       console.log("Click - empty gun");
@@ -107,13 +107,13 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
               muzzleFlashRef.current.position.z
             );
             
-            // Hide muzzle flash after a much longer time for better visibility
+            // Hide muzzle flash after an extended time for better visibility
             setTimeout(() => {
               if (muzzleFlashRef.current) {
                 muzzleFlashRef.current.visible = false;
                 console.log("Mouse click - hiding muzzle flash");
               }
-            }, 250);
+            }, 350);
           } else {
             console.log("MOUSE CLICK: Muzzle flash ref is not available!");
           }
@@ -121,10 +121,10 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
           // Trigger shoot callback
           onShoot();
           
-          // Cooldown before next shot
+          // Cooldown before next shot - increased to match muzzle flash duration
           setTimeout(() => {
             setIsShooting(false);
-          }, 250);
+          }, 350);
         }
       }
     };
@@ -299,7 +299,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         </mesh>
       </group>
       
-      {/* More subtle, realistic muzzle flash */}
+      {/* Enhanced brighter muzzle flash */}
       <group 
         ref={muzzleFlashRef} 
         position={[
@@ -309,48 +309,81 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         ]}
         rotation={rotation}
       >
-        {/* Small central flash */}
+        {/* Main flash cone - larger and brighter */}
         <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
-          <coneGeometry args={[0.04, 0.08, 8]} />
+          <coneGeometry args={[0.08, 0.2, 12]} />
           <meshStandardMaterial 
-            color="#f8d498" 
-            emissive="#f5a742"
-            emissiveIntensity={3}
-            transparent={true}
-            opacity={0.7}
-          />
-        </mesh>
-        
-        {/* Thin smoke wisp */}
-        <mesh position={[0, 0.02, 0.05]} rotation={[0, 0, Math.PI / 4]}>
-          <coneGeometry args={[0.03, 0.15, 6]} />
-          <meshStandardMaterial 
-            color="#d6d6d6" 
-            emissive="#a0a0a0"
-            emissiveIntensity={1}
-            transparent={true}
-            opacity={0.4}
-          />
-        </mesh>
-        
-        {/* Small bright center */}
-        <mesh position={[0, 0, 0.02]}>
-          <sphereGeometry args={[0.02, 8, 8]} />
-          <meshStandardMaterial 
-            color="#ffffff" 
-            emissive="#ffcc88"
+            color="#ffcc55" 
+            emissive="#ff7700"
             emissiveIntensity={4}
             transparent={true}
-            opacity={0.8}
+            opacity={0.9}
           />
         </mesh>
         
-        {/* Subtle light source */}
+        {/* Secondary flash cone at angle */}
+        <mesh position={[0.03, 0.03, 0.02]} rotation={[0, 0, Math.PI / 6]}>
+          <coneGeometry args={[0.06, 0.15, 10]} />
+          <meshStandardMaterial 
+            color="#ffaa22" 
+            emissive="#ff5500"
+            emissiveIntensity={3.5}
+            transparent={true}
+            opacity={0.85}
+          />
+        </mesh>
+        
+        {/* Thicker smoke wisp */}
+        <mesh position={[0, 0.03, 0.08]} rotation={[0, 0, Math.PI / 5]}>
+          <coneGeometry args={[0.07, 0.25, 8]} />
+          <meshStandardMaterial 
+            color="#dddddd" 
+            emissive="#cccccc"
+            emissiveIntensity={2}
+            transparent={true}
+            opacity={0.6}
+          />
+        </mesh>
+        
+        {/* Bright core */}
+        <mesh position={[0, 0, 0.02]}>
+          <sphereGeometry args={[0.04, 12, 12]} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            emissive="#ffdd99"
+            emissiveIntensity={5}
+            transparent={true}
+            opacity={0.9}
+          />
+        </mesh>
+        
+        {/* Small particles around the muzzle */}
+        {[...Array(5)].map((_, i) => (
+          <mesh 
+            key={i}
+            position={[
+              (Math.sin(i * Math.PI * 0.4) * 0.06),
+              (Math.cos(i * Math.PI * 0.4) * 0.06),
+              0.05 + (i * 0.02)
+            ]}
+          >
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshStandardMaterial 
+              color="#ff9900" 
+              emissive="#ff4400"
+              emissiveIntensity={3}
+              transparent={true}
+              opacity={0.7}
+            />
+          </mesh>
+        ))}
+        
+        {/* Stronger light source */}
         <pointLight
           position={[0, 0, 0.05]}
-          color="#ffbb77"
-          intensity={3}
-          distance={5}
+          color="#ff7700"
+          intensity={5}
+          distance={8}
           decay={2}
         />
       </group>
