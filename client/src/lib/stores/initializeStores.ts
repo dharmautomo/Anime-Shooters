@@ -291,6 +291,104 @@ export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
       }));
     });
     
+    // Handle existing players data when joining
+    socket.on('existingPlayers', (players) => {
+      console.log('Received existing players data:', Object.keys(players).length, 'players');
+      
+      // Add all existing players to our local state
+      const updatedPlayers: Record<string, PlayerData> = {};
+      
+      // Process each player
+      Object.values(players).forEach((player: any) => {
+        // Skip our own player
+        if (player.id === socket.id) return;
+        
+        console.log(`Adding existing player: ${player.username} (${player.id})`);
+        
+        // Convert position to THREE.Vector3
+        updatedPlayers[player.id] = {
+          id: player.id,
+          username: player.username,
+          position: new THREE.Vector3(
+            player.position.x,
+            player.position.y,
+            player.position.z
+          ),
+          rotation: player.rotation,
+          health: player.health,
+        };
+      });
+      
+      // Update state with all existing players
+      set((state) => ({
+        otherPlayers: {
+          ...state.otherPlayers,
+          ...updatedPlayers,
+        },
+      }));
+    });
+    
+    // Handle player position/rotation updates
+    socket.on('playerUpdated', (playerData) => {
+      console.log(`Player updated: ${playerData.id}`);
+      
+      // Make sure it's not our own player
+      if (playerData.id === socket.id) return;
+      
+      // Update the player in our state
+      set((state) => {
+        // If player is already in our state, update their data
+        if (state.otherPlayers[playerData.id]) {
+          return {
+            otherPlayers: {
+              ...state.otherPlayers,
+              [playerData.id]: {
+                ...state.otherPlayers[playerData.id],
+                position: new THREE.Vector3(
+                  playerData.position.x,
+                  playerData.position.y,
+                  playerData.position.z
+                ),
+                rotation: playerData.rotation,
+                health: playerData.health,
+              },
+            },
+          };
+        } 
+        // If player is not in our state, add them
+        else {
+          return {
+            otherPlayers: {
+              ...state.otherPlayers,
+              [playerData.id]: {
+                id: playerData.id,
+                username: playerData.username || 'Unknown Player',
+                position: new THREE.Vector3(
+                  playerData.position.x,
+                  playerData.position.y,
+                  playerData.position.z
+                ),
+                rotation: playerData.rotation,
+                health: playerData.health,
+              },
+            },
+          };
+        }
+      });
+    });
+    
+    // Handle player leaving
+    socket.on('playerLeft', (playerId: string) => {
+      console.log(`Player left: ${playerId}`);
+      
+      // Remove player from our state
+      set((state) => ({
+        otherPlayers: Object.fromEntries(
+          Object.entries(state.otherPlayers).filter(([id]) => id !== playerId)
+        ),
+      }));
+    });
+    
     // Handle player hit
     socket.on('playerHit', (data: { playerId: string, damage: number }) => {
       console.log(`Hit event received for player ${data.playerId}, damage: ${data.damage}`);
@@ -324,6 +422,76 @@ export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
           return state;
         });
       }
+    });
+    
+    // Handle bullet creation
+    socket.on('bulletCreated', (bulletData: any) => {
+      console.log(`Bullet created: ${bulletData.id}`);
+      
+      // Skip bullets created by this player (we already have them)
+      if (bulletData.owner === socket.id) {
+        console.log('Skipping local bullet');
+        return;
+      }
+      
+      // Add bullet to local state
+      set((state) => ({
+        bullets: [
+          ...state.bullets,
+          {
+            id: bulletData.id,
+            position: new THREE.Vector3(
+              bulletData.position.x,
+              bulletData.position.y,
+              bulletData.position.z
+            ),
+            velocity: new THREE.Vector3(
+              bulletData.velocity.x,
+              bulletData.velocity.y,
+              bulletData.velocity.z
+            ),
+            owner: bulletData.owner,
+          },
+        ],
+      }));
+    });
+    
+    // Handle bullet removal
+    socket.on('bulletRemoved', (bulletId: string) => {
+      console.log(`Bullet removed: ${bulletId}`);
+      
+      // Remove bullet from local state
+      set((state) => ({
+        bullets: state.bullets.filter((bullet) => bullet.id !== bulletId),
+      }));
+    });
+    
+    // Handle kill feed updates
+    socket.on('playerKilled', (data: { killer: string, victim: string }) => {
+      console.log(`Player killed: ${data.victim} by ${data.killer}`);
+      
+      // Get player store
+      const playerStore = storeContext.playerStore;
+      if (!playerStore) {
+        console.error("playerKilled handler error: Player store not initialized");
+        return;
+      }
+      
+      // If this player was the killer, add score
+      if (data.killer === socket.id) {
+        playerStore.addScore(10);
+      }
+      
+      // Add to kill feed
+      set((state) => ({
+        killFeed: [
+          ...state.killFeed.slice(-4), // Keep only the last 4 items
+          {
+            killer: data.killer,
+            victim: data.victim,
+          },
+        ],
+      }));
     });
   },
   
