@@ -24,8 +24,8 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
   const { hasInteracted, isControlsLocked } = useGameControls();
   
   // Get keyboard/mouse controls using KeyMapping to avoid type issues
-  const shoot = useKeyboardControls(state => (state as KeyMapping).shoot);
-  const reload = useKeyboardControls(state => (state as KeyMapping).reload);
+  const shoot = useKeyboardControls(state => (state as KeyMapping).shoot) || false;
+  const reload = useKeyboardControls(state => (state as KeyMapping).reload) || false;
   
   // Handle muzzle flash effect
   useEffect(() => {

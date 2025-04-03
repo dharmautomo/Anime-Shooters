@@ -5,7 +5,13 @@ import { useMultiplayer } from '../lib/stores/useMultiplayer';
 import { useGameControls } from '../lib/stores/useGameControls';
 
 const UI = () => {
-  const { health, ammo, score } = usePlayer();
+  // Get the latest player state including ammo (cache the selector function to avoid infinite loops)
+  const playerState = usePlayer(state => ({
+    health: state.health,
+    ammo: state.ammo,
+    score: state.score
+  }));
+  const { health, ammo, score } = playerState;
   const { killFeed } = useMultiplayer();
   const { hasInteracted, isControlsLocked } = useGameControls();
   const [showControls, setShowControls] = useState(true);
@@ -120,7 +126,9 @@ const UI = () => {
           left: 0,
           pointerEvents: "none"
         }}>
-          <span>Ammo: {ammo}/10</span>
+          <span style={{ color: ammo === 0 ? '#ff6b6b' : 'white' }}>
+            Ammo: <b>{ammo}</b>/10 {ammo === 0 ? "- EMPTY!" : ""}
+          </span>
         </div>
         {ammo === 0 && <div className="reload-indicator">Press R to reload!</div>}
       </div>
@@ -213,6 +221,11 @@ const UI = () => {
             <p style={{ margin: '5px 0' }}>
               pointerLockElement: <span style={{ color: isPointerLocked ? '#00ff00' : '#ff0000' }}>
                 {isPointerLocked ? 'YES' : 'NO'}
+              </span>
+            </p>
+            <p style={{ margin: '5px 0' }}>
+              Current Ammo: <span style={{ color: ammo === 0 ? '#ff0000' : '#00ff00' }}>
+                {ammo}/10
               </span>
             </p>
           </div>

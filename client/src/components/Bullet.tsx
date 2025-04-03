@@ -48,11 +48,9 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
     
     // Start lifetime countdown
     const timeoutId = setTimeout(() => {
-      if (bulletRef.current) {
-        // Remove bullet after lifetime expires
-        removeBullet(bulletRef.current.uuid);
-        console.log("Bullet expired and removed");
-      }
+      // Use the stored bullet ID for removing
+      console.log(`Bullet with ID ${bulletId.current} expired and will be removed`);
+      removeBullet(bulletId.current);
     }, lifetime.current);
     
     return () => {
@@ -75,7 +73,8 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       
       // If collision occurred, remove the bullet
       if (collision) {
-        removeBullet(bulletRef.current.uuid);
+        console.log(`Bullet with ID ${bulletId.current} collided and will be removed`);
+        removeBullet(bulletId.current);
       }
     }
   });

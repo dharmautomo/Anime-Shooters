@@ -160,9 +160,10 @@ const Game = ({ username }: GameProps) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 'R' key for reloading
       if (e.code === 'KeyR') {
-        console.log('Reloading weapon');
+        console.log('Reloading weapon - Current ammo:', ammo);
         // Use the reloadAmmo function from the player store
         reloadAmmo();
+        console.log('Weapon reloaded - New ammo count:', usePlayer.getState().ammo);
       }
     };
     
@@ -171,7 +172,7 @@ const Game = ({ username }: GameProps) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [reloadAmmo]);
+  }, [reloadAmmo, ammo]);
 
   // Update player position and camera
   useFrame((state, delta) => {
@@ -283,6 +284,7 @@ const Game = ({ username }: GameProps) => {
       {bullets.map((bullet) => (
         <Bullet 
           key={bullet.id}
+          id={bullet.id} // Pass bullet ID explicitly
           position={bullet.position}
           velocity={bullet.velocity}
           owner={bullet.owner}
