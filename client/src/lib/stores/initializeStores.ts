@@ -2,8 +2,8 @@ import { create } from 'zustand';
 import * as THREE from 'three';
 import { io, Socket } from 'socket.io-client';
 
-// Forward declarations for store types to avoid circular references
-interface PlayerStore {
+// Define the structure of our store states and actions
+interface PlayerState {
   playerId: string;
   playerName: string;
   position: THREE.Vector3;
@@ -12,7 +12,9 @@ interface PlayerStore {
   ammo: number;
   score: number;
   isAlive: boolean;
-  
+}
+
+interface PlayerActions {
   setPlayerId: (id: string) => void;
   setPlayerName: (name: string) => void;
   updatePosition: (position: THREE.Vector3) => void;
@@ -45,13 +47,15 @@ interface KillFeedItem {
   victim: string;
 }
 
-interface MultiplayerStore {
+interface MultiplayerState {
   socket: Socket | null;
   connected: boolean;
   otherPlayers: Record<string, PlayerData>;
   bullets: BulletData[];
   killFeed: KillFeedItem[];
-  
+}
+
+interface MultiplayerActions {
   initializeSocket: (username: string) => void;
   updatePlayerPosition: (position: THREE.Vector3, rotation: number) => void;
   addBullet: (position: THREE.Vector3, direction: THREE.Vector3, owner: string) => string;
@@ -60,15 +64,22 @@ interface MultiplayerStore {
   disconnect: () => void;
 }
 
-export type PlayerStoreType = PlayerStore;
-export type MultiplayerStoreType = MultiplayerStore;
+// Combined interfaces
+type PlayerStore = PlayerState & PlayerActions;
+type MultiplayerStore = MultiplayerState & MultiplayerActions;
 
-// Store instances (will be initialized later)
-let playerStore: ReturnType<typeof createPlayerStore> | null = null;
-let multiplayerStore: ReturnType<typeof createMultiplayerStore> | null = null;
+// Circular references for types
+interface StoreReferences {
+  playerStore: PlayerStore;
+  multiplayerStore: MultiplayerStore;
+}
 
-// Player store factory
-export const createPlayerStore = (getMultiplayerStore: () => MultiplayerStoreType) => create<PlayerStore>((set, get) => ({
+// Create stores with a context of the combined stores
+let storeContext: Partial<StoreReferences> = {};
+
+// Create actual stores
+export const usePlayer = create<PlayerStore>((set, get) => ({
+  // State
   playerId: '',
   playerName: '',
   position: new THREE.Vector3(0, 1.6, 10),
@@ -78,18 +89,19 @@ export const createPlayerStore = (getMultiplayerStore: () => MultiplayerStoreTyp
   score: 0,
   isAlive: true,
   
-  setPlayerId: (id) => set({ playerId: id }),
-  setPlayerName: (name) => set({ playerName: name }),
+  // Actions
+  setPlayerId: (id: string) => set({ playerId: id }),
+  setPlayerName: (name: string) => set({ playerName: name }),
   
-  updatePosition: (position) => {
+  updatePosition: (position: THREE.Vector3) => {
     set({ position: position.clone() });
   },
   
-  updateRotation: (rotation) => {
+  updateRotation: (rotation: number) => {
     set({ rotation });
   },
   
-  takeDamage: (amount) => {
+  takeDamage: (amount: number) => {
     set((state) => {
       const newHealth = Math.max(0, state.health - amount);
       const isAlive = newHealth > 0;
@@ -108,7 +120,7 @@ export const createPlayerStore = (getMultiplayerStore: () => MultiplayerStoreTyp
     }
   },
   
-  addScore: (points) => {
+  addScore: (points: number) => {
     set((state) => ({ score: state.score + points }));
   },
   
@@ -149,8 +161,12 @@ export const createPlayerStore = (getMultiplayerStore: () => MultiplayerStoreTyp
       const bulletPosition = position.clone().add(direction.clone().multiplyScalar(0.5));
       bulletPosition.y += 1.5; // Eye height
       
-      // Create the bullet via multiplayer store - using the getter to avoid circular imports
-      const { addBullet } = getMultiplayerStore();
+      // Access multiplayer store through context
+      const multiplayerStore = storeContext.multiplayerStore;
+      if (!multiplayerStore) {
+        console.error("🔫❌ STORE: Multiplayer store not initialized!");
+        return false;
+      }
       
       // Ensure we have the player ID before creating a bullet
       if (!playerId) {
@@ -159,7 +175,7 @@ export const createPlayerStore = (getMultiplayerStore: () => MultiplayerStoreTyp
       }
       
       try {
-        const bulletId = addBullet(bulletPosition, direction, playerId);
+        const bulletId = multiplayerStore.addBullet(bulletPosition, direction, playerId);
         console.log('🔫✅ STORE: Created bullet with ID:', bulletId);
         
         // IMPORTANT: Decrement ammo HERE after successful bullet creation
@@ -205,15 +221,16 @@ export const createPlayerStore = (getMultiplayerStore: () => MultiplayerStoreTyp
   }
 }));
 
-// Multiplayer store factory
-export const createMultiplayerStore = (getPlayerStore: () => PlayerStoreType) => create<MultiplayerStore>((set, get) => ({
+export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
+  // State
   socket: null,
   connected: false,
   otherPlayers: {},
   bullets: [],
   killFeed: [],
   
-  initializeSocket: (username) => {
+  // Actions
+  initializeSocket: (username: string) => {
     // Create socket connection
     const socket = io('/', {
       transports: ['websocket'],
@@ -230,24 +247,29 @@ export const createMultiplayerStore = (getPlayerStore: () => PlayerStoreType) =>
       
       // Set player ID to socket ID
       const playerId = socket.id || '';
-      getPlayerStore().setPlayerId(playerId);
+      
+      // Access player store through context
+      const playerStore = storeContext.playerStore;
+      if (!playerStore) {
+        console.error("Socket connect error: Player store not initialized");
+        return;
+      }
+      
+      // Update player store
+      playerStore.setPlayerId(playerId);
+      playerStore.setPlayerName(username || 'Player');
       
       // Join game with username
-      const userName = username || 'Player';
-      
-      // Save the username to player state
-      getPlayerStore().setPlayerName(userName);
-      
       socket.emit('joinGame', {
         id: playerId,
-        username: userName,
-        position: getPlayerStore().position,
-        rotation: getPlayerStore().rotation,
-        health: getPlayerStore().health,
+        username: username || 'Player',
+        position: playerStore.position,
+        rotation: playerStore.rotation,
+        health: playerStore.health,
       });
     });
     
-    // Socket event handlers (using getPlayerStore() for safe access)
+    // Socket event handlers for player joining
     socket.on('playerJoined', (playerData) => {
       console.log(`Player joined: ${playerData.username}`);
       
@@ -270,16 +292,21 @@ export const createMultiplayerStore = (getPlayerStore: () => PlayerStoreType) =>
       }));
     });
     
-    // Other socket handlers would be implemented here...
-    
     // Handle player hit
     socket.on('playerHit', (data: { playerId: string, damage: number }) => {
       console.log(`Hit event received for player ${data.playerId}, damage: ${data.damage}`);
       
+      // Get player store from context
+      const playerStore = storeContext.playerStore;
+      if (!playerStore) {
+        console.error("playerHit handler error: Player store not initialized");
+        return;
+      }
+      
       // If we were hit
       if (data.playerId === socket.id) {
         console.log(`Taking damage locally: ${data.damage}`);
-        getPlayerStore().takeDamage(data.damage);
+        playerStore.takeDamage(data.damage);
       } else {
         // Update other player's health locally for immediate visual feedback
         set(state => {
@@ -301,9 +328,17 @@ export const createMultiplayerStore = (getPlayerStore: () => PlayerStoreType) =>
     });
   },
   
-  updatePlayerPosition: (position, rotation) => {
+  updatePlayerPosition: (position: THREE.Vector3, rotation: number) => {
     const { socket } = get();
-    const { playerName, health } = getPlayerStore();
+    
+    // Get player data from context
+    const playerStore = storeContext.playerStore;
+    if (!playerStore) {
+      console.error("updatePlayerPosition error: Player store not initialized");
+      return;
+    }
+    
+    const { playerName, health } = playerStore;
     
     if (socket && socket.connected) {
       socket.emit('updatePlayer', {
@@ -315,7 +350,7 @@ export const createMultiplayerStore = (getPlayerStore: () => PlayerStoreType) =>
     }
   },
   
-  addBullet: (position, direction, owner) => {
+  addBullet: (position: THREE.Vector3, direction: THREE.Vector3, owner: string) => {
     const { socket } = get();
     const bulletId = `bullet-${Math.random().toString(36).substring(2, 9)}`;
     
@@ -354,7 +389,7 @@ export const createMultiplayerStore = (getPlayerStore: () => PlayerStoreType) =>
     return bulletId;
   },
   
-  removeBullet: (id) => {
+  removeBullet: (id: string) => {
     const { socket } = get();
     
     // Remove locally
@@ -368,9 +403,17 @@ export const createMultiplayerStore = (getPlayerStore: () => PlayerStoreType) =>
     }
   },
   
-  checkBulletCollision: (bulletPosition, bulletOwner) => {
+  checkBulletCollision: (bulletPosition: THREE.Vector3, bulletOwner: string) => {
     const { socket, otherPlayers } = get();
-    const { playerId, takeDamage } = getPlayerStore();
+    
+    // Get player store from context
+    const playerStore = storeContext.playerStore;
+    if (!playerStore) {
+      console.error("checkBulletCollision error: Player store not initialized");
+      return false;
+    }
+    
+    const { playerId, takeDamage } = playerStore;
     
     // Check collision with other players
     for (const [id, player] of Object.entries(otherPlayers)) {
@@ -396,10 +439,10 @@ export const createMultiplayerStore = (getPlayerStore: () => PlayerStoreType) =>
     
     // Check collision with main player (if bullet isn't from main player)
     if (bulletOwner !== playerId) {
-      const playerPosition = getPlayerStore().position;
+      const playerPosition = playerStore.position;
       const distance = bulletPosition.distanceTo(playerPosition);
       
-      if (distance < 1.5 && getPlayerStore().health > 0) {
+      if (distance < 1.5 && playerStore.health > 0) {
         // Apply damage locally
         console.log("COLLISION with main player! Taking damage: 25");
         takeDamage(25);
@@ -429,36 +472,17 @@ export const createMultiplayerStore = (getPlayerStore: () => PlayerStoreType) =>
   },
 }));
 
-// Initialization function
-export const initializeStores = () => {
-  // Create getters that will be used to resolve circular dependencies
-  const getPlayerStoreImpl = () => {
-    if (!playerStore) {
-      throw new Error("Player store accessed before initialization");
-    }
-    return playerStore;
-  };
-  
-  const getMultiplayerStoreImpl = () => {
-    if (!multiplayerStore) {
-      throw new Error("Multiplayer store accessed before initialization");
-    }
-    return multiplayerStore;
-  };
-  
-  // Initialize the stores with access to each other
-  playerStore = createPlayerStore(getMultiplayerStoreImpl);
-  multiplayerStore = createMultiplayerStore(getPlayerStoreImpl);
-  
-  console.log("✅ Game stores initialized successfully");
-  
-  // Return the stores
-  return {
-    usePlayer: playerStore,
-    useMultiplayer: multiplayerStore
-  };
-};
+// Initialize the store cross-references
+storeContext.playerStore = usePlayer.getState();
+storeContext.multiplayerStore = useMultiplayer.getState();
 
-// Create and export the stores
-const { usePlayer, useMultiplayer } = initializeStores();
-export { usePlayer, useMultiplayer };
+// Subscribe to changes in each store to keep our context updated
+usePlayer.subscribe(state => {
+  storeContext.playerStore = state;
+});
+
+useMultiplayer.subscribe(state => {
+  storeContext.multiplayerStore = state;
+});
+
+console.log("✅ Game stores initialized successfully");
