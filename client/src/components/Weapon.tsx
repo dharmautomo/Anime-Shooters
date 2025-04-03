@@ -1,12 +1,10 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useAudio } from '../lib/stores/useAudio';
-import { usePlayer } from '../lib/stores/usePlayer';
-import { useGameControls } from '../lib/stores/useGameControls';
 import { useKeyboardControls } from '@react-three/drei';
 import { Controls } from '../App';
-
+import { useAudio } from '../lib/stores/useAudio';
+import { useGameControls } from '../lib/stores/useGameControls';
 
 interface WeaponProps {
   position: [number, number, number];
@@ -16,22 +14,23 @@ interface WeaponProps {
 }
 
 const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
+  const weaponRef = useRef<THREE.Group>(null);
+  const muzzleFlashRef = useRef<THREE.Group>(null);
+  const { camera } = useThree();
   const [isShooting, setIsShooting] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
-  const muzzleFlashRef = useRef<THREE.PointLight>(null);
-  const { playSound, playHit, playSuccess } = useAudio();
+  const { playHit, playSuccess, playSound } = useAudio();
   const { hasInteracted, isControlsLocked } = useGameControls();
-  const weaponRef = useRef<THREE.Group>(null);
-
+  
   // Get keyboard/mouse controls using stable direct selectors
   const [subscribeKeys, getKeys] = useKeyboardControls();
   const [shoot, setShoot] = useState(false);
   const [reload, setReload] = useState(false);
-
+  
   // Subscribe to key changes
   useEffect(() => {
     console.log("Setting up key subscriptions for shoot and reload");
-
+    
     // Subscribe to reload key (R key)
     const unsubReload = subscribeKeys(
       (state) => state[Controls.reload],
@@ -40,7 +39,9 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         setReload(!!pressed);
       }
     );
-
+    
+    // Note: 'shoot' is set to 'click' in the key mappings
+    // So we'll primarily handle it through the mouse events below
     // Subscribe to shoot key as backup
     const unsubShoot = subscribeKeys(
       (state) => state[Controls.shoot],
@@ -49,176 +50,426 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         setShoot(!!pressed);
       }
     );
-
+    
     return () => {
       unsubShoot();
       unsubReload();
     };
   }, [subscribeKeys]);
-
-  // Initialize muzzle flash
+  
+  // Handle muzzle flash effect
   useEffect(() => {
     if (muzzleFlashRef.current) {
+      // Hide muzzle flash initially
       muzzleFlashRef.current.visible = false;
       console.log("Initialized muzzle flash, set to invisible");
     }
   }, []);
-
-  // Handle shooting (Keyboard and Mouse)
+  
+  // Handle shooting
   useEffect(() => {
     // Only allow shooting when controls are locked and user has interacted
     if (!hasInteracted || !isControlsLocked) return;
-
-    if ((shoot || isShooting) && !isReloading && ammo > 0) {
+    
+    if (shoot && !isShooting && !isReloading && ammo > 0) {
       setIsShooting(true);
-
-      console.log("🔫 SHOOT KEY/MOUSE PRESSED - Shooting weapon! Current ammo:", ammo);
-
-      // Play gunshot sound
+      
+      console.log("🔫 SHOOT KEY PRESSED - Shooting weapon! Current ammo:", ammo);
+      
+      // Play gunshot sound using Web Audio API
       playSound('gunshot');
-
-      // Show muzzle flash
+      
+      // Show muzzle flash with extensive logging
       if (muzzleFlashRef.current) {
         muzzleFlashRef.current.visible = true;
+        console.log("Showing muzzle flash at position:", 
+          muzzleFlashRef.current.position.x,
+          muzzleFlashRef.current.position.y,
+          muzzleFlashRef.current.position.z
+        );
+        
+        // Hide muzzle flash after an extended duration
         setTimeout(() => {
           if (muzzleFlashRef.current) {
             muzzleFlashRef.current.visible = false;
           }
-        }, 100);
+        }, 350);
       }
-
+      
       // DIRECT APPROACH - Manually decrement ammo to ensure it works
+      // This bypasses any potential issues with the callback chain
       try {
-        const currentAmmo = usePlayer.getState().ammo;
+        // Import is wrapped in try-catch to handle any potential errors
+        const playerStore = require('../lib/stores/usePlayer').usePlayer;
+        const currentAmmo = playerStore.getState().ammo;
+        
         console.log("🔢 Before shooting: Current ammo in store:", currentAmmo);
-        if (currentAmmo > 0) {
-          usePlayer.setState({ ammo: currentAmmo - 1 });
-          console.log("🔢 After direct ammo update: New ammo count:", usePlayer.getState().ammo);
-        }
+        
+        // Directly set the ammo value (bypassing any issues with the callback)
+        playerStore.setState({ ammo: Math.max(0, currentAmmo - 1) });
+        
+        // Verify ammo was decremented
+        console.log("🔢 After direct ammo update: New ammo count:", playerStore.getState().ammo);
+        
+        // Still call the original onShoot callback for other functionality (bullet creation, etc.)
         onShoot();
       } catch (error) {
         console.error("Failed to update ammo directly:", error);
+        
+        // Fall back to just using the callback if direct access fails
         onShoot();
       }
-
+      
       // Cooldown before next shot
       setTimeout(() => {
         setIsShooting(false);
       }, 350);
-    } else if ((shoot || isShooting) && ammo === 0 && !isReloading) {
+    } else if (shoot && ammo === 0 && !isReloading) {
       // Click sound for empty gun
       console.log("Click - empty gun");
       playSuccess();
     }
   }, [shoot, isShooting, isReloading, ammo, playHit, playSuccess, playSound, onShoot, hasInteracted, isControlsLocked]);
-
-
+  
   // Handle mouse input for shooting (MAIN METHOD - most browsers use this)
   useEffect(() => {
     console.log("Setting up mouse event listener for shooting");
-
+    
     const handleMouseDown = (e: MouseEvent) => {
       // Only allow shooting when controls are locked and user has interacted
       if (!hasInteracted || !isControlsLocked) {
         console.log("Mouse click ignored - controls not locked or no interaction");
         return;
       }
-
+      
       if (e.button === 0) { // Left mouse button
         console.log("🖱️ Left mouse button click detected");
-        setIsShooting(true); //Added this line to trigger the useEffect above
+        
+        if (!isShooting && !isReloading && ammo > 0) {
+          console.log("🖱️ MOUSE CLICK - Shooting with ammo:", ammo);
+          setIsShooting(true);
+          
+          // Play gunshot sound using Web Audio API
+          playSound('gunshot');
+          
+          // Show muzzle flash
+          if (muzzleFlashRef.current) {
+            muzzleFlashRef.current.visible = true;
+            
+            // Hide muzzle flash after an extended time for better visibility
+            setTimeout(() => {
+              if (muzzleFlashRef.current) {
+                muzzleFlashRef.current.visible = false;
+              }
+            }, 350);
+          }
+          
+          // IMPORTANT: This is the MAIN source of ammo decrement
+          // It should reliably update the ammo count on click
+          try {
+            const playerStore = require('../lib/stores/usePlayer').usePlayer;
+            const currentAmmo = playerStore.getState().ammo;
+            
+            console.log("🔫 MOUSE CLICK: Before shooting: Current ammo:", currentAmmo);
+            
+            // Directly set the ammo value (most reliable approach)
+            if (currentAmmo > 0) {
+              playerStore.setState({ ammo: currentAmmo - 1 });
+              console.log("🔫 MOUSE CLICK: Ammo decremented to:", currentAmmo - 1);
+            }
+            
+            // Call onShoot to create the bullet in the game world
+            onShoot();
+            
+            // Verify the final state (after all updates)
+            console.log("🔫 MOUSE CLICK: Final ammo count:", playerStore.getState().ammo);
+          } catch (error) {
+            console.error("Failed to update ammo on mouse click:", error);
+            // Fallback to original callback
+            onShoot();
+          }
+          
+          // Cooldown before next shot
+          setTimeout(() => {
+            setIsShooting(false);
+            console.log("Shooting cooldown finished");
+          }, 350);
+        } else if (ammo === 0 && !isReloading) {
+          // Click sound for empty gun
+          console.log("Empty gun click sound - no ammo left");
+          playSuccess();
+        } else {
+          console.log("🖱️ Mouse click ignored. Shooting:", isShooting, 
+                      "Reloading:", isReloading, "Ammo:", ammo);
+        }
       }
     };
-
+    
+    // Add the event listener
     window.addEventListener('mousedown', handleMouseDown);
-    return () => window.removeEventListener('mousedown', handleMouseDown);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown);
+    };
   }, [isShooting, isReloading, ammo, playHit, playSuccess, playSound, onShoot, hasInteracted, isControlsLocked]);
-
-
+  
   // Handle reloading
   useEffect(() => {
     // Only allow reloading when controls are locked and user has interacted
     if (!hasInteracted || !isControlsLocked) return;
-
+    
     if (reload && !isReloading && ammo < 10) {
       setIsReloading(true);
-
+      
       // Play reload sound after a short delay
       setTimeout(() => {
         playSound('reload');
       }, 300);
-
+      
+      // Call the actual reloadAmmo function from usePlayer
+      // Import directly to avoid circular dependency issues
+      const { usePlayer } = require('../lib/stores/usePlayer');
+      
       // Schedule the actual ammo reload halfway through the animation
       setTimeout(() => {
         usePlayer.getState().reloadAmmo();
         console.log('Reloaded ammo to 10');
       }, 750);
-
+      
       // Finish reloading animation after 1.5 seconds
       setTimeout(() => {
         setIsReloading(false);
       }, 1500);
     }
   }, [reload, isReloading, ammo, playSuccess, playSound, hasInteracted, isControlsLocked]);
-
+  
   // Make weapon and muzzle flash follow the camera
-  const { camera } = useThree();
   useFrame(() => {
     if (weaponRef.current) {
+      // Position the weapon in front of the camera
       const cameraPosition = new THREE.Vector3();
       const cameraQuaternion = new THREE.Quaternion();
+      
       camera.getWorldPosition(cameraPosition);
       camera.getWorldQuaternion(cameraQuaternion);
-      weaponRef.current.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+      
+      // Apply weapon position relative to camera
+      weaponRef.current.position.set(
+        cameraPosition.x,
+        cameraPosition.y,
+        cameraPosition.z
+      );
+      
+      // Apply camera rotation to weapon
       weaponRef.current.quaternion.copy(cameraQuaternion);
-      const offsetVector = new THREE.Vector3(...position);
+      
+      // Apply weapon offset
+      const offsetVector = new THREE.Vector3(position[0], position[1], position[2]);
       offsetVector.applyQuaternion(cameraQuaternion);
+      
       weaponRef.current.position.add(offsetVector);
-
+      
       // Apply recoil effect when shooting
       if (isShooting) {
         weaponRef.current.rotation.x += 0.05;
       } else {
+        // Reset rotation when not shooting
         weaponRef.current.rotation.x *= 0.8;
       }
-
+      
       // Apply reload animation
       if (isReloading) {
         weaponRef.current.rotation.z = Math.sin(Date.now() * 0.01) * 0.2;
       } else {
         weaponRef.current.rotation.z = 0;
       }
-
+      
+      // Update muzzle flash position to follow the gun
       if (muzzleFlashRef.current) {
+        // Calculate muzzle position at the front of the gun barrel
         const muzzleOffset = new THREE.Vector3(0, 0, 0.5);
         muzzleOffset.applyQuaternion(weaponRef.current.quaternion);
+        
+        // Set muzzle flash position
         muzzleFlashRef.current.position.copy(weaponRef.current.position);
         muzzleFlashRef.current.position.add(muzzleOffset);
+        
+        // Copy the weapon's rotation
         muzzleFlashRef.current.quaternion.copy(weaponRef.current.quaternion);
+        
+        // Add debug logs occasionally to track muzzle flash position
+        if (Math.random() < 0.01) { // Only log 1% of the time to avoid flooding console
+          console.log("Muzzle flash position:", 
+            muzzleFlashRef.current.position.x,
+            muzzleFlashRef.current.position.y,
+            muzzleFlashRef.current.position.z
+          );
+        }
       }
     }
   });
-
+  
   return (
     <>
+      {/* Main weapon group */}
       <group ref={weaponRef}>
-        <group position={new THREE.Vector3(...position)} rotation={new THREE.Euler(...rotation)}>
-          {/* Gun model */}
-          <mesh position={[0, 0, 0]} castShadow>
-            <boxGeometry args={[0.3, 0.2, 1]} />
-            <meshStandardMaterial color="#333333" metalness={0.8} roughness={0.2} />
-          </mesh>
-
-          {/* Muzzle flash light */}
-          <pointLight
-            ref={muzzleFlashRef}
-            position={[0, 0.1, 0.6]}
-            intensity={2}
-            distance={2}
-            color="#ff7700"
-            visible={false}
+        {/* Gun slide (top part) */}
+        <mesh position={[0, 0.03, 0]} rotation={rotation}>
+          <boxGeometry args={[0.09, 0.06, 0.28]} />
+          <meshStandardMaterial color="#1a1a1a" roughness={0.6} metalness={0.8} />
+        </mesh>
+        
+        {/* Gun frame (lower part) */}
+        <mesh position={[0, -0.02, 0]} rotation={rotation}>
+          <boxGeometry args={[0.1, 0.07, 0.3]} />
+          <meshStandardMaterial color="#2a2a2a" roughness={0.5} metalness={0.7} />
+        </mesh>
+        
+        {/* Gun handle with brown grip */}
+        <mesh position={[0, -0.13, -0.08]} rotation={[0.1, 0, 0]}>
+          <boxGeometry args={[0.09, 0.18, 0.12]} />
+          <meshStandardMaterial color="#3d2817" roughness={0.9} metalness={0.1} />
+        </mesh>
+        
+        {/* Gun barrel */}
+        <mesh position={[0, 0.01, 0.18]} rotation={[Math.PI/2, 0, 0]}>
+          <cylinderGeometry args={[0.025, 0.025, 0.16, 8]} />
+          <meshStandardMaterial color="#111111" roughness={0.5} metalness={0.9} />
+        </mesh>
+        
+        {/* Front sight */}
+        <mesh position={[0, 0.06, 0.14]} rotation={rotation}>
+          <boxGeometry args={[0.02, 0.02, 0.02]} />
+          <meshStandardMaterial color="#111111" />
+        </mesh>
+        
+        {/* Rear sight */}
+        <mesh position={[0, 0.06, -0.1]} rotation={rotation}>
+          <boxGeometry args={[0.06, 0.02, 0.02]} />
+          <meshStandardMaterial color="#111111" />
+        </mesh>
+        
+        {/* Trigger guard */}
+        <mesh position={[0, -0.04, -0.05]} rotation={rotation}>
+          <torusGeometry args={[0.03, 0.008, 8, 16, Math.PI]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+        
+        {/* Trigger */}
+        <mesh position={[0, -0.04, -0.02]} rotation={[0.3, 0, 0]}>
+          <boxGeometry args={[0.02, 0.04, 0.01]} />
+          <meshStandardMaterial color="#111111" />
+        </mesh>
+        
+        {/* Hand - palm */}
+        <mesh position={[0, -0.17, -0.12]} rotation={[0.4, 0, 0]}>
+          <boxGeometry args={[0.1, 0.05, 0.14]} />
+          <meshStandardMaterial color="#ffd6b1" />
+        </mesh>
+        
+        {/* Hand - thumb */}
+        <mesh position={[0.06, -0.14, -0.05]} rotation={[0.2, -0.3, 0]}>
+          <capsuleGeometry args={[0.02, 0.06]} />
+          <meshStandardMaterial color="#ffd6b1" />
+        </mesh>
+        
+        {/* Hand - fingers */}
+        <mesh position={[0, -0.13, 0]} rotation={[0.6, 0, 0]}>
+          <boxGeometry args={[0.1, 0.025, 0.08]} />
+          <meshStandardMaterial color="#ffd6b1" />
+        </mesh>
+        
+        {/* Hand - finger segments */}
+        <mesh position={[0, -0.11, 0.05]} rotation={[0.8, 0, 0]}>
+          <boxGeometry args={[0.095, 0.023, 0.05]} />
+          <meshStandardMaterial color="#ffd6b1" />
+        </mesh>
+      </group>
+      
+      {/* Enhanced brighter muzzle flash */}
+      <group 
+        ref={muzzleFlashRef} 
+        position={[0, 0, 0]} // Initialize with zero position, will be updated in useFrame
+        rotation={rotation}
+      >
+        {/* Main flash cone - larger and brighter */}
+        <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
+          <coneGeometry args={[0.08, 0.2, 12]} />
+          <meshStandardMaterial 
+            color="#ffcc55" 
+            emissive="#ff7700"
+            emissiveIntensity={4}
+            transparent={true}
+            opacity={0.9}
           />
-        </group>
+        </mesh>
+        
+        {/* Secondary flash cone at angle */}
+        <mesh position={[0.03, 0.03, 0.02]} rotation={[0, 0, Math.PI / 6]}>
+          <coneGeometry args={[0.06, 0.15, 10]} />
+          <meshStandardMaterial 
+            color="#ffaa22" 
+            emissive="#ff5500"
+            emissiveIntensity={3.5}
+            transparent={true}
+            opacity={0.85}
+          />
+        </mesh>
+        
+        {/* Thicker smoke wisp */}
+        <mesh position={[0, 0.03, 0.08]} rotation={[0, 0, Math.PI / 5]}>
+          <coneGeometry args={[0.07, 0.25, 8]} />
+          <meshStandardMaterial 
+            color="#dddddd" 
+            emissive="#cccccc"
+            emissiveIntensity={2}
+            transparent={true}
+            opacity={0.6}
+          />
+        </mesh>
+        
+        {/* Bright core */}
+        <mesh position={[0, 0, 0.02]}>
+          <sphereGeometry args={[0.04, 12, 12]} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            emissive="#ffdd99"
+            emissiveIntensity={5}
+            transparent={true}
+            opacity={0.9}
+          />
+        </mesh>
+        
+        {/* Small particles around the muzzle */}
+        {[...Array(5)].map((_, i) => (
+          <mesh 
+            key={i}
+            position={[
+              (Math.sin(i * Math.PI * 0.4) * 0.06),
+              (Math.cos(i * Math.PI * 0.4) * 0.06),
+              0.05 + (i * 0.02)
+            ]}
+          >
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshStandardMaterial 
+              color="#ff9900" 
+              emissive="#ff4400"
+              emissiveIntensity={3}
+              transparent={true}
+              opacity={0.7}
+            />
+          </mesh>
+        ))}
+        
+        {/* Stronger light source */}
+        <pointLight
+          position={[0, 0, 0.05]}
+          color="#ff7700"
+          intensity={5}
+          distance={8}
+          decay={2}
+        />
       </group>
     </>
   );
