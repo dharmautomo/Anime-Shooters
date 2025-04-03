@@ -16,7 +16,7 @@ const Portal = ({ position, destination, isEntry = false, referrer }: PortalProp
   const textRef = useRef<any>(null);
   const [hovering, setHovering] = useState(false);
   const [time, setTime] = useState(0);
-  const collisionThreshold = 1.5;
+  const collisionThreshold = 2.5; // Increased from 1.5 to match the larger portal size
   const hasEnteredPortal = useRef(false);
   
   // Animate portal and check for collision
@@ -66,64 +66,65 @@ const Portal = ({ position, destination, isEntry = false, referrer }: PortalProp
   const color1 = isEntry ? new THREE.Color('#4287f5') : new THREE.Color('#f542b9');
   const color2 = isEntry ? new THREE.Color('#42f5e3') : new THREE.Color('#f5e642');
   
-  // Style for the portal label
+  // Style for the portal label - increased font size
   const textStyle = {
     color: '#ffffff',
-    fontSize: 0.2,
-    maxWidth: 2,
+    fontSize: 0.35, // Increased from 0.2
+    maxWidth: 3, // Increased from 2
     lineHeight: 1,
     textAlign: 'center' as const,
-    outlineWidth: 0.01,
+    outlineWidth: 0.02, // Increased from 0.01
     outlineColor: '#000000',
+    fontWeight: 'bold' as const, // Make the text bold
   };
   
   return (
     <group position={[position[0], position[1], position[2]]}>
-      {/* Glowing outer ring */}
+      {/* Glowing outer ring - increased size */}
       <mesh position={[0, 0, 0]}>
-        <torusGeometry args={[1.2, 0.1, 16, 50]} />
+        <torusGeometry args={[2.0, 0.15, 20, 64]} /> {/* Increased from [1.2, 0.1, 16, 50] */}
         <meshStandardMaterial 
           color={isEntry ? '#00ffff' : '#ff00ff'} 
           emissive={isEntry ? '#00ffff' : '#ff00ff'} 
-          emissiveIntensity={hovering ? 3 : 1}
+          emissiveIntensity={hovering ? 4 : 2} // Increased intensity
         />
       </mesh>
       
-      {/* Portal surface */}
+      {/* Portal surface - increased size */}
       <mesh>
-        <circleGeometry args={[1, 32]} />
+        <circleGeometry args={[1.8, 40]} /> {/* Increased from [1, 32] */}
         <meshStandardMaterial 
           color={isEntry ? '#4287f5' : '#f542b9'}
           emissive={isEntry ? '#4287f5' : '#f542b9'}
-          emissiveIntensity={1.5}
+          emissiveIntensity={2} // Increased from 1.5
           transparent={true}
           opacity={0.8}
         />
       </mesh>
       
-      {/* Portal particles for effect */}
-      {[...Array(5)].map((_, i) => (
+      {/* Portal particles for effect - increased size and range */}
+      {[...Array(7)].map((_, i) => ( // Increased particle count from 5 to 7
         <mesh 
           key={i} 
           position={[
-            Math.sin(time + i * 1.5) * 0.5, 
-            Math.cos(time + i * 1.5) * 0.5, 
+            Math.sin(time + i * 1.5) * 0.9, // Increased range from 0.5 to 0.9
+            Math.cos(time + i * 1.5) * 0.9, // Increased range from 0.5 to 0.9
             0.1
           ]}
         >
-          <sphereGeometry args={[0.05, 8, 8]} />
+          <sphereGeometry args={[0.08, 10, 10]} /> {/* Increased from [0.05, 8, 8] */}
           <meshStandardMaterial 
             color={i % 2 === 0 ? color1 : color2}
             emissive={i % 2 === 0 ? color1 : color2}
-            emissiveIntensity={2}
+            emissiveIntensity={2.5} // Increased from 2
           />
         </mesh>
       ))}
       
-      {/* Portal label */}
+      {/* Portal label - position raised slightly */}
       <Text
         ref={textRef}
-        position={[0, 1.8, 0]}
+        position={[0, 2.4, 0]} // Increased height from 1.8 to 2.4
         {...textStyle}
       >
         {isEntry ? 'Entry Portal' : 'Vibeverse Portal'}
