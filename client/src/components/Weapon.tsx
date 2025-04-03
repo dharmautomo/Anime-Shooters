@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useAudio } from '../lib/stores/useAudio';
 import { usePlayer } from '../lib/stores/usePlayer';
@@ -162,6 +162,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
   }, [reload, isReloading, ammo, playSuccess, playSound, hasInteracted, isControlsLocked]);
 
   // Make weapon and muzzle flash follow the camera
+  const { camera } = useThree();
   useFrame(() => {
     if (weaponRef.current) {
       const cameraPosition = new THREE.Vector3();
