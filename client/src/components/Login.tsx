@@ -33,33 +33,18 @@ export default function Login({ onLogin }: LoginProps) {
     overflow: 'auto',
   };
   
-  // Mobile optimization styles
+  // Basic mobile styles only, no orientation forcing
   useEffect(() => {
     if (isMobile) {
-      // Add viewport meta tag to ensure proper mobile scaling
+      // Add basic viewport meta tag for responsive design
       const viewportMeta = document.createElement('meta');
       viewportMeta.name = 'viewport';
-      viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      viewportMeta.content = 'width=device-width, initial-scale=1.0';
       document.getElementsByTagName('head')[0].appendChild(viewportMeta);
-      
-      // Force landscape orientation if possible
-      const orientationMeta = document.createElement('meta');
-      orientationMeta.name = 'screen-orientation';
-      orientationMeta.content = 'landscape';
-      document.getElementsByTagName('head')[0].appendChild(orientationMeta);
-      
-      // Add fullscreen to mobile
-      document.documentElement.style.height = '100%';
-      document.body.style.height = '100%';
-      document.body.style.overflow = 'hidden';
       
       return () => {
         // Clean up
         document.getElementsByTagName('head')[0].removeChild(viewportMeta);
-        document.getElementsByTagName('head')[0].removeChild(orientationMeta);
-        document.documentElement.style.height = '';
-        document.body.style.height = '';
-        document.body.style.overflow = '';
       };
     }
   }, [isMobile]);
