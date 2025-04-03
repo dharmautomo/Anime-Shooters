@@ -70,34 +70,29 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   },
   
   shootBullet: () => {
-    // Explicitly get fresh state values right when the function is called
+    // NOTE: This function now ONLY creates bullets but does NOT decrement ammo
+    // Ammo decrementing is done EXCLUSIVELY in the Weapon.tsx component
+    
+    // Get the current state
     const { ammo, isAlive, position, playerId } = get();
     
     console.log("🔫 STORE: shootBullet called at", new Date().toISOString());
-    console.log("🔫 STORE: Current state - Ammo:", ammo, "isAlive:", isAlive);
+    console.log("🔫 STORE: Current ammo:", ammo, "isAlive:", isAlive);
     
-    // IMPORTANT: Immediately check if the ammo is already depleted
-    // This can happen if our direct approach in Weapon.tsx already decremented it
+    // VALIDATION: Check if we're allowed to shoot
     if (ammo <= 0) {
       console.log("🔫❌ STORE: Cannot shoot - no ammo available");
       return false;
     }
     
-    // SAFEGUARD: Only continue if player is still alive
     if (!isAlive) {
       console.log("🔫❌ STORE: Cannot shoot - player is not alive");
       return false;
     }
     
     try {
-      // Now we know we have ammo and the player is alive, so we can proceed
-      
-      // NOTE: We don't decrement ammo here since the Weapon component does that directly
-      // This prevents double-decrementing the ammo counter
-      // The line below is commented out to avoid double-decrementing
-      // set({ ammo: ammo - 1 });
-      
-      // Get camera direction for bullet creation
+      // BULLET CREATION - This is the sole responsibility of this function now
+      // Get camera for bullet direction
       const canvas = document.querySelector('canvas');
       const camera = canvas && (canvas as any)?.__r3f?.root?.camera;
       
@@ -106,25 +101,22 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         return false;
       }
       
-      // Create bullet direction from camera
+      // Calculate bullet direction from camera
       const direction = new THREE.Vector3(0, 0, -1);
       direction.applyQuaternion(camera.quaternion);
       direction.normalize();
       
-      // Calculate bullet spawn position (slightly in front of camera)
+      // Set bullet spawn position (slightly in front of camera)
       const bulletPosition = position.clone().add(direction.clone().multiplyScalar(0.5));
       bulletPosition.y += 1.5; // Eye height
       
-      // Import useMultiplayer directly
+      // Create the bullet via multiplayer store
       const { useMultiplayer } = require('./useMultiplayer');
       const { addBullet } = useMultiplayer.getState();
-      
-      // Create the bullet in the game world
       const bulletId = addBullet(bulletPosition, direction, playerId);
-      console.log('🔫✅ STORE: Created bullet with ID:', bulletId);
       
-      // Check final ammo count (should be decremented from Weapon.tsx)
-      console.log('🔫 STORE: Final ammo count after shooting:', get().ammo);
+      console.log('🔫✅ STORE: Created bullet with ID:', bulletId);
+      console.log('🔫 STORE: Current ammo after bullet creation:', get().ammo);
       
       return true;
     } catch (error) {

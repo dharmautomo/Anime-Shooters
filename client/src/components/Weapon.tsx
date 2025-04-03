@@ -66,7 +66,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     }
   }, []);
   
-  // Handle shooting
+  // Handle shooting through keyboard controls
   useEffect(() => {
     // Only allow shooting when controls are locked and user has interacted
     if (!hasInteracted || !isControlsLocked) return;
@@ -74,21 +74,16 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     if (shoot && !isShooting && !isReloading && ammo > 0) {
       setIsShooting(true);
       
-      console.log("🔫 SHOOT KEY PRESSED - Shooting weapon! Current ammo:", ammo);
+      console.log("🔫 KEYBOARD SHOOT - Starting shooting process. Current ammo:", ammo);
       
-      // Play gunshot sound using Web Audio API
+      // Play gunshot sound
       playSound('gunshot');
       
-      // Show muzzle flash with extensive logging
+      // Show muzzle flash
       if (muzzleFlashRef.current) {
         muzzleFlashRef.current.visible = true;
-        console.log("Showing muzzle flash at position:", 
-          muzzleFlashRef.current.position.x,
-          muzzleFlashRef.current.position.y,
-          muzzleFlashRef.current.position.z
-        );
         
-        // Hide muzzle flash after an extended duration
+        // Hide muzzle flash after a delay
         setTimeout(() => {
           if (muzzleFlashRef.current) {
             muzzleFlashRef.current.visible = false;
@@ -96,28 +91,25 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         }, 350);
       }
       
-      // DIRECT APPROACH - Manually decrement ammo to ensure it works
-      // This bypasses any potential issues with the callback chain
+      // CENTRALIZED AMMO MANAGEMENT:
+      // This is the only place where ammo gets decremented
       try {
-        // Import is wrapped in try-catch to handle any potential errors
         const playerStore = require('../lib/stores/usePlayer').usePlayer;
         const currentAmmo = playerStore.getState().ammo;
         
-        console.log("🔢 Before shooting: Current ammo in store:", currentAmmo);
-        
-        // Directly set the ammo value (bypassing any issues with the callback)
-        playerStore.setState({ ammo: Math.max(0, currentAmmo - 1) });
-        
-        // Verify ammo was decremented
-        console.log("🔢 After direct ammo update: New ammo count:", playerStore.getState().ammo);
-        
-        // Still call the original onShoot callback for other functionality (bullet creation, etc.)
-        onShoot();
+        if (currentAmmo > 0) {
+          console.log("🔢 KEYBOARD: Decrementing ammo from", currentAmmo, "to", currentAmmo - 1);
+          
+          // Set the new ammo value
+          playerStore.setState({ ammo: currentAmmo - 1 });
+          
+          // Create the bullet (but don't decrement ammo again in shootBullet)
+          onShoot();
+          
+          console.log("🔢 KEYBOARD: Ammo count after shooting:", playerStore.getState().ammo);
+        }
       } catch (error) {
-        console.error("Failed to update ammo directly:", error);
-        
-        // Fall back to just using the callback if direct access fails
-        onShoot();
+        console.error("Failed to update ammo:", error);
       }
       
       // Cooldown before next shot
@@ -129,7 +121,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       console.log("Click - empty gun");
       playSuccess();
     }
-  }, [shoot, isShooting, isReloading, ammo, playHit, playSuccess, playSound, onShoot, hasInteracted, isControlsLocked]);
+  }, [shoot, isShooting, isReloading, ammo, playSound, playSuccess, onShoot, hasInteracted, isControlsLocked]);
   
   // Handle mouse input for shooting (MAIN METHOD - most browsers use this)
   useEffect(() => {
