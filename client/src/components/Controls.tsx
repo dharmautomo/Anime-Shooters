@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
-import { usePlayer } from '../lib/stores/usePlayer';
+import { usePlayer } from '../lib/stores/initializeStores';
 
 const Controls = () => {
   const { camera } = useThree();

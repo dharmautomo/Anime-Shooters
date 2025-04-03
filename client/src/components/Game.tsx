@@ -2,15 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
-import { useMultiplayer } from '../lib/stores/useMultiplayer';
 import Player from './Player';
 import World from './World';
 import Weapon from './Weapon';
 import Bullet from './Bullet';
-import { usePlayer } from '../lib/stores/usePlayer';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
+import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 
 interface GameProps {
   username: string;

@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { usePlayer } from '../lib/stores/usePlayer';
-import { useMultiplayer } from '../lib/stores/useMultiplayer';
+import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { useGameControls } from '../lib/stores/useGameControls';
 
 // Create stable selector functions outside the component to prevent infinite loops

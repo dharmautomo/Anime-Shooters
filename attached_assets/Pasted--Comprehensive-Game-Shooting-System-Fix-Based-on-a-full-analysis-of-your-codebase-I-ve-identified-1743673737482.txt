@@ -1,0 +1,508 @@
+# Comprehensive Game Shooting System Fix
+
+Based on a full analysis of your codebase, I've identified a series of interconnected issues causing your shooting functionality to fail. Here's a complete approach to fixing your game's shooting system.
+
+## 1. Core Issues
+
+1. **Circular Dependencies**
+   - The stores are importing each other dynamically via `require()`
+   - This creates unpredictable behavior and potential race conditions
+
+2. **State Management Confusion**
+   - Ammo decrementing is happening in multiple places
+   - Shooting logic is split across Weapon.tsx and the usePlayer store
+
+3. **Pointer Lock and Controls**
+   - Shooting depends on control state that may not be updating correctly
+   - Pointer lock may not be properly established or maintained
+
+4. **Bullet Creation & Lifecycle**
+   - Sound effects are triggered in multiple places
+   - Bullet creation has multiple failure points
+
+## 2. Fix Strategy
+
+The fix requires changes to multiple files to create a more cohesive system:
+
+### A. Restructure the Stores
+
+**1. In `usePlayer.ts`:**
+```typescript
+// Pre-import the useMultiplayer type but not the actual store
+import { type MultiplierStore } from './useMultiplayer';
+
+// Export type for usePlayer
+export type PlayerStore = ReturnType<typeof createPlayerStore>;
+
+// Create a factory function instead of direct store
+export const createPlayerStore = (getMultiplayerStore: () => MultiplierStore) => create<PlayerState>((set, get) => ({
+  // ...existing state
+  
+  shootBullet: () => {
+    // Get the current state
+    const { ammo, isAlive, position, playerId } = get();
+    
+    console.log("🔫 STORE: shootBullet called at", new Date().toISOString());
+    console.log("🔫 STORE: Current ammo:", ammo, "isAlive:", isAlive);
+    
+    // VALIDATION: Check if we're allowed to shoot
+    if (ammo <= 0 || !isAlive) {
+      return false;
+    }
+    
+    try {
+      // Get the multiplayer store using the function passed in
+      const { addBullet } = getMultiplayerStore();
+      
+      // Get camera for bullet direction
+      const canvas = document.querySelector('canvas');
+      const camera = canvas && (canvas as any)?.__r3f?.root?.camera;
+      
+      if (!camera) {
+        console.error("🔫❌ STORE: Failed to shoot - camera not found!");
+        return false;
+      }
+      
+      // Calculate bullet direction from camera
+      const direction = new THREE.Vector3(0, 0, -1);
+      direction.applyQuaternion(camera.quaternion);
+      direction.normalize();
+      
+      // Set bullet spawn position
+      const bulletPosition = position.clone().add(direction.clone().multiplyScalar(0.5));
+      bulletPosition.y += 1.5; // Eye height
+      
+      // Create the bullet
+      const bulletId = addBullet(bulletPosition, direction, playerId);
+      console.log('🔫✅ STORE: Created bullet with ID:', bulletId);
+      
+      // Decrement ammo AFTER successful bullet creation
+      set(state => ({ ammo: state.ammo - 1 }));
+      console.log('🔫 STORE: Ammo decremented - new value:', get().ammo);
+      
+      return true;
+    } catch (error) {
+      console.error("🔫❌ STORE: Error in shootBullet:", error);
+      return false;
+    }
+  },
+  
+  // ...rest of functions
+}));
+
+// Create a delayed initialization for the actual store
+let playerStore: PlayerStore | null = null;
+
+export const initializePlayerStore = (getMultiplayerStore: () => MultiplierStore) => {
+  if (!playerStore) {
+    playerStore = createPlayerStore(getMultiplayerStore);
+  }
+  return playerStore;
+};
+
+// Expose the store with a getter that ensures it's initialized
+export const usePlayer = () => {
+  if (!playerStore) {
+    throw new Error("Player store accessed before initialization");
+  }
+  return playerStore;
+};
+```
+
+**2. In `useMultiplayer.ts`:**
+```typescript
+// Pre-import the usePlayer type but not the actual store
+import { type PlayerStore } from './usePlayer';
+
+// Export type for useMultiplayer
+export type MultiplierStore = ReturnType<typeof createMultiplayerStore>;
+
+// Create a factory function instead of direct store
+export const createMultiplayerStore = (getPlayerStore: () => PlayerStore) => create<MultiplayerState>((set, get) => ({
+  // ...existing state
+  
+  // Modified functions that need to access player store
+  initializeSocket: (username: string) => {
+    // ...existing code
+    
+    // Use getter function to safely access player store
+    const playerStore = getPlayerStore();
+    
+    // Setup socket event handlers
+    socket.on('connect', () => {
+      // ...
+      playerStore.setPlayerId(playerId);
+      // ...
+    });
+    
+    // ...rest of socket handlers
+  },
+  
+  // ...rest of functions
+}));
+
+// Create a delayed initialization
+let multiplayerStore: MultiplierStore | null = null;
+
+export const initializeMultiplayerStore = (getPlayerStore: () => PlayerStore) => {
+  if (!multiplayerStore) {
+    multiplayerStore = createMultiplayerStore(getPlayerStore);
+  }
+  return multiplayerStore;
+};
+
+// Expose the store with a getter that ensures it's initialized
+export const useMultiplayer = () => {
+  if (!multiplayerStore) {
+    throw new Error("Multiplayer store accessed before initialization");
+  }
+  return multiplayerStore;
+};
+```
+
+**3. Create a new `initializeStores.ts` file:**
+```typescript
+import { initializePlayerStore, usePlayer as getPlayerStore } from './usePlayer';
+import { initializeMultiplayerStore, useMultiplayer as getMultiplayerStore } from './useMultiplayer';
+
+// Initialize both stores with circular reference getters
+export const initializeStores = () => {
+  // Create store getters that handle the circular dependency
+  const getPlayerStoreImpl = () => getPlayerStore();
+  const getMultiplayerStoreImpl = () => getMultiplayerStore();
+  
+  // Initialize both stores with the getters
+  initializePlayerStore(getMultiplayerStoreImpl);
+  initializeMultiplayerStore(getPlayerStoreImpl);
+};
+```
+
+**4. Update your app initialization:**
+```typescript
+// In App.tsx or index.tsx
+import { initializeStores } from './lib/stores/initializeStores';
+
+// Initialize stores before rendering
+initializeStores();
+
+// ... rest of your app initialization
+```
+
+### B. Fix the Weapon Component
+
+```typescript
+import { useRef, useState, useEffect } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
+import { useKeyboardControls } from '@react-three/drei';
+import { Controls } from '../App';
+import { useAudio } from '../lib/stores/useAudio';
+import { useGameControls } from '../lib/stores/useGameControls';
+import { usePlayer } from '../lib/stores/usePlayer';
+
+interface WeaponProps {
+  position: [number, number, number];
+  rotation: [number, number, number];
+  ammo: number;
+  onShoot: () => void;
+}
+
+const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
+  const weaponRef = useRef<THREE.Group>(null);
+  const muzzleFlashRef = useRef<THREE.Group>(null);
+  const { camera } = useThree();
+  const [isShooting, setIsShooting] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
+  const { playHit, playSuccess, playSound } = useAudio();
+  const { hasInteracted, isControlsLocked } = useGameControls();
+  
+  // Get keyboard/mouse controls
+  const [subscribeKeys, getKeys] = useKeyboardControls();
+  const [shoot, setShoot] = useState(false);
+  const [reload, setReload] = useState(false);
+  
+  // Get player store - no require!
+  const playerStore = usePlayer();
+  
+  // Muzzle flash setup
+  useEffect(() => {
+    if (muzzleFlashRef.current) {
+      muzzleFlashRef.current.visible = false;
+    }
+  }, []);
+  
+  // Subscribe to keyboard controls
+  useEffect(() => {
+    const unsubReload = subscribeKeys(
+      (state) => state[Controls.reload],
+      (pressed) => setReload(!!pressed)
+    );
+    
+    const unsubShoot = subscribeKeys(
+      (state) => state[Controls.shoot],
+      (pressed) => setShoot(!!pressed)
+    );
+    
+    return () => {
+      unsubShoot();
+      unsubReload();
+    };
+  }, [subscribeKeys]);
+  
+  // CENTRALIZED SHOOTING FUNCTION
+  const handleShootAttempt = () => {
+    // Check control and interaction state
+    if (!hasInteracted || !isControlsLocked) {
+      console.log("Shooting blocked - controls not locked or no interaction");
+      return false;
+    }
+    
+    // Check weapon state
+    if (isShooting || isReloading) {
+      console.log("Shooting blocked - already shooting or reloading");
+      return false;
+    }
+    
+    // Check ammo
+    if (ammo <= 0) {
+      console.log("Shooting blocked - no ammo");
+      playSuccess(); // Click sound for empty gun
+      return false;
+    }
+    
+    // ALL CHECKS PASSED - Start shooting sequence
+    console.log("🔫 SHOOTING SEQUENCE INITIATED");
+    setIsShooting(true);
+    
+    // Show muzzle flash
+    if (muzzleFlashRef.current) {
+      muzzleFlashRef.current.visible = true;
+      setTimeout(() => {
+        if (muzzleFlashRef.current) {
+          muzzleFlashRef.current.visible = false;
+        }
+      }, 150);
+    }
+    
+    // Play sound (only here - bullet won't play it)
+    playSound('gunshot');
+    
+    // Create bullet via store - THIS WILL DECREMENT AMMO
+    const success = playerStore.shootBullet();
+    
+    // Call the onShoot callback provided by parent
+    if (success) {
+      onShoot();
+    }
+    
+    // Set cooldown 
+    setTimeout(() => {
+      setIsShooting(false);
+    }, 250);
+    
+    return true;
+  };
+  
+  // Handle keyboard shooting
+  useEffect(() => {
+    if (shoot) {
+      handleShootAttempt();
+    }
+  }, [shoot, ammo, isShooting, isReloading, hasInteracted, isControlsLocked]);
+  
+  // Handle mouse click shooting
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 0) { // Left mouse button
+        handleShootAttempt();
+      }
+    };
+    
+    window.addEventListener('mousedown', handleMouseDown);
+    return () => window.removeEventListener('mousedown', handleMouseDown);
+  }, [ammo, isShooting, isReloading, hasInteracted, isControlsLocked]);
+  
+  // Handle reloading
+  useEffect(() => {
+    if (reload && !isReloading && ammo < 10 && hasInteracted && isControlsLocked) {
+      setIsReloading(true);
+      
+      // Play reload sound
+      setTimeout(() => playSound('reload'), 300);
+      
+      // Actual reload happens halfway through animation
+      setTimeout(() => playerStore.reloadAmmo(), 750);
+      
+      // Complete reloading
+      setTimeout(() => setIsReloading(false), 1500);
+    }
+  }, [reload, isReloading, ammo, hasInteracted, isControlsLocked]);
+  
+  // The rest of your component (useFrame, return JSX)...
+  // ... (keep all the rendering and animation code the same)
+  
+  return (
+    // ... your existing JSX ...
+  );
+};
+
+export default Weapon;
+```
+
+### C. Update Bullet Component
+
+```typescript
+// In Bullet.tsx
+import { useRef, useEffect } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+import { useMultiplayer } from '../lib/stores/useMultiplayer';
+import { usePlayer } from '../lib/stores/usePlayer';
+
+interface BulletProps {
+  position: THREE.Vector3 | [number, number, number];
+  velocity: THREE.Vector3 | [number, number, number];
+  owner: string;
+  id?: string;
+}
+
+const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
+  // ... your existing code ...
+  
+  // IMPORTANT CHANGE: Remove additional sound playing
+  useEffect(() => {
+    // DON'T play shooting sound here - it's already played in the Weapon component
+    // This prevents double sound effects
+    
+    // Start lifetime countdown
+    const timeoutId = setTimeout(() => {
+      try {
+        removeBullet(bulletId.current);
+      } catch (error) {
+        console.error(`Failed to remove expired bullet ${bulletId.current}:`, error);
+      }
+    }, lifetime.current);
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [removeBullet]);
+  
+  // ... rest of your component ...
+};
+
+export default Bullet;
+```
+
+### D. Improve Game Controls
+
+```typescript
+// GameControls.tsx - Add this to your UI components
+import { useEffect } from 'react';
+import { useGameControls } from '../lib/stores/useGameControls';
+
+export const GameControlsManager = () => {
+  const { setHasInteracted, setControlsLocked } = useGameControls();
+  
+  // Handle pointer lock
+  useEffect(() => {
+    const handlePointerLockChange = () => {
+      const isLocked = document.pointerLockElement !== null;
+      console.log("Pointer lock changed:", isLocked ? "LOCKED" : "UNLOCKED");
+      setControlsLocked(isLocked);
+    };
+    
+    const handlePointerLockError = (e: Event) => {
+      console.error("Pointer lock error:", e);
+      setControlsLocked(false);
+    };
+    
+    // First interaction handler
+    const handleFirstInteraction = () => {
+      console.log("First interaction detected");
+      setHasInteracted(true);
+      
+      // Try to get pointer lock
+      const canvas = document.querySelector('canvas');
+      if (canvas && !document.pointerLockElement) {
+        try {
+          canvas.requestPointerLock();
+        } catch (e) {
+          console.error("Error requesting pointer lock:", e);
+        }
+      }
+      
+      // Remove these handlers after first interaction
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
+    
+    // Set up all event listeners
+    document.addEventListener('pointerlockchange', handlePointerLockChange);
+    document.addEventListener('pointerlockerror', handlePointerLockError);
+    window.addEventListener('click', handleFirstInteraction);
+    window.addEventListener('keydown', handleFirstInteraction);
+    
+    return () => {
+      document.removeEventListener('pointerlockchange', handlePointerLockChange);
+      document.removeEventListener('pointerlockerror', handlePointerLockError);
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, [setHasInteracted, setControlsLocked]);
+  
+  // This is a "hidden" component - it doesn't render anything
+  return null;
+};
+```
+
+## 3. Integration and Testing
+
+1. **Update Your App Component:**
+```tsx
+// In App.tsx
+import { GameControlsManager } from './components/GameControlsManager';
+
+function App() {
+  // ... your existing code ...
+  
+  return (
+    <>
+      {!isLoggedIn ? (
+        <Login onLogin={handleLogin} />
+      ) : (
+        <KeyboardControls map={keyMap}>
+          <Canvas /* ... your existing props ... */ >
+            {/* ... */}
+          </Canvas>
+          <GameStartOverlay />
+          <UI />
+          <AudioManager />
+          <GameControlsManager /> {/* Add this component */}
+        </KeyboardControls>
+      )}
+    </>
+  );
+}
+```
+
+2. **Testing The Fix:**
+   - Test shooting with mouse clicks
+   - Test shooting with the J key
+   - Test shooting while moving
+   - Test shooting at other players
+   - Test reloading
+
+## 4. Debugging Options
+
+If you still encounter issues, add the debug overlay component from the previous artifact to help diagnose pointer lock problems:
+
+```tsx
+// In App.tsx, import and add the debug component
+import GameControlsDebug from './components/GameControlsDebug';
+
+// Then add it to your UI
+<GameControlsDebug />
+```
+
+This will show you the current state of controls and interaction, helping pinpoint any remaining issues.

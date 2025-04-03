@@ -3,8 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useKeyboardControls, useAnimations } from '@react-three/drei';
 import { Controls } from '../App';
-import { usePlayer } from '../lib/stores/usePlayer';
-import { useMultiplayer } from '../lib/stores/useMultiplayer';
+import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { checkCollision } from '../lib/utils/collisionDetection';
 
 interface PlayerProps {

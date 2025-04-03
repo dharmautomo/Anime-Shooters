@@ -5,6 +5,7 @@ import { useKeyboardControls } from '@react-three/drei';
 import { Controls } from '../App';
 import { useAudio } from '../lib/stores/useAudio';
 import { useGameControls } from '../lib/stores/useGameControls';
+import { usePlayer } from '../lib/stores/initializeStores';
 
 interface WeaponProps {
   position: [number, number, number];
@@ -66,141 +67,79 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     }
   }, []);
   
-  // Handle shooting through keyboard controls (including J key)
+  // CENTRALIZED SHOOTING FUNCTION
+  const handleShootAttempt = () => {
+    // Check control and interaction state
+    if (!hasInteracted || !isControlsLocked) {
+      console.log("Shooting blocked - controls not locked or no interaction");
+      return false;
+    }
+    
+    // Check weapon state
+    if (isShooting || isReloading) {
+      console.log("Shooting blocked - already shooting or reloading");
+      return false;
+    }
+    
+    // Check ammo
+    if (ammo <= 0) {
+      console.log("Shooting blocked - no ammo");
+      playSuccess(); // Click sound for empty gun
+      return false;
+    }
+    
+    // ALL CHECKS PASSED - Start shooting sequence
+    console.log("🔫 SHOOTING SEQUENCE INITIATED");
+    setIsShooting(true);
+    
+    // Show muzzle flash first (immediate visual feedback)
+    if (muzzleFlashRef.current) {
+      muzzleFlashRef.current.visible = true;
+      setTimeout(() => {
+        if (muzzleFlashRef.current) {
+          muzzleFlashRef.current.visible = false;
+        }
+      }, 150);
+    }
+    
+    // Play sound (only here - bullet won't play it)
+    playSound('gunshot');
+    
+    // Create bullet via store - THIS WILL DECREMENT AMMO in the store
+    const success = usePlayer.shootBullet();
+    
+    // Call the onShoot callback provided by parent (for any additional effects)
+    if (success) {
+      onShoot();
+    }
+    
+    // Set cooldown 
+    setTimeout(() => {
+      setIsShooting(false);
+    }, 250);
+    
+    return true;
+  };
+  
+  // Handle keyboard shooting
   useEffect(() => {
     // Only allow shooting when controls are locked and user has interacted
     if (!hasInteracted || !isControlsLocked) return;
     
     if (shoot && !isShooting && !isReloading) {
-      setIsShooting(true);
-      
-      // Check which key was pressed (J key or other key mapped to shoot)
-      const isJKeyPressed = document.querySelector("body")?.getAttribute("data-pressed-j") === "true";
-      console.log("🔫 KEYBOARD SHOOT - Starting shooting process. Current ammo:", ammo, 
-                 isJKeyPressed ? " (J key pressed)" : " (Regular key press)");
-      
-      // CENTRALIZED AMMO MANAGEMENT:
-      // This is the only place where ammo gets decremented when using keyboard controls
-      try {
-        const playerStore = require('../lib/stores/usePlayer').usePlayer;
-        const currentAmmo = playerStore.getState().ammo;
-        
-        if (currentAmmo > 0) {
-          console.log("🔢 KEYBOARD: Decrementing ammo from", currentAmmo, "to", currentAmmo - 1);
-          
-          // Set the new ammo value FIRST before other actions
-          playerStore.setState({ ammo: currentAmmo - 1 });
-          
-          // Play gunshot sound
-          playSound('gunshot');
-          
-          // Show muzzle flash
-          if (muzzleFlashRef.current) {
-            muzzleFlashRef.current.visible = true;
-            
-            // Hide muzzle flash after a delay
-            setTimeout(() => {
-              if (muzzleFlashRef.current) {
-                muzzleFlashRef.current.visible = false;
-              }
-            }, 350);
-          }
-          
-          // Create the bullet (but don't decrement ammo again in shootBullet)
-          const success = onShoot();
-          
-          console.log("🔢 KEYBOARD: Bullet creation success:", success);
-          console.log("🔢 KEYBOARD: Ammo count after shooting:", playerStore.getState().ammo);
-        } else {
-          // Click sound for empty gun
-          console.log("Click - empty gun");
-          playSuccess();
-        }
-      } catch (error) {
-        console.error("Failed to update ammo:", error);
-      }
-      
-      // Cooldown before next shot
-      setTimeout(() => {
-        setIsShooting(false);
-      }, 350);
-    } else if (shoot && ammo === 0 && !isReloading) {
-      // Click sound for empty gun
-      console.log("Click - empty gun");
-      playSuccess();
+      console.log("🔫 KEYBOARD SHOOT - Starting shooting process. Current ammo:", ammo);
+      handleShootAttempt();
     }
-  }, [shoot, isShooting, isReloading, ammo, playSound, playSuccess, onShoot, hasInteracted, isControlsLocked]);
+  }, [shoot, isShooting, isReloading, ammo, hasInteracted, isControlsLocked]);
   
   // Handle mouse input for shooting (MAIN METHOD - most browsers use this)
   useEffect(() => {
     console.log("Setting up mouse event listener for shooting");
     
     const handleMouseDown = (e: MouseEvent) => {
-      // Only allow shooting when controls are locked and user has interacted
-      if (!hasInteracted || !isControlsLocked) {
-        console.log("Mouse click ignored - controls not locked or no interaction");
-        return;
-      }
-      
       if (e.button === 0) { // Left mouse button
         console.log("🖱️ Left mouse button click detected");
-        
-        if (!isShooting && !isReloading) {
-          console.log("🖱️ MOUSE CLICK - Processing click. Current ammo:", ammo);
-          setIsShooting(true);
-          
-          // IMPORTANT: This is the MAIN source of ammo decrement
-          // It should reliably update the ammo count on click
-          try {
-            const playerStore = require('../lib/stores/usePlayer').usePlayer;
-            const currentAmmo = playerStore.getState().ammo;
-            
-            console.log("🔫 MOUSE CLICK: Before shooting: Current ammo:", currentAmmo);
-            
-            if (currentAmmo > 0) {
-              // Directly set the ammo value (most reliable approach) FIRST before other actions
-              playerStore.setState({ ammo: currentAmmo - 1 });
-              console.log("🔫 MOUSE CLICK: Ammo decremented to:", currentAmmo - 1);
-              
-              // Play gunshot sound using Web Audio API
-              playSound('gunshot');
-              
-              // Show muzzle flash
-              if (muzzleFlashRef.current) {
-                muzzleFlashRef.current.visible = true;
-                
-                // Hide muzzle flash after an extended time for better visibility
-                setTimeout(() => {
-                  if (muzzleFlashRef.current) {
-                    muzzleFlashRef.current.visible = false;
-                  }
-                }, 350);
-              }
-              
-              // Call onShoot to create the bullet in the game world
-              const success = onShoot();
-              
-              // Verify the final state (after all updates)
-              console.log("🔫 MOUSE CLICK: Bullet creation success:", success);
-              console.log("🔫 MOUSE CLICK: Final ammo count:", playerStore.getState().ammo);
-            } else {
-              // Click sound for empty gun
-              console.log("Empty gun click sound - no ammo left");
-              playSuccess();
-            }
-          } catch (error) {
-            console.error("Failed to update ammo on mouse click:", error);
-          }
-          
-          // Cooldown before next shot
-          setTimeout(() => {
-            setIsShooting(false);
-            console.log("Shooting cooldown finished");
-          }, 350);
-        } else {
-          console.log("🖱️ Mouse click ignored. Shooting:", isShooting, 
-                      "Reloading:", isReloading, "Ammo:", ammo);
-        }
+        handleShootAttempt();
       }
     };
     
@@ -211,7 +150,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     return () => {
       window.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [isShooting, isReloading, ammo, playHit, playSuccess, playSound, onShoot, hasInteracted, isControlsLocked]);
+  }, [isShooting, isReloading, ammo, hasInteracted, isControlsLocked]);
   
   // Handle reloading
   useEffect(() => {
@@ -226,13 +165,9 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         playSound('reload');
       }, 300);
       
-      // Call the actual reloadAmmo function from usePlayer
-      // Import directly to avoid circular dependency issues
-      const { usePlayer } = require('../lib/stores/usePlayer');
-      
       // Schedule the actual ammo reload halfway through the animation
       setTimeout(() => {
-        usePlayer.getState().reloadAmmo();
+        usePlayer.reloadAmmo();
         console.log('Reloaded ammo to 10');
       }, 750);
       
@@ -241,7 +176,7 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         setIsReloading(false);
       }, 1500);
     }
-  }, [reload, isReloading, ammo, playSuccess, playSound, hasInteracted, isControlsLocked]);
+  }, [reload, isReloading, ammo, playSound, hasInteracted, isControlsLocked]);
   
   // Make weapon and muzzle flash follow the camera
   useFrame(() => {

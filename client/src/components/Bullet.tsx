@@ -1,9 +1,8 @@
 import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useMultiplayer } from '../lib/stores/useMultiplayer';
-import { usePlayer } from '../lib/stores/usePlayer';
 import { useAudio } from '../lib/stores/useAudio';
+import { useMultiplayer, usePlayer } from '../lib/stores/initializeStores';
 import { checkCollision } from '../lib/utils/collisionDetection';
 
 interface BulletProps {

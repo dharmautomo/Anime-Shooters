@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
-import { usePlayer } from '../lib/stores/usePlayer';
+import { usePlayer } from '../lib/stores/initializeStores';
 
 interface PortalProps {
   position: [number, number, number];

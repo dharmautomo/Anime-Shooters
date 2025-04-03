@@ -1,0 +1,243 @@
+// initializeStores.ts
+import { create } from 'zustand';
+import * as THREE from 'three';
+
+// Types for cross-store references
+export type PlayerStoreType = ReturnType<typeof createPlayerStore>;
+export type MultiplayerStoreType = ReturnType<typeof createMultiplayerStore>;
+
+// Store instances (will be initialized later)
+let playerStore: PlayerStoreType | null = null;
+let multiplayerStore: MultiplayerStoreType | null = null;
+
+// Player store factory
+export const createPlayerStore = (getMultiplayerStore: () => MultiplayerStoreType) => create((set, get) => ({
+  playerId: '',
+  playerName: '',
+  position: new THREE.Vector3(0, 1.6, 10),
+  rotation: 0,
+  health: 100,
+  ammo: 10,
+  score: 0,
+  isAlive: true,
+  
+  setPlayerId: (id) => set({ playerId: id }),
+  setPlayerName: (name) => set({ playerName: name }),
+  
+  updatePosition: (position) => {
+    set({ position: position.clone() });
+  },
+  
+  updateRotation: (rotation) => {
+    set({ rotation });
+  },
+  
+  takeDamage: (amount) => {
+    set((state) => {
+      const newHealth = Math.max(0, state.health - amount);
+      const isAlive = newHealth > 0;
+      
+      return { 
+        health: newHealth, 
+        isAlive 
+      };
+    });
+    
+    // If player died, schedule respawn
+    if (get().health <= 0) {
+      setTimeout(() => {
+        get().respawn();
+      }, 3000);
+    }
+  },
+  
+  addScore: (points) => {
+    set((state) => ({ score: state.score + points }));
+  },
+  
+  shootBullet: () => {
+    // Get the current state
+    const { ammo, isAlive, position, playerId } = get();
+    
+    console.log("🔫 STORE: shootBullet called at", new Date().toISOString());
+    console.log("🔫 STORE: Current ammo:", ammo, "isAlive:", isAlive);
+    
+    // VALIDATION: Check if we're allowed to shoot
+    if (ammo <= 0) {
+      console.log("🔫❌ STORE: Cannot shoot - no ammo available");
+      return false;
+    }
+    
+    if (!isAlive) {
+      console.log("🔫❌ STORE: Cannot shoot - player is not alive");
+      return false;
+    }
+    
+    try {
+      // Get camera for bullet direction
+      const canvas = document.querySelector('canvas');
+      const camera = canvas && (canvas as any)?.__r3f?.root?.camera;
+      
+      if (!camera) {
+        console.error("🔫❌ STORE: Failed to shoot - camera not found!");
+        return false;
+      }
+      
+      // Calculate bullet direction from camera
+      const direction = new THREE.Vector3(0, 0, -1);
+      direction.applyQuaternion(camera.quaternion);
+      direction.normalize();
+      
+      // Set bullet spawn position (slightly in front of camera)
+      const bulletPosition = position.clone().add(direction.clone().multiplyScalar(0.5));
+      bulletPosition.y += 1.5; // Eye height
+      
+      // Create the bullet via multiplayer store - using the getter to avoid circular imports
+      const { addBullet } = getMultiplayerStore();
+      
+      // Ensure we have the player ID before creating a bullet
+      if (!playerId) {
+        console.error("🔫❌ STORE: Failed to shoot - player ID not set!");
+        return false;
+      }
+      
+      try {
+        const bulletId = addBullet(bulletPosition, direction, playerId);
+        console.log('🔫✅ STORE: Created bullet with ID:', bulletId);
+        
+        // IMPORTANT: Decrement ammo HERE after successful bullet creation
+        set({ ammo: ammo - 1 });
+        console.log('🔫 STORE: Ammo decremented to:', get().ammo);
+        
+        return true;
+      } catch (bulletError) {
+        console.error("🔫❌ STORE: Error creating bullet:", bulletError);
+        return false;
+      }
+    } catch (error) {
+      console.error("🔫❌ STORE: Error in shootBullet:", error);
+      return false;
+    }
+  },
+  
+  reloadAmmo: () => {
+    set({ ammo: 10 });
+  },
+  
+  respawn: () => {
+    const randomX = (Math.random() - 0.5) * 40;
+    const randomZ = (Math.random() - 0.5) * 40;
+    
+    set({
+      position: new THREE.Vector3(randomX, 1.6, randomZ),
+      health: 100,
+      ammo: 10,
+      isAlive: true
+    });
+  },
+  
+  resetPlayer: () => {
+    set({
+      position: new THREE.Vector3(0, 1.6, 10),
+      rotation: 0,
+      health: 100,
+      ammo: 10,
+      score: 0,
+      isAlive: true
+    });
+  }
+}));
+
+// Multiplayer store factory - simplified for example
+export const createMultiplayerStore = (getPlayerStore: () => PlayerStoreType) => create((set, get) => ({
+  socket: null,
+  connected: false,
+  otherPlayers: {},
+  bullets: [],
+  killFeed: [],
+  
+  // Method to initialize socket
+  initializeSocket: (username) => {
+    // Existing socket initialization code would go here
+    // When you need to reference the player store, use:
+    const playerStore = getPlayerStore();
+    // ...which gives safe access to the player store
+  },
+  
+  // Other methods from your original store
+  updatePlayerPosition: (position, rotation) => {
+    // ...
+  },
+  
+  // Add bullet method - critical for shooting
+  addBullet: (position, direction, owner) => {
+    const bulletId = `bullet-${Math.random().toString(36).substring(2, 9)}`;
+    
+    console.log(`Creating bullet ${bulletId} at position:`, position);
+    
+    // Add bullet to local state
+    set((state) => ({
+      bullets: [
+        ...state.bullets,
+        {
+          id: bulletId,
+          position: position.clone(),
+          velocity: direction.clone(),
+          owner,
+        },
+      ],
+    }));
+    
+    // Socket emission would go here
+    // ...
+    
+    return bulletId;
+  },
+  
+  // Other methods
+  removeBullet: (id) => {
+    // ...
+  },
+  
+  checkBulletCollision: (bulletPosition, bulletOwner) => {
+    // ...
+    return false;
+  },
+  
+  disconnect: () => {
+    // ...
+  }
+}));
+
+// Initialization function
+export const initializeStores = () => {
+  // Create getters that will be used to resolve circular dependencies
+  const getPlayerStoreImpl = () => {
+    if (!playerStore) {
+      throw new Error("Player store accessed before initialization");
+    }
+    return playerStore;
+  };
+  
+  const getMultiplayerStoreImpl = () => {
+    if (!multiplayerStore) {
+      throw new Error("Multiplayer store accessed before initialization");
+    }
+    return multiplayerStore;
+  };
+  
+  // Initialize the stores with access to each other
+  playerStore = createPlayerStore(getMultiplayerStoreImpl);
+  multiplayerStore = createMultiplayerStore(getPlayerStoreImpl);
+  
+  console.log("✅ Game stores initialized successfully");
+  
+  // Return the stores
+  return {
+    usePlayer: () => playerStore,
+    useMultiplayer: () => multiplayerStore
+  };
+};
+
+// Default export initialization
+export const { usePlayer, useMultiplayer } = initializeStores();
