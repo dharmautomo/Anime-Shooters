@@ -113,12 +113,22 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       // Create the bullet via multiplayer store
       const { useMultiplayer } = require('./useMultiplayer');
       const { addBullet } = useMultiplayer.getState();
-      const bulletId = addBullet(bulletPosition, direction, playerId);
       
-      console.log('🔫✅ STORE: Created bullet with ID:', bulletId);
-      console.log('🔫 STORE: Current ammo after bullet creation:', get().ammo);
+      // Ensure we have the player ID before creating a bullet
+      if (!playerId) {
+        console.error("🔫❌ STORE: Failed to shoot - player ID not set!");
+        return false;
+      }
       
-      return true;
+      try {
+        const bulletId = addBullet(bulletPosition, direction, playerId);
+        console.log('🔫✅ STORE: Created bullet with ID:', bulletId);
+        console.log('🔫 STORE: Current ammo after bullet creation:', get().ammo);
+        return true;
+      } catch (bulletError) {
+        console.error("🔫❌ STORE: Error creating bullet:", bulletError);
+        return false;
+      }
     } catch (error) {
       console.error("🔫❌ STORE: Error in shootBullet:", error);
       return false;

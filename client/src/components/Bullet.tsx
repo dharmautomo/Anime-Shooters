@@ -14,8 +14,8 @@ interface BulletProps {
 }
 
 const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
-  // Store the bullet ID for later use with removal
-  const bulletId = useRef(id || Math.random().toString(36).substring(2, 9));
+  // Store the bullet ID for later use with removal - ensure we always have an ID
+  const bulletId = useRef(id || `bullet-${Math.random().toString(36).substring(2, 9)}`);
   const bulletRef = useRef<THREE.Mesh>(null);
   const initialPos = useRef(
     position instanceof THREE.Vector3 
@@ -37,20 +37,29 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
   const lifetime = useRef(3000); // 3 seconds
   const speed = 2.0; // Slightly reduced speed to make bullets more visible
   
+  // Logging for debug - check bullet initialization
+  useEffect(() => {
+    console.log(`Bullet initialized: ID ${bulletId.current}, owner: ${owner}, position:`, initialPos.current);
+  }, [owner]);
+  
   // Set up bullet
   useEffect(() => {
     // Play shooting sound when bullet is created (only for bullets that are not owned by other players)
     if (owner === playerId) {
       // Use direct Web Audio API for more reliable sound
+      console.log(`Owner's bullet - playing gunshot sound for bullet ${bulletId.current}`);
       playSound('gunshot');
-      console.log("Playing gunshot sound for bullet using Web Audio API");
     }
     
     // Start lifetime countdown
     const timeoutId = setTimeout(() => {
       // Use the stored bullet ID for removing
-      console.log(`Bullet with ID ${bulletId.current} expired and will be removed`);
-      removeBullet(bulletId.current);
+      console.log(`Bullet with ID ${bulletId.current} expired after ${lifetime.current}ms and will be removed`);
+      try {
+        removeBullet(bulletId.current);
+      } catch (error) {
+        console.error(`Failed to remove expired bullet ${bulletId.current}:`, error);
+      }
     }, lifetime.current);
     
     return () => {
@@ -66,15 +75,19 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       bulletRef.current.position.add(movement);
       
       // Check for collisions with players
-      const collision = checkBulletCollision(
-        bulletRef.current.position,
-        owner
-      );
-      
-      // If collision occurred, remove the bullet
-      if (collision) {
-        console.log(`Bullet with ID ${bulletId.current} collided and will be removed`);
-        removeBullet(bulletId.current);
+      try {
+        const collision = checkBulletCollision(
+          bulletRef.current.position,
+          owner
+        );
+        
+        // If collision occurred, remove the bullet
+        if (collision) {
+          console.log(`Bullet with ID ${bulletId.current} collided and will be removed`);
+          removeBullet(bulletId.current);
+        }
+      } catch (error) {
+        console.error(`Error checking bullet collision for ${bulletId.current}:`, error);
       }
     }
   });

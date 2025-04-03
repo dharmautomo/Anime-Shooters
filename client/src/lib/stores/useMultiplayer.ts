@@ -61,7 +61,7 @@ interface MultiplayerState {
   // Actions
   initializeSocket: (username: string) => void;
   updatePlayerPosition: (position: THREE.Vector3, rotation: number) => void;
-  addBullet: (position: THREE.Vector3, direction: THREE.Vector3, owner: string) => void;
+  addBullet: (position: THREE.Vector3, direction: THREE.Vector3, owner: string) => string;
   removeBullet: (id: string) => void;
   checkBulletCollision: (bulletPosition: THREE.Vector3, bulletOwner: string) => boolean;
   disconnect: () => void;

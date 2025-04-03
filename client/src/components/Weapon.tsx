@@ -71,28 +71,13 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
     // Only allow shooting when controls are locked and user has interacted
     if (!hasInteracted || !isControlsLocked) return;
     
-    if (shoot && !isShooting && !isReloading && ammo > 0) {
+    if (shoot && !isShooting && !isReloading) {
       setIsShooting(true);
       
       // Check which key was pressed (J key or other key mapped to shoot)
       const isJKeyPressed = document.querySelector("body")?.getAttribute("data-pressed-j") === "true";
       console.log("🔫 KEYBOARD SHOOT - Starting shooting process. Current ammo:", ammo, 
                  isJKeyPressed ? " (J key pressed)" : " (Regular key press)");
-      
-      // Play gunshot sound
-      playSound('gunshot');
-      
-      // Show muzzle flash
-      if (muzzleFlashRef.current) {
-        muzzleFlashRef.current.visible = true;
-        
-        // Hide muzzle flash after a delay
-        setTimeout(() => {
-          if (muzzleFlashRef.current) {
-            muzzleFlashRef.current.visible = false;
-          }
-        }, 350);
-      }
       
       // CENTRALIZED AMMO MANAGEMENT:
       // This is the only place where ammo gets decremented when using keyboard controls
@@ -103,13 +88,33 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         if (currentAmmo > 0) {
           console.log("🔢 KEYBOARD: Decrementing ammo from", currentAmmo, "to", currentAmmo - 1);
           
-          // Set the new ammo value
+          // Set the new ammo value FIRST before other actions
           playerStore.setState({ ammo: currentAmmo - 1 });
           
-          // Create the bullet (but don't decrement ammo again in shootBullet)
-          onShoot();
+          // Play gunshot sound
+          playSound('gunshot');
           
+          // Show muzzle flash
+          if (muzzleFlashRef.current) {
+            muzzleFlashRef.current.visible = true;
+            
+            // Hide muzzle flash after a delay
+            setTimeout(() => {
+              if (muzzleFlashRef.current) {
+                muzzleFlashRef.current.visible = false;
+              }
+            }, 350);
+          }
+          
+          // Create the bullet (but don't decrement ammo again in shootBullet)
+          const success = onShoot();
+          
+          console.log("🔢 KEYBOARD: Bullet creation success:", success);
           console.log("🔢 KEYBOARD: Ammo count after shooting:", playerStore.getState().ammo);
+        } else {
+          // Click sound for empty gun
+          console.log("Click - empty gun");
+          playSuccess();
         }
       } catch (error) {
         console.error("Failed to update ammo:", error);
@@ -140,24 +145,9 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
       if (e.button === 0) { // Left mouse button
         console.log("🖱️ Left mouse button click detected");
         
-        if (!isShooting && !isReloading && ammo > 0) {
-          console.log("🖱️ MOUSE CLICK - Shooting with ammo:", ammo);
+        if (!isShooting && !isReloading) {
+          console.log("🖱️ MOUSE CLICK - Processing click. Current ammo:", ammo);
           setIsShooting(true);
-          
-          // Play gunshot sound using Web Audio API
-          playSound('gunshot');
-          
-          // Show muzzle flash
-          if (muzzleFlashRef.current) {
-            muzzleFlashRef.current.visible = true;
-            
-            // Hide muzzle flash after an extended time for better visibility
-            setTimeout(() => {
-              if (muzzleFlashRef.current) {
-                muzzleFlashRef.current.visible = false;
-              }
-            }, 350);
-          }
           
           // IMPORTANT: This is the MAIN source of ammo decrement
           // It should reliably update the ammo count on click
@@ -167,21 +157,39 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
             
             console.log("🔫 MOUSE CLICK: Before shooting: Current ammo:", currentAmmo);
             
-            // Directly set the ammo value (most reliable approach)
             if (currentAmmo > 0) {
+              // Directly set the ammo value (most reliable approach) FIRST before other actions
               playerStore.setState({ ammo: currentAmmo - 1 });
               console.log("🔫 MOUSE CLICK: Ammo decremented to:", currentAmmo - 1);
+              
+              // Play gunshot sound using Web Audio API
+              playSound('gunshot');
+              
+              // Show muzzle flash
+              if (muzzleFlashRef.current) {
+                muzzleFlashRef.current.visible = true;
+                
+                // Hide muzzle flash after an extended time for better visibility
+                setTimeout(() => {
+                  if (muzzleFlashRef.current) {
+                    muzzleFlashRef.current.visible = false;
+                  }
+                }, 350);
+              }
+              
+              // Call onShoot to create the bullet in the game world
+              const success = onShoot();
+              
+              // Verify the final state (after all updates)
+              console.log("🔫 MOUSE CLICK: Bullet creation success:", success);
+              console.log("🔫 MOUSE CLICK: Final ammo count:", playerStore.getState().ammo);
+            } else {
+              // Click sound for empty gun
+              console.log("Empty gun click sound - no ammo left");
+              playSuccess();
             }
-            
-            // Call onShoot to create the bullet in the game world
-            onShoot();
-            
-            // Verify the final state (after all updates)
-            console.log("🔫 MOUSE CLICK: Final ammo count:", playerStore.getState().ammo);
           } catch (error) {
             console.error("Failed to update ammo on mouse click:", error);
-            // Fallback to original callback
-            onShoot();
           }
           
           // Cooldown before next shot
@@ -189,10 +197,6 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
             setIsShooting(false);
             console.log("Shooting cooldown finished");
           }, 350);
-        } else if (ammo === 0 && !isReloading) {
-          // Click sound for empty gun
-          console.log("Empty gun click sound - no ammo left");
-          playSuccess();
         } else {
           console.log("🖱️ Mouse click ignored. Shooting:", isShooting, 
                       "Reloading:", isReloading, "Ammo:", ammo);
