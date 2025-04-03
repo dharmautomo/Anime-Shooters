@@ -134,72 +134,14 @@ function App() {
     };
   }, [isLoggedIn]);
 
-  // Add emergency shoot button for debugging
+  // Make player store accessible globally for debugging
   useEffect(() => {
-    // Make store accessible globally for emergency debugging
     if (typeof window !== 'undefined') {
       (window as any).usePlayer = usePlayer;
     }
     
-    const createDebugButton = () => {
-      const existingBtn = document.getElementById('debug-shoot-btn');
-      if (existingBtn) return;
-      
-      const btn = document.createElement('button');
-      btn.id = 'debug-shoot-btn';
-      btn.textContent = 'EMERGENCY SHOOT';
-      btn.style.position = 'fixed';
-      btn.style.bottom = '20px';
-      btn.style.right = '20px';
-      btn.style.zIndex = '10000';
-      btn.style.backgroundColor = 'red';
-      btn.style.color = 'white';
-      btn.style.padding = '10px';
-      btn.style.border = 'none';
-      btn.style.borderRadius = '5px';
-      
-      btn.addEventListener('click', () => {
-        console.log("Emergency shoot button clicked");
-        // Try to get the store from window
-        if (window.usePlayer && typeof window.usePlayer.getState === 'function') {
-          const playerState = window.usePlayer.getState();
-          if (playerState && typeof playerState.shootBullet === 'function') {
-            playerState.shootBullet();
-          }
-        }
-        
-        // Backup: Try to find and call shootBullet directly
-        try {
-          let shootBullet = window.shootBullet;
-          
-          // Try to get from devtools if available
-          if (!shootBullet && (window as any).__ZUSTAND_DEVTOOLS__) {
-            const devTools = (window as any).__ZUSTAND_DEVTOOLS__;
-            if (devTools.usePlayer && typeof devTools.usePlayer.getState === 'function') {
-              const state = devTools.usePlayer.getState();
-              if (state && typeof state.shootBullet === 'function') {
-                shootBullet = state.shootBullet;
-              }
-            }
-          }
-          
-          if (shootBullet) shootBullet();
-        } catch (e) {
-          console.error("Emergency shoot failed:", e);
-        }
-      });
-      
-      document.body.appendChild(btn);
-    };
-    
-    // Only show emergency button in development
-    if (process.env.NODE_ENV === 'development') {
-      createDebugButton();
-    }
-    
     return () => {
-      const btn = document.getElementById('debug-shoot-btn');
-      if (btn) btn.remove();
+      // Clean up if needed
     };
   }, []);
 
