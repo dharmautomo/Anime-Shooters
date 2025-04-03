@@ -170,7 +170,17 @@ const Weapon = ({ position, rotation, ammo, onShoot }: WeaponProps) => {
         playSound('reload');
       }, 300);
       
-      // Finish reloading after 1.5 seconds
+      // Call the actual reloadAmmo function from usePlayer
+      // Import directly to avoid circular dependency issues
+      const { usePlayer } = require('../lib/stores/usePlayer');
+      
+      // Schedule the actual ammo reload halfway through the animation
+      setTimeout(() => {
+        usePlayer.getState().reloadAmmo();
+        console.log('Reloaded ammo to 10');
+      }, 750);
+      
+      // Finish reloading animation after 1.5 seconds
       setTimeout(() => {
         setIsReloading(false);
       }, 1500);

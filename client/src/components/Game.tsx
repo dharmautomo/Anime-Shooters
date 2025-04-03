@@ -157,13 +157,40 @@ const Game = ({ username }: GameProps) => {
   
   // Keyboard event handling for reloading
   useEffect(() => {
+    // Track if we're currently in a reload animation to prevent multiple reload calls
+    let isCurrentlyReloading = false;
+    
     const handleKeyDown = (e: KeyboardEvent) => {
       // 'R' key for reloading
-      if (e.code === 'KeyR') {
+      if (e.code === 'KeyR' && !isCurrentlyReloading && ammo < 10 && isControlsLocked && hasInteracted) {
         console.log('Reloading weapon - Current ammo:', ammo);
-        // Use the reloadAmmo function from the player store
-        reloadAmmo();
-        console.log('Weapon reloaded - New ammo count:', usePlayer.getState().ammo);
+        
+        // Set reloading flag
+        isCurrentlyReloading = true;
+        
+        // Play reload sound (using global audio function)
+        try {
+          // Import audio store to play reload sound
+          const { useAudio } = require('../lib/stores/useAudio');
+          const { playSound } = useAudio.getState();
+          setTimeout(() => {
+            playSound('reload');
+          }, 100);
+        } catch (error) {
+          console.error('Failed to play reload sound:', error);
+        }
+        
+        // Actual reload happens after a delay to match animation
+        setTimeout(() => {
+          // Use the reloadAmmo function from the player store
+          reloadAmmo();
+          console.log('Weapon reloaded - New ammo count:', usePlayer.getState().ammo);
+          
+          // Clear reloading state after complete
+          setTimeout(() => {
+            isCurrentlyReloading = false;
+          }, 500);
+        }, 750);
       }
     };
     
@@ -172,7 +199,7 @@ const Game = ({ username }: GameProps) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [reloadAmmo, ammo]);
+  }, [reloadAmmo, ammo, isControlsLocked, hasInteracted]);
 
   // Update player position and camera
   useFrame((state, delta) => {
