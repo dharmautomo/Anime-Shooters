@@ -1,0 +1,67 @@
+shootBullet: () => {
+  // Get the current state
+  const { ammo, isAlive, position, playerId } = get();
+  
+  console.log("🔫 STORE: shootBullet called at", new Date().toISOString());
+  console.log("🔫 STORE: Current ammo:", ammo, "isAlive:", isAlive);
+  
+  // VALIDATION: Check if we're allowed to shoot
+  if (ammo <= 0) {
+    console.log("🔫❌ STORE: Cannot shoot - no ammo available");
+    return false;
+  }
+  
+  if (!isAlive) {
+    console.log("🔫❌ STORE: Cannot shoot - player is not alive");
+    return false;
+  }
+  
+  try {
+    // First decrement ammo - this should happen whether or not bullet creation succeeds
+    set({ ammo: ammo - 1 });
+    console.log('🔫 STORE: Ammo decremented to:', get().ammo);
+    
+    // Get camera for bullet direction
+    const canvas = document.querySelector('canvas');
+    const camera = canvas && (canvas as any)?.__r3f?.root?.camera;
+    
+    if (!camera) {
+      console.error("🔫❌ STORE: Failed to shoot - camera not found!");
+      return false;
+    }
+    
+    // Calculate bullet direction from camera
+    const direction = new THREE.Vector3(0, 0, -1);
+    direction.applyQuaternion(camera.quaternion);
+    direction.normalize();
+    
+    // Set bullet spawn position (slightly in front of camera)
+    const bulletPosition = position.clone().add(direction.clone().multiplyScalar(0.5));
+    bulletPosition.y += 1.5; // Eye height
+    
+    // Access multiplayer store through context
+    const multiplayerStore = storeContext.multiplayerStore;
+    if (!multiplayerStore) {
+      console.error("🔫❌ STORE: Multiplayer store not initialized!");
+      return false;
+    }
+    
+    // Ensure we have the player ID before creating a bullet
+    if (!playerId) {
+      console.error("🔫❌ STORE: Failed to shoot - player ID not set!");
+      return false;
+    }
+    
+    try {
+      const bulletId = multiplayerStore.addBullet(bulletPosition, direction, playerId);
+      console.log('🔫✅ STORE: Created bullet with ID:', bulletId);
+      return true;
+    } catch (bulletError) {
+      console.error("🔫❌ STORE: Error creating bullet:", bulletError);
+      return false;
+    }
+  } catch (error) {
+    console.error("🔫❌ STORE: Error in shootBullet:", error);
+    return false;
+  }
+}

@@ -143,6 +143,10 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
     }
     
     try {
+      // First decrement ammo - this should happen whether or not bullet creation succeeds
+      set({ ammo: ammo - 1 });
+      console.log('🔫 STORE: Ammo decremented to:', get().ammo);
+      
       // Get camera for bullet direction
       const canvas = document.querySelector('canvas');
       const camera = canvas && (canvas as any)?.__r3f?.root?.camera;
@@ -177,11 +181,6 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
       try {
         const bulletId = multiplayerStore.addBullet(bulletPosition, direction, playerId);
         console.log('🔫✅ STORE: Created bullet with ID:', bulletId);
-        
-        // IMPORTANT: Decrement ammo HERE after successful bullet creation
-        set({ ammo: ammo - 1 });
-        console.log('🔫 STORE: Ammo decremented to:', get().ammo);
-        
         return true;
       } catch (bulletError) {
         console.error("🔫❌ STORE: Error creating bullet:", bulletError);
