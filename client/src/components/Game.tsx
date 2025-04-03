@@ -293,6 +293,34 @@ const Game = ({ username }: GameProps) => {
     }
   });
 
+  // Add test function for shooting from console
+  useEffect(() => {
+    // Create a global reference to the shootBullet function
+    (window as any).testShoot = () => {
+      console.log("Test shoot function called");
+      try {
+        shootBullet();
+        return "Shoot function called successfully";
+      } catch (e) {
+        console.error("Error in test shoot:", e);
+        return "Error: " + (e as Error).message;
+      }
+    };
+    
+    // Also create a direct reference to the shootBullet function itself
+    (window as any).shootBullet = shootBullet;
+    
+    // Let the player know these functions are available
+    console.log("TEST FUNCTIONS AVAILABLE:");
+    console.log("1. Call window.testShoot() in console to test shooting with error handling");
+    console.log("2. Call window.shootBullet() in console for direct shooting");
+    
+    return () => {
+      delete (window as any).testShoot;
+      delete (window as any).shootBullet;
+    };
+  }, [shootBullet]);
+
   return (
     <>
       <PointerLockControls ref={controlsRef} />
