@@ -292,7 +292,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       // Apply position with bob offset for walking animation
       playerRef.current.position.set(
         position instanceof THREE.Vector3 ? position.x : position[0],
-        (yPos - 1.5) + bobOffset, // Apply bob offset for smoother walking
+        yPos + bobOffset, // Apply bob offset for smoother walking without sinking
         position instanceof THREE.Vector3 ? position.z : position[2]
       );
       playerRef.current.rotation.y = rotation;
