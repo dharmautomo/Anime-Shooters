@@ -199,6 +199,20 @@ const Game = ({ username }: GameProps) => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [reloadAmmo, ammo, isControlsLocked, hasInteracted]);
+  
+  // Space key as backup shooting method
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Use Space as a backup shooting key
+      if (e.code === 'Space' && isControlsLocked && hasInteracted) {
+        console.log("SPACE key shooting attempt");
+        shootBullet();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [shootBullet, isControlsLocked, hasInteracted]);
 
   // Update player position and camera
   useFrame((state, delta) => {
