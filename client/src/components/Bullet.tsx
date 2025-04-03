@@ -78,6 +78,15 @@ const Bullet = ({ position, velocity, owner, id }: BulletProps) => {
       const movement = velocityVector.current.clone().multiplyScalar(speed);
       bulletRef.current.position.add(movement);
       
+      // Log bullet position occasionally to debug movement
+      if (Math.random() < 0.01) {
+        console.log(`Bullet ${bulletId.current} position:`, 
+          bulletRef.current.position.x,
+          bulletRef.current.position.y,
+          bulletRef.current.position.z
+        );
+      }
+      
       // Check for collisions with players
       try {
         const collision = multiplayerState.checkBulletCollision(
