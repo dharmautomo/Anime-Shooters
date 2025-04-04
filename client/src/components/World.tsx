@@ -344,14 +344,13 @@ const World = () => {
             
             return (
               <group key={`hill-${side}-${i}`} position={[pos[0] + offsetX, 0, pos[2] + offsetZ]}>
-                {/* Create a custom half-sphere for the hill that sits directly on the ground */}
-                <mesh position={[0, size/2, 0]} castShadow receiveShadow rotation={[Math.PI / 2, 0, 0]}>
-                  {/* Use regular sphere but we'll only show half of it by using properly positioned clipping planes */}
-                  <sphereGeometry args={[size, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+                {/* Create a simple mound for the hill using a sphere that's positioned to sit on the ground */}
+                <mesh position={[0, size/2, 0]} castShadow receiveShadow>
+                  {/* Use regular sphere but position it so that the bottom is at ground level */}
+                  <sphereGeometry args={[size, 16, 16]} />
                   <meshStandardMaterial 
                     color={new THREE.Color('#6b8e23').lerp(new THREE.Color('#4a7023'), colorBlend)} 
                     roughness={0.8}
-                    side={THREE.FrontSide}
                   />
                 </mesh>
               </group>
