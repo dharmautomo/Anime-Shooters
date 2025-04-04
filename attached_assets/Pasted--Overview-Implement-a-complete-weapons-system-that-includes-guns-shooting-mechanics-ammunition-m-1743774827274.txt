@@ -1,0 +1,122 @@
+## Overview
+Implement a complete weapons system that includes guns, shooting mechanics, ammunition management, player health, and visual effects.
+
+## Core Requirements
+
+### Player Weapon Display
+- Implement a first-person view that shows the player's current weapon
+- Position the weapon in the lower right portion of the screen, properly aligned with the camera
+- Create smooth weapon sway animation while walking/running
+- Add weapon bob effect during movement
+- Include weapon lowering animation when sprinting
+
+### Multiplayer Weapon Visualization
+- Display appropriate weapon models on other players' characters
+- Ensure weapon positioning looks natural in third-person view
+- Synchronize weapon animations (shooting, reloading) across the network
+- Implement proper weapon handling animations for other players
+
+### Shooting Mechanics
+- Implement shooting functionality using:
+  - Left mouse button click
+  - J key press
+  - K key press
+- Add screen shake effect when firing weapons
+
+### Projectile Visualization
+- Create visible bullet projectiles when a weapon is fired
+- Implement bullet trails/tracers for better visualization
+- Add bullet impact effects on different surfaces (wall, ground, player)
+- Include bullet drop and travel time for realistic ballistics
+
+### Visual Effects
+- Implement muzzle flash effect when firing
+  - Create particle system for the flash
+  - Add appropriate light emission during firing
+- Add smoke effects from the barrel after firing
+- Include shell ejection animation and sound
+- Create camera kickback effect when firing
+
+### Health and Scoring System
+- Implement player health system (0-100 points)
+- Display health bar/indicator in the HUD
+- Add visual feedback when taking damage (screen flash, blood splatter effect)
+- When health reaches zero:
+  - Play death animation
+  - Disable player controls
+  - Implement respawn system with countdown timer
+  - Reset health to full upon respawn
+- Scoring system:
+  - Add 1 point to player's score for each successful hit on another player
+  - Display score prominently in the HUD
+  - Add visual/audio feedback when scoring a hit (distinctive sound, score counter animation)
+  - Implement score persistence between respawns
+
+### Ammunition System
+- Implement ammunition counter in the HUD
+- Decrease ammo count by 1 for each shot fired
+- When ammo reaches zero:
+  - Disable firing capability
+  - Display "Empty" indicator or play click sound
+- Implement reload functionality with R key press
+- Add reload animation with appropriate timing
+- Include partial reload logic (keeping bullets in chamber)
+
+### User Interface Elements
+- Create ammo counter display showing current magazine/total ammo
+- Add health bar/indicator
+- Implement hit markers when successfully hitting enemies
+- Add score counter that updates in real-time:
+  - Show player's current score
+  - Implement score animation/highlighting when score increases
+
+### Controls Guide
+- Add the on-screen controls guide during initial loading:
+  ```
+  CONTROLS:
+  • SHOOT: Left Mouse Button, J, or K
+  • RELOAD: R
+  ```
+
+## Technical Implementation Guidelines
+
+### Weapon System Architecture
+- Create a modular weapon class system that handles:
+  - Weapon properties (damage, fire rate, ammo capacity)
+  - Weapon state management
+  - Firing and reload logic
+
+### Network Considerations
+- Synchronize weapon state across all clients
+- Implement server authority for damage calculation
+- Use prediction for responsive local feedback
+- Add reconciliation for accurate multiplayer experience
+
+### Performance Optimization
+- Use object pooling for bullets and effects
+- Implement level of detail (LOD) for weapon models
+- Optimize particle effects for performance
+- Use instancing for bullet rendering when appropriate
+
+## Asset Requirements
+
+### 3D Models
+- Detailed first-person weapon models
+- Third-person weapon models (potentially lower poly)
+- Ammunition models for reload visualization
+- Shell casing models
+
+### Textures
+- High-resolution weapon textures
+- Normal maps for detailed weapon rendering
+- Emission maps for muzzle flash
+- Blood splatter textures
+
+### Sounds
+- Weapon firing sounds
+- Empty magazine click
+- Reload sounds (magazine out, magazine in, chamber)
+- Impact sounds (different per surface)
+- Player damage/hurt sounds
+- Death sounds
+- Low ammo indicator sound

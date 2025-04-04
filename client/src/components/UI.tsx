@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
+import { usePlayer, useMultiplayer, useWeapon } from '../lib/stores/initializeStores';
 import { useGameControls } from '../lib/stores/useGameControls';
 
 // Create stable selector functions outside the component to prevent infinite loops
@@ -13,6 +13,14 @@ const UI = () => {
   const score = usePlayer(scoreSelector);
   const { killFeed } = useMultiplayer();
   const { hasInteracted, isControlsLocked } = useGameControls();
+  
+  // Get weapon state
+  const { 
+    currentWeapon,
+    ammo,
+    totalAmmo,
+    isReloading
+  } = useWeapon();
   const [showControls, setShowControls] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
   // For tracking if pointer lock is actually working via the native API
@@ -134,6 +142,34 @@ const UI = () => {
         </div>
       </div>
       
+      {/* Weapon display */}
+      <div 
+        className="weapon-display"
+        style={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          backgroundColor: "rgba(0, 0, 0, 0.6)",
+          color: "white",
+          padding: "10px",
+          borderRadius: "5px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          fontSize: "14px",
+          fontWeight: "bold",
+          zIndex: 100,
+          pointerEvents: "none"
+        }}
+      >
+        <div>{currentWeapon.name}</div>
+        <div style={{ 
+          color: isReloading ? "#ff6600" : ammo === 0 ? "#ff0000" : "#ffffff" 
+        }}>
+          {isReloading ? "RELOADING..." : `${ammo} / ${totalAmmo}`}
+        </div>
+      </div>
+      
       {/* Controls guide */}
       {showControls && (
         <div className="controls-guide">
@@ -141,6 +177,9 @@ const UI = () => {
           <p>WASD or Arrow Keys - Move</p>
           <p>Mouse - Look around</p>
           <p>Space - Jump</p>
+          <p>Mouse Left - Shoot</p>
+          <p>R - Reload weapon</p>
+          <p>1,2,3 - Switch weapons</p>
           <p>ESC - Toggle this guide</p>
           <p>Shift+D - Show debug info</p>
         </div>

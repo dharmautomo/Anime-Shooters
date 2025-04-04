@@ -3,11 +3,13 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
 import Player from './Player';
+import Weapon from './Weapon';
+import Bullet from './Bullet';
 import World from './World';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
-import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
+import { usePlayer, useMultiplayer, useWeapon, BulletData } from '../lib/stores/initializeStores';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { useAudio } from '../lib/stores/useAudio';
 
@@ -44,6 +46,22 @@ const Game = ({ username }: GameProps) => {
     updateRotation,
     resetPlayer
   } = usePlayer();
+  
+  // Get weapon state
+  const {
+    weapons,
+    currentWeapon,
+    ammo,
+    totalAmmo,
+    isReloading,
+    bullets,
+    hitMarkers,
+    initializeWeapons,
+    shootWeapon,
+    reloadWeapon,
+    finishReload,
+    selectWeapon
+  } = useWeapon();
   const { 
     hasInteracted, 
     setControlsLocked, 
@@ -93,6 +111,48 @@ const Game = ({ username }: GameProps) => {
       }
     };
   }, [camera, resetPlayer, setControlsLocked]);
+  
+  // Set up weapon switching
+  const [subscribeKeys] = useKeyboardControls();
+  
+  useEffect(() => {
+    // Set up weapon slot selection with number keys
+    const unsubscribeWeapon1 = subscribeKeys(
+      state => state[Controls.weaponSlot1],
+      pressed => {
+        if (pressed) {
+          console.log("Switching to weapon 1");
+          selectWeapon(0);
+        }
+      }
+    );
+    
+    const unsubscribeWeapon2 = subscribeKeys(
+      state => state[Controls.weaponSlot2],
+      pressed => {
+        if (pressed) {
+          console.log("Switching to weapon 2");
+          selectWeapon(1);
+        }
+      }
+    );
+    
+    const unsubscribeWeapon3 = subscribeKeys(
+      state => state[Controls.weaponSlot3],
+      pressed => {
+        if (pressed) {
+          console.log("Switching to weapon 3");
+          selectWeapon(2);
+        }
+      }
+    );
+    
+    return () => {
+      unsubscribeWeapon1();
+      unsubscribeWeapon2();
+      unsubscribeWeapon3();
+    };
+  }, [subscribeKeys, selectWeapon]);
   
   // Set up mobile touch controls
   useEffect(() => {
@@ -464,6 +524,40 @@ const Game = ({ username }: GameProps) => {
           health={player.health}
           username={player.username}
         />
+      ))}
+      
+      {/* First-person weapon */}
+      {health > 0 && (
+        <Weapon 
+          isThirdPerson={false}
+          position={[0.3, -0.3, -0.5]} 
+          rotation={[0, Math.PI, 0]}
+          scale={0.5}
+        />
+      )}
+      
+      {/* Render all bullets */}
+      {bullets.map((bullet) => (
+        <Bullet
+          key={bullet.id}
+          bulletId={bullet.id}
+          position={[bullet.position.x, bullet.position.y, bullet.position.z]}
+          direction={bullet.direction}
+          owner={bullet.owner}
+          speed={currentWeapon.projectileSpeed}
+        />
+      ))}
+      
+      {/* Render hit markers */}
+      {hitMarkers.map((marker, index) => (
+        <mesh 
+          key={`marker_${index}_${marker.timestamp}`} 
+          position={marker.position}
+          scale={[0.5, 0.5, 0.5]}
+        >
+          <sphereGeometry args={[0.1, 8, 8]} />
+          <meshBasicMaterial color="#ffff00" transparent opacity={0.8} />
+        </mesh>
       ))}
       
       {/* Add mobile game stats text UI */}
