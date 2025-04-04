@@ -20,7 +20,7 @@ const LaserBullet = ({ position, velocity, owner, id }: LaserBulletProps) => {
   // Normalize velocity for consistent speed
   useEffect(() => {
     const velocity = velRef.current;
-    const speed = 60; // Extremely fast laser speed
+    const speed = 180; // Ultra-fast laser speed (tripled)
     velocity.normalize().multiplyScalar(speed);
   }, []);
   
@@ -69,9 +69,9 @@ const LaserBullet = ({ position, velocity, owner, id }: LaserBulletProps) => {
   
   return (
     <>
-      {/* Main laser bullet - glowing core */}
+      {/* Main laser bullet - smaller glowing core */}
       <mesh ref={meshRef}>
-        <sphereGeometry args={[0.15, 12, 12]} />
+        <sphereGeometry args={[0.05, 8, 8]} />
         <meshBasicMaterial 
           color="#ff3333" 
           transparent 
@@ -79,52 +79,52 @@ const LaserBullet = ({ position, velocity, owner, id }: LaserBulletProps) => {
           toneMapped={false}
         />
         
-        {/* Add point light to make bullet glow */}
+        {/* Smaller point light with reduced intensity */}
         <pointLight
           color="#ff0000"
-          intensity={5}
-          distance={3}
-          decay={2}
+          intensity={2}
+          distance={1.5}
+          decay={3}
         />
       </mesh>
       
-      {/* Outer glow layer */}
+      {/* Smaller outer glow layer */}
       <mesh position={posRef.current.toArray()}>
-        <sphereGeometry args={[0.25, 12, 12]} />
+        <sphereGeometry args={[0.08, 8, 8]} />
         <meshBasicMaterial 
           color="#ff6666" 
           transparent 
-          opacity={0.4}
+          opacity={0.3}
           toneMapped={false}
         />
       </mesh>
       
-      {/* Laser trail - longer for faster bullets */}
+      {/* Thinner laser trail for faster bullets */}
       <mesh ref={trailRef}>
-        <cylinderGeometry args={[0.05, 0.18, 4.0, 8]} />
+        <cylinderGeometry args={[0.02, 0.07, 3.0, 6]} />
         <meshBasicMaterial 
           color="#ff6666" 
           transparent 
-          opacity={0.7}
+          opacity={0.5}
           toneMapped={false}
         />
       </mesh>
       
-      {/* Small particles following the bullet */}
-      {[...Array(3)].map((_, i) => (
+      {/* Fewer, smaller particles following the bullet */}
+      {[...Array(2)].map((_, i) => (
         <mesh 
           key={i} 
           position={[
-            posRef.current.x - velRef.current.normalize().x * (i * 0.2), 
-            posRef.current.y - velRef.current.normalize().y * (i * 0.2), 
-            posRef.current.z - velRef.current.normalize().z * (i * 0.2)
+            posRef.current.x - velRef.current.normalize().x * (i * 0.1), 
+            posRef.current.y - velRef.current.normalize().y * (i * 0.1), 
+            posRef.current.z - velRef.current.normalize().z * (i * 0.1)
           ]}
         >
-          <sphereGeometry args={[0.05 - (i * 0.01), 8, 8]} />
+          <sphereGeometry args={[0.02 - (i * 0.005), 6, 6]} />
           <meshBasicMaterial 
             color="#ff9999" 
             transparent 
-            opacity={0.5 - (i * 0.1)}
+            opacity={0.4 - (i * 0.1)}
             toneMapped={false}
           />
         </mesh>

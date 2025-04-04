@@ -353,7 +353,7 @@ const Game = ({ username }: GameProps) => {
     const newBullet = {
       id: `bullet_${playerId}_${Date.now()}`,
       position: bulletPosition,
-      velocity: direction.clone().normalize().multiplyScalar(60), // Extremely fast laser speed
+      velocity: direction.clone().normalize().multiplyScalar(180), // Ultra-fast laser speed (tripled)
       owner: playerId,
       createdAt: Date.now()
     };
