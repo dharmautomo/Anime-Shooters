@@ -331,14 +331,28 @@ const Game = ({ username }: GameProps) => {
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
     
+    // Calculate gun position in world space (in front of and to the right of camera)
+    const gunOffset = new THREE.Vector3(0.4, -0.3, -0.5); // First-person gun position
+    
+    // Create a rotation matrix from camera quaternion
+    const rotationMatrix = new THREE.Matrix4().makeRotationFromQuaternion(camera.quaternion);
+    
+    // Apply the rotation to the gun offset
+    gunOffset.applyMatrix4(rotationMatrix);
+    
+    // Calculate the bullet spawn position (at the end of the gun barrel)
+    const barrelOffset = new THREE.Vector3(0, 0, 0.5).applyMatrix4(rotationMatrix);
+    
+    // Final bullet position: camera position + gun offset + barrel length
+    const bulletPosition = new THREE.Vector3().addVectors(
+      camera.position,
+      new THREE.Vector3().addVectors(gunOffset, barrelOffset)
+    );
+    
     // Create bullet with unique ID
     const newBullet = {
       id: `bullet_${playerId}_${Date.now()}`,
-      position: new THREE.Vector3(
-        position.x,
-        position.y + 1.5, // Eye height
-        position.z
-      ),
+      position: bulletPosition,
       velocity: direction.clone().normalize().multiplyScalar(30), // Fast laser speed
       owner: playerId,
       createdAt: Date.now()

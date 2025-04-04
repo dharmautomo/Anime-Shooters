@@ -78,8 +78,22 @@ const LaserWeapon = ({ position, rotation, onShoot }: LaserWeaponProps) => {
           laserSound.current.play().catch(e => console.error("Error playing laser sound:", e));
         }
         
-        // Call the shoot callback
-        onShoot();
+        // Call the shoot callback with the barrel position
+        // Get the world position of the barrel (front of the gun)
+        if (laserGroupRef.current) {
+          const barrelWorldPosition = new THREE.Vector3();
+          // Position the barrel at the front of the gun
+          const barrelLocalPosition = new THREE.Vector3(0, 0, 0.5);
+          
+          // Convert the local barrel position to world coordinates
+          laserGroupRef.current.localToWorld(barrelWorldPosition.copy(barrelLocalPosition));
+          
+          // Call the shoot callback with the world position of the barrel
+          onShoot();
+        } else {
+          // Fallback to just calling the callback
+          onShoot();
+        }
         
         // Update last shoot time
         lastShootTime.current = now;
