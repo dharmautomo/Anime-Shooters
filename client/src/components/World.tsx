@@ -118,7 +118,7 @@ const World = () => {
           const foliage3Color = i % 3 === 0 ? "#6b8e23" : i % 3 === 1 ? "#9acd32" : "#556b2f";
           
           return (
-            <group key={`big-tree-${i}`} position={[pos[0], pos[1], pos[2]]}>
+            <group key={`big-tree-${i}`} position={[pos[0], 0, pos[2]]}>
               {/* Trunk - properly grounded by positioning at trunkHeight/2 */}
               <mesh position={[0, trunkHeight/2, 0]} castShadow receiveShadow>
                 <cylinderGeometry args={[trunkTopRadius, trunkBottomRadius, trunkHeight, 8]} />
@@ -211,7 +211,8 @@ const World = () => {
                                i % 5 === 3 ? "#556b2f" : "#7c9340";
           
           return {
-            position: [pos[0] + offsetX, pos[1], pos[2] + offsetZ],
+            // Modify position: ensure the y value is 0 to place trees properly on the ground
+            position: [pos[0] + offsetX, 0, pos[2] + offsetZ],
             trunk: {
               topRadius: trunkTopRadius,
               bottomRadius: trunkBottomRadius,
@@ -227,25 +228,34 @@ const World = () => {
         });
         
         // Return the JSX with stable values
-        return trees.map((tree, i) => (
-          <group key={`small-tree-${i}`} position={tree.position}>
-            {/* Position trunk at trunkHeight/2 to ensure proper grounding */}
-            <mesh position={[0, tree.trunk.height/2, 0]} castShadow>
-              <cylinderGeometry args={[
-                tree.trunk.topRadius, 
-                tree.trunk.bottomRadius, 
-                tree.trunk.height, 
-                8
-              ]} />
-              <meshStandardMaterial color={tree.trunk.color} />
-            </mesh>
-            {/* Update foliage y position to be relative to new trunk position */}
-            <mesh position={[0, tree.trunk.height + tree.foliage.size * 0.5, 0]} castShadow>
-              <sphereGeometry args={[tree.foliage.size, 16, 16]} />
-              <meshStandardMaterial color={tree.foliage.color} />
-            </mesh>
-          </group>
-        ));
+        return trees.map((tree, i) => {
+          // Convert the position array to Vector3 tuple to fix TypeScript error
+          const position: [number, number, number] = [
+            tree.position[0] as number, 
+            tree.position[1] as number, 
+            tree.position[2] as number
+          ];
+          
+          return (
+            <group key={`small-tree-${i}`} position={position}>
+              {/* Position trunk at trunkHeight/2 to ensure proper grounding */}
+              <mesh position={[0, tree.trunk.height/2, 0]} castShadow>
+                <cylinderGeometry args={[
+                  tree.trunk.topRadius, 
+                  tree.trunk.bottomRadius, 
+                  tree.trunk.height, 
+                  8
+                ]} />
+                <meshStandardMaterial color={tree.trunk.color} />
+              </mesh>
+              {/* Update foliage y position to be relative to new trunk position */}
+              <mesh position={[0, tree.trunk.height + tree.foliage.size * 0.5, 0]} castShadow>
+                <sphereGeometry args={[tree.foliage.size, 16, 16]} />
+                <meshStandardMaterial color={tree.foliage.color} />
+              </mesh>
+            </group>
+          );
+        });
       }, [])}
       
       {/* MOUNTAINS - using useMemo to prevent re-rendering */}
@@ -319,7 +329,7 @@ const World = () => {
         ];
         
         // Process all hills with additional random offsets, ensuring they're grounded
-        const processHills = (hillPositions, side) => {
+        const processHills = (hillPositions: number[][], side: string) => {
           return hillPositions.map((pos, i) => {
             // Add stable random offsets for more random spread
             const offsetX = (Math.sin(i * 123.45) * 10 - 5);
@@ -335,7 +345,7 @@ const World = () => {
             const colorBlend = Math.abs(Math.sin(i * 123.456)) * 0.3;
             
             return (
-              <group key={`hill-${side}-${i}`} position={[pos[0] + offsetX, pos[1], pos[2] + offsetZ]}>
+              <group key={`hill-${side}-${i}`} position={[pos[0] + offsetX, 0, pos[2] + offsetZ]}>
                 <mesh position={[0, height, 0]} castShadow receiveShadow>
                   <sphereGeometry args={[size, 16, 16]} />
                   <meshStandardMaterial 
