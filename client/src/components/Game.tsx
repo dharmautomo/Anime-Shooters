@@ -4,18 +4,12 @@ import * as THREE from 'three';
 import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
 import Player from './Player';
 import World from './World';
-import Weapon from './Weapon';
-import Crosshair from './Crosshair';
-import MouseControls from './Controls';
-import AmmoDisplay from './AmmoDisplay';
-import BulletManager from './BulletManager';
-import { Controls as ControlsMap } from '../App';
+import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { useAudio } from '../lib/stores/useAudio';
-import { useWeaponStore } from '../lib/stores/useWeaponStore';
 
 interface GameProps {
   username: string;
@@ -25,7 +19,6 @@ const Game = ({ username }: GameProps) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
   const isMobile = useIsMobile();
-  const hasResetPlayer = useRef(false);
   
   // Touch controls state for mobile devices
   const [touchControls, setTouchControls] = useState({
@@ -62,46 +55,15 @@ const Game = ({ username }: GameProps) => {
 
   // Initialize player controls
   useEffect(() => {
-    // Store camera reference in window for bullet creation
-    if (typeof window !== 'undefined') {
-      (window as any).mainCamera = camera;
-    }
-    
     // Define the event handlers separately so we can properly remove them
     const handleLock = () => {
-      console.log('Controls locked - pointer lock handler');
-      console.log('PointerLockElement:', document.pointerLockElement);
+      console.log('Controls locked');
       setControlsLocked(true);
     };
     
     const handleUnlock = () => {
-      console.log('Controls unlocked - pointer lock handler');
-      console.log('PointerLockElement:', document.pointerLockElement);
+      console.log('Controls unlocked');
       setControlsLocked(false);
-    };
-    
-    // Handler for mouse clicks (weapon firing)
-    const handleMouseClick = (e: MouseEvent) => {
-      if (isControlsLocked && e.button === 0) { // Left mouse button
-        // Only register clicks when controls are locked and player is alive
-        if (health > 0) {
-          // Use the weapon store to shoot
-          useWeaponStore.getState().shoot();
-          
-          console.log('Weapon fired with left mouse button!');
-          
-          // Play gun shot sound
-          const posSound = createPositionalSound(
-            '/sounds/hit.mp3', // Use existing sound for gun shot
-            new THREE.Vector3(position.x, position.y, position.z),
-            0.5
-          );
-          
-          if (posSound) {
-            posSound.play();
-          }
-        }
-      }
     };
     
     if (controlsRef.current) {
@@ -120,25 +82,18 @@ const Game = ({ username }: GameProps) => {
         }
       }
     }
-    
-    // Add mouse click event listener for weapon firing
-    document.addEventListener('mousedown', handleMouseClick);
 
-    // Reset player on game start - only do it once
-    if (!hasResetPlayer.current) {
-      resetPlayer();
-      hasResetPlayer.current = true;
-    }
-    
+    // Reset player on game start
+    resetPlayer();
+
     // Clean up on unmount
     return () => {
-      document.removeEventListener('mousedown', handleMouseClick);
       if (controlsRef.current) {
         controlsRef.current.removeEventListener('lock', handleLock);
         controlsRef.current.removeEventListener('unlock', handleUnlock);
       }
     };
-  }, [camera, resetPlayer, setControlsLocked, position, health, createPositionalSound, isControlsLocked]);
+  }, [camera, resetPlayer, setControlsLocked]);
   
   // Set up mobile touch controls
   useEffect(() => {
@@ -361,46 +316,6 @@ const Game = ({ username }: GameProps) => {
   const lastUpdateRef = useRef<number>(0);
   
   // Update player position and camera
-  // Add keyboard handler for J and K keys (alternate shooting options)
-  useEffect(() => {
-    // Only set up when controls are locked and player is alive
-    if (!isControlsLocked || health <= 0) return;
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // J key or K key for shooting
-      if (e.code === 'KeyJ' || e.code === 'KeyK') {
-        // Use the weapon store to shoot
-        useWeaponStore.getState().shoot();
-        
-        console.log(`Weapon fired with ${e.code}!`);
-        
-        // Play gun shot sound
-        const posSound = createPositionalSound(
-          '/sounds/hit.mp3', // Use existing sound for gun shot
-          new THREE.Vector3(position.x, position.y, position.z),
-          0.5
-        );
-        
-        if (posSound) {
-          posSound.play();
-        }
-      }
-      
-      // R key for reloading
-      if (e.code === 'KeyR') {
-        useWeaponStore.getState().reload();
-      }
-    };
-    
-    // Add event listener
-    document.addEventListener('keydown', handleKeyDown);
-    
-    // Clean up
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isControlsLocked, health, position, createPositionalSound]);
-  
   useFrame((state, delta) => {
     if (!hasInteracted) return;
     if (!isMobile && !controlsRef.current) return;
@@ -411,33 +326,21 @@ const Game = ({ username }: GameProps) => {
     // Don't allow movement when player is dead
     if (health <= 0) return;
     
-    // Apply screen shake effect to camera if needed
-    useWeaponStore.getState().updateScreenShake(delta, camera);
-    
     // Calculate movement direction based on camera orientation
+    const direction = new THREE.Vector3();
+    const sideDirection = new THREE.Vector3();
     const rotationEuler = new THREE.Euler(0, 0, 0, 'YXZ');
     
-    // Get camera rotation quaternion and convert to Euler angles
+    // Get camera direction
+    camera.getWorldDirection(direction);
+    direction.y = 0; // Keep movement on horizontal plane
+    direction.normalize();
+    
+    // Calculate side direction (perpendicular to camera direction)
+    sideDirection.copy(direction).cross(new THREE.Vector3(0, 1, 0));
+    
+    // Get camera rotation
     rotationEuler.setFromQuaternion(camera.quaternion);
-    
-    // We only care about the Y rotation (yaw) for movement
-    // This ensures movement is always relative to camera direction
-    const cameraYRotation = rotationEuler.y;
-    
-    // Create forward and right vectors based on camera yaw
-    // This is the key to making WASD movement align with the camera view
-    const forwardVec = new THREE.Vector3(
-      Math.sin(cameraYRotation), 
-      0, 
-      Math.cos(cameraYRotation)
-    ).normalize();
-    
-    // Right vector is perpendicular to forward (90 degrees clockwise)
-    const rightVec = new THREE.Vector3(
-      Math.sin(cameraYRotation + Math.PI/2), 
-      0, 
-      Math.cos(cameraYRotation + Math.PI/2)
-    ).normalize();
     
     // Update player position based on controls
     const moveSpeed = 5 * delta; // Speed multiplier
@@ -463,31 +366,20 @@ const Game = ({ username }: GameProps) => {
     // Apply movement based on inputs (keyboard or touch)
     const { forward, backward, left, right, jump } = controlInput;
     
-    // Calculate movement vector (initialize with zero vector)
-    const moveVec = new THREE.Vector3(0, 0, 0);
-    
-    // Add appropriate direction vectors based on key presses
+    // Forward/backward movement
     if (forward) {
-      moveVec.add(forwardVec);
+      newPosition.add(direction.clone().multiplyScalar(moveSpeed));
     }
     if (backward) {
-      moveVec.sub(forwardVec);
-    }
-    if (left) {
-      moveVec.sub(rightVec);
-    }
-    if (right) {
-      moveVec.add(rightVec);
+      newPosition.add(direction.clone().multiplyScalar(-moveSpeed));
     }
     
-    // Normalize the movement vector if we're moving in multiple directions
-    // This prevents diagonal movement from being faster
-    if (moveVec.length() > 0) {
-      moveVec.normalize();
-      // Apply the move speed
-      moveVec.multiplyScalar(moveSpeed);
-      // Apply movement to position
-      newPosition.add(moveVec);
+    // Left/right movement
+    if (left) {
+      newPosition.add(sideDirection.clone().multiplyScalar(-moveSpeed));
+    }
+    if (right) {
+      newPosition.add(sideDirection.clone().multiplyScalar(moveSpeed));
     }
     
     // Simple jumping
@@ -520,37 +412,10 @@ const Game = ({ username }: GameProps) => {
   return (
     <>
       {/* Only use PointerLockControls on desktop */}
-      {!isMobile && (
-        <>
-          <PointerLockControls 
-            ref={controlsRef} 
-            onLock={() => console.log('PointerLock activated')}
-            onUnlock={() => console.log('PointerLock deactivated')}
-          />
-        </>
-      )}
-      
-      {/* Use our custom mouse controls for rotation when controls are locked */}
-      {!isMobile && isControlsLocked && <MouseControls />}
+      {!isMobile && <PointerLockControls ref={controlsRef} />}
       
       {/* Game world with environment and obstacles */}
       <World />
-      
-      {/* Bullet manager for projectiles and impacts */}
-      <BulletManager bulletLifetime={2} impactLifetime={1.5} />
-      
-      {/* Crosshair for aiming */}
-      {health > 0 && isControlsLocked && (
-        <Crosshair color="#ffffff" size={0.03} thickness={0.003} gap={0.005} />
-      )}
-      
-      {/* Weapon display in first-person view */}
-      {health > 0 && isControlsLocked && (
-        <>
-          <Weapon position={[0.3, -0.3, -0.5]} />
-          <AmmoDisplay />
-        </>
-      )}
       
       {/* Death overlay when player is dead */}
       {health <= 0 && (

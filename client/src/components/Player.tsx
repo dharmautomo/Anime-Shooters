@@ -5,8 +5,6 @@ import { useKeyboardControls, useAnimations } from '@react-three/drei';
 import { Controls, ControlsType } from '../App';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { checkCollision } from '../lib/utils/collisionDetection';
-import Weapon from './Weapon';
-import Crosshair from './Crosshair';
 
 interface PlayerProps {
   isMainPlayer: boolean;
@@ -27,7 +25,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
   const nameTagRef = useRef<THREE.Sprite>(null);
-  const weaponRef = useRef<THREE.Group>(null);
+  // Weapon ref removed
 
   const { updatePosition, takeDamage, respawn } = usePlayer();
   const { updatePlayerPosition, socket } = useMultiplayer();
@@ -41,7 +39,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const [animationTime, setAnimationTime] = useState(0);
   const [nameTagCanvas, setNameTagCanvas] = useState<HTMLCanvasElement | null>(null);
   const [bobOffset, setBobOffset] = useState(0);
-  const [isWeaponVisible, setIsWeaponVisible] = useState(true);
+  // Weapon state variables removed
 
   // Movement states
   const isJumping = useRef(false);
@@ -99,23 +97,9 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
     setWalkCycle(getForward() || getBackward() || getLeft() || getRight());
   }, [forward, backward, left, right]);
   
-  // Handle weapon animations and interactions
+  // Weapon animations have been removed
   useEffect(() => {
-    if (isMainPlayer && socket) {
-      // Set up socket event listener for weapon actions
-      const handleWeaponFire = () => {
-        console.log('Player fired weapon!');
-        // Play weapon animation logic can be added here
-      };
-      
-      // Listen for weapon fire events from server
-      socket.on('weapon_fire', handleWeaponFire);
-      
-      // Clean up event listener
-      return () => {
-        socket.off('weapon_fire', handleWeaponFire);
-      };
-    }
+    // No weapon-related socket event handlers needed
   }, [isMainPlayer, socket, username]);
 
   // Set up eye blinking and expressions
@@ -346,17 +330,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
         }
       }
       
-      // Add third-person weapon animation for non-player characters
-      if (weaponRef.current) {
-        // If player is walking, add subtle weapon movement
-        if (walkCycle) {
-          weaponRef.current.position.y = Math.sin(animationTime * 5) * 0.02 - 0.6;
-          weaponRef.current.rotation.x = Math.sin(animationTime * 5) * 0.1 - 0.2;
-        } else {
-          weaponRef.current.position.y = -0.6 + Math.sin(animationTime * 1.5) * 0.01;
-          weaponRef.current.rotation.x = -0.2 + Math.sin(animationTime * 1.5) * 0.02;
-        }
-      }
+      // Weapon animations removed
 
       // Animate legs while walking
       if (leftLegRef.current && rightLegRef.current) {
@@ -373,17 +347,10 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
 
   return (
     <group ref={playerRef}>
-      {/* First-person view for main player with weapon and crosshair */}
+      {/* First-person view for main player - weapon has been removed */}
       {isMainPlayer && (
-        <>
-          {/* Weapon display */}
-          {isWeaponVisible && health > 0 && (
-            <Weapon position={[0.3, -0.3, -0.5]} />
-          )}
-          
-          {/* Aiming crosshair */}
-          <Crosshair color="#ffffff" size={0.01} />
-        </>
+        // Empty group maintained for compatibility with any code that might reference this
+        <group></group>
       )}
       
       {/* Character Model - only visible for other players */}
@@ -531,20 +498,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
               <meshStandardMaterial color="#e6ccb3" />
             </mesh>
             
-            {/* Add a simple pistol for other players */}
-            <group ref={weaponRef} position={[-0.125, -0.6, 0.2]} rotation={[0, 0, 0]}>
-              {/* Gun handle */}
-              <mesh castShadow>
-                <boxGeometry args={[0.08, 0.15, 0.05]} />
-                <meshStandardMaterial color="#111111" roughness={0.5} metalness={0.5} />
-              </mesh>
-              
-              {/* Gun barrel */}
-              <mesh position={[0, 0.08, 0.1]} castShadow>
-                <boxGeometry args={[0.05, 0.05, 0.2]} />
-                <meshStandardMaterial color="#222222" roughness={0.4} metalness={0.7} />
-              </mesh>
-            </group>
+            {/* Weapon removed */}
           </group>
 
           {/* Legs */}
