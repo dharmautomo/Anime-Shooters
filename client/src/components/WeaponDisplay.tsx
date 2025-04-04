@@ -1,7 +1,6 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useTexture } from '@react-three/drei';
 import { useKeyboardControls } from '@react-three/drei';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
@@ -14,10 +13,6 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   const { camera } = useThree();
   const pistolRef = useRef<THREE.Group>(null);
   const { isControlsLocked } = useGameControls();
-  
-  // Track last camera rotation to detect changes
-  const prevCameraRotation = useRef(new THREE.Euler());
-  const cameraRotationDelta = useRef(new THREE.Vector2(0, 0));
   
   // Get movement keys for weapon sway animation
   const forward = useKeyboardControls((state) => state[Controls.forward]);
@@ -35,91 +30,58 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   const bobSpeed = 4; // Speed of the bobbing effect
   const bobAmount = 0.015; // Amount of bobbing
   const swayAmount = 0.08; // Amount of weapon sway
-  const viewFollowStrength = 0.5; // How much the weapon follows the view
-  
-  // Debug for development
-  const [debugInfo, setDebugInfo] = useState('');
   
   // Set up weapon position and rotation
   useEffect(() => {
     if (pistolRef.current) {
-      // Position weapon in the lower right portion of the screen, but slightly more centered
-      pistolRef.current.position.set(0.25, -0.25, -0.5);
+      // Position weapon in the lower right portion of the screen
+      pistolRef.current.position.set(0.3, -0.3, -0.5);
       // Slightly rotate the weapon for a better angle
       pistolRef.current.rotation.set(0, -Math.PI/12, 0);
-      // Scale up the weapon a bit for better visibility
-      pistolRef.current.scale.set(1.1, 1.1, 1.1);
     }
     
-    // Initialize previous camera rotation
-    prevCameraRotation.current.copy(camera.rotation);
-    
-    // Log for debugging
-    console.log('Weapon display initialized, tracking camera rotation');
-  }, [camera]);
+    console.log('Weapon display initialized');
+  }, []);
   
-  // Handle weapon animation and view following
+  // Handle weapon animation
   useFrame((_, delta) => {
     time.current += delta;
     
     if (!pistolRef.current || !isControlsLocked || !isVisible) return;
     
-    // Calculate camera rotation delta for view following
-    const rotDeltaX = camera.rotation.x - prevCameraRotation.current.x;
-    const rotDeltaY = camera.rotation.y - prevCameraRotation.current.y;
+    // Create a vector to represent the camera's forward direction
+    const cameraDirection = new THREE.Vector3(0, 0, -1);
+    cameraDirection.applyQuaternion(camera.quaternion);
     
-    // Update camera rotation deltas with smoothing
-    cameraRotationDelta.current.x = rotDeltaX * 10; // Scale for better response
-    cameraRotationDelta.current.y = rotDeltaY * 10;
+    // Create a simple copy of the pistol to the camera
+    // This makes the weapon directly attached to the camera view
+    pistolRef.current.quaternion.copy(camera.quaternion);
     
-    // Store current camera rotation for next frame
-    prevCameraRotation.current.copy(camera.rotation);
+    // But we want to offset it to be visible in the corner, not centered
+    // Set local position relative to camera
+    pistolRef.current.position.set(0.3, -0.3, -0.5);
     
-    // Reset position for idle state
-    let targetPosX = 0.25;
-    let targetPosY = -0.25;
-    let targetRotZ = 0;
-    let targetRotX = 0;
-    let targetRotY = -Math.PI/12;
-    
-    // Bobbing effect when moving
+    // Add bobbing effect when moving
     if (isMoving) {
       const bobOffsetY = Math.sin(time.current * bobSpeed) * bobAmount;
       const bobOffsetX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
       
-      targetPosY = -0.25 + bobOffsetY;
-      targetPosX = 0.25 + bobOffsetX;
+      pistolRef.current.position.y = -0.3 + bobOffsetY;
+      pistolRef.current.position.x = 0.3 + bobOffsetX;
     } else {
       // Subtle breathing movement when idle
       const breathingOffset = Math.sin(time.current * 1.5) * 0.003;
-      targetPosY = -0.25 + breathingOffset;
+      pistolRef.current.position.y = -0.3 + breathingOffset;
     }
     
     // Left-right sway based on movement
+    let targetRotZ = 0;
     if (left) targetRotZ = swayAmount;
     if (right) targetRotZ = -swayAmount;
     
-    // Apply view-following effect based on camera rotation changes
-    // This makes the weapon follow the player's view direction
-    targetRotY += cameraRotationDelta.current.y * viewFollowStrength;
-    targetRotX += cameraRotationDelta.current.x * viewFollowStrength;
-    
-    // Add slight tilt based on camera's current rotation for more immersion
-    // This makes the weapon feel more connected to the camera view
-    targetRotY += (camera.rotation.y + Math.PI/2) * 0.1;
-    targetRotX += camera.rotation.x * 0.1;
-    
-    // Add position shift based on rotation (makes the weapon move slightly in the direction you're looking)
-    // This creates more realistic inertia feel for the weapon
-    targetPosX -= cameraRotationDelta.current.y * 0.15; // Move horizontally based on yaw change
-    targetPosY -= cameraRotationDelta.current.x * 0.15; // Move vertically based on pitch change
-    
-    // Apply position and rotation with lerping for smooth transitions
-    pistolRef.current.position.x += (targetPosX - pistolRef.current.position.x) * 5 * delta;
-    pistolRef.current.position.y += (targetPosY - pistolRef.current.position.y) * 5 * delta;
-    pistolRef.current.rotation.z += (targetRotZ - pistolRef.current.rotation.z) * 3 * delta;
-    pistolRef.current.rotation.y += (targetRotY - pistolRef.current.rotation.y) * 5 * delta;
-    pistolRef.current.rotation.x += (targetRotX - pistolRef.current.rotation.x) * 5 * delta;
+    // Apply rotation around local Z axis (for left-right sway)
+    const currentRotZ = pistolRef.current.rotation.z;
+    pistolRef.current.rotation.z = currentRotZ + (targetRotZ - currentRotZ) * 3 * delta;
   });
   
   return (
