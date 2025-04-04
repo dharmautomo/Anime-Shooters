@@ -71,8 +71,8 @@ const UI = () => {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '16px',
-    height: '16px',
+    width: '24px',
+    height: '24px',
     pointerEvents: 'none' as const,
     zIndex: 1000,
     opacity: isControlsLocked ? 1 : 0,
@@ -83,12 +83,12 @@ const UI = () => {
     <div className="game-ui">
       {/* Crosshair */}
       <div style={crosshairStyle}>
-        <svg width="16" height="16" viewBox="0 0 16 16">
-          <circle cx="8" cy="8" r="1.5" fill="white" />
-          <line x1="8" y1="3" x2="8" y2="5" stroke="white" strokeWidth="1" />
-          <line x1="8" y1="11" x2="8" y2="13" stroke="white" strokeWidth="1" />
-          <line x1="3" y1="8" x2="5" y2="8" stroke="white" strokeWidth="1" />
-          <line x1="11" y1="8" x2="13" y2="8" stroke="white" strokeWidth="1" />
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="2" fill="white" />
+          <line x1="12" y1="4" x2="12" y2="8" stroke="white" strokeWidth="1.5" />
+          <line x1="12" y1="16" x2="12" y2="20" stroke="white" strokeWidth="1.5" />
+          <line x1="4" y1="12" x2="8" y2="12" stroke="white" strokeWidth="1.5" />
+          <line x1="16" y1="12" x2="20" y2="12" stroke="white" strokeWidth="1.5" />
         </svg>
       </div>
       

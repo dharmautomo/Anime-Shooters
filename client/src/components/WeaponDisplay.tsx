@@ -15,6 +15,12 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   const pistolRef = useRef<THREE.Group>(null);
   const { isControlsLocked } = useGameControls();
   
+  // Store last mouse movement for view following effect
+  const lastMouseX = useRef(0);
+  const lastMouseY = useRef(0);
+  const mouseDeltaX = useRef(0);
+  const mouseDeltaY = useRef(0);
+  
   // Get movement keys for weapon sway animation
   const forward = useKeyboardControls((state) => state[Controls.forward]);
   const backward = useKeyboardControls((state) => state[Controls.backward]);
@@ -31,6 +37,29 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   const bobSpeed = 4; // Speed of the bobbing effect
   const bobAmount = 0.015; // Amount of bobbing
   const swayAmount = 0.08; // Amount of weapon sway
+  const viewFollowStrength = 0.15; // How much the weapon follows the view
+  
+  // Setup mouse movement tracking for view-following effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isControlsLocked) return;
+      
+      // Calculate mouse delta since last frame
+      if (lastMouseX.current !== 0) {
+        mouseDeltaX.current = (e.movementX || 0) * 0.002; // Scale down movement for subtle effect
+        mouseDeltaY.current = (e.movementY || 0) * 0.002;
+      }
+      
+      lastMouseX.current = e.clientX;
+      lastMouseY.current = e.clientY;
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [isControlsLocked]);
   
   // Set up weapon position and rotation
   useEffect(() => {
@@ -42,7 +71,7 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     }
   }, []);
   
-  // Handle weapon animation
+  // Handle weapon animation and view following
   useFrame((_, delta) => {
     time.current += delta;
     
@@ -52,6 +81,8 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     let targetPosX = 0.3;
     let targetPosY = -0.3;
     let targetRotZ = 0;
+    let targetRotX = 0;
+    let targetRotY = -Math.PI/12;
     
     // Bobbing effect when moving
     if (isMoving) {
@@ -70,10 +101,21 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     if (left) targetRotZ = swayAmount;
     if (right) targetRotZ = -swayAmount;
     
-    // Apply position with lerping for smooth transitions
+    // Apply view-following effect based on mouse movement
+    // This makes the weapon follow the player's view direction
+    targetRotY += mouseDeltaX.current * viewFollowStrength * 5;
+    targetRotX += mouseDeltaY.current * viewFollowStrength * 3;
+    
+    // Gradually decay mouse movement delta
+    mouseDeltaX.current *= 0.9;
+    mouseDeltaY.current *= 0.9;
+    
+    // Apply position and rotation with lerping for smooth transitions
     pistolRef.current.position.x += (targetPosX - pistolRef.current.position.x) * 5 * delta;
     pistolRef.current.position.y += (targetPosY - pistolRef.current.position.y) * 5 * delta;
     pistolRef.current.rotation.z += (targetRotZ - pistolRef.current.rotation.z) * 3 * delta;
+    pistolRef.current.rotation.y += (targetRotY - pistolRef.current.rotation.y) * 2 * delta;
+    pistolRef.current.rotation.x += (targetRotX - pistolRef.current.rotation.x) * 2 * delta;
   });
   
   return (
