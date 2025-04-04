@@ -347,9 +347,38 @@ const Game = ({ username }: GameProps) => {
     // Add bullet to local state
     setBullets(prev => [...prev, newBullet]);
     
+    // Play laser sound
+    const laserSound = new Audio('/sounds/laser.mp3');
+    laserSound.volume = 0.3;
+    laserSound.play().catch(e => console.error("Error playing laser sound:", e));
+    
     // Log bullet creation
     console.log('Created laser bullet:', newBullet);
   };
+  
+  // Expose shootLaser function globally
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.shootBullet = shootLaser;
+      
+      // For testing
+      window.testShoot = () => {
+        shootLaser();
+        return "Bullet fired!";
+      };
+      
+      // For debugging
+      window.getBullets = () => bullets;
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.shootBullet;
+        delete window.testShoot;
+        delete window.getBullets;
+      }
+    };
+  }, [bullets, playerId, position, camera]);
   
   // Clean up old bullets
   useEffect(() => {

@@ -337,6 +337,106 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
 
   return (
     <group ref={playerRef}>
+      {/* First-person weapon view for main player */}
+      {isMainPlayer && (
+        <group 
+          position={[0.4, -0.3 + (walkCycle ? Math.sin(animationTime * 10) * 0.03 : Math.sin(animationTime * 2) * 0.01), -0.5]} 
+          rotation={[
+            walkCycle ? Math.sin(animationTime * 5) * 0.02 : 0, 
+            walkCycle ? Math.sin(animationTime * 3) * 0.01 : 0, 
+            walkCycle ? Math.cos(animationTime * 8) * 0.02 : 0
+          ]}
+          onClick={(e) => {
+            e.stopPropagation();
+            // Get the useMultiplayer store method through the global window variable
+            if (window.shootBullet) {
+              window.shootBullet();
+            }
+            // Simulate recoil
+            if (playerRef.current) {
+              const recoilAmount = 0.05;
+              playerRef.current.position.z -= recoilAmount;
+              setTimeout(() => {
+                if (playerRef.current) {
+                  playerRef.current.position.z += recoilAmount;
+                }
+              }, 100);
+            }
+          }}
+        >
+          {/* Gun body */}
+          <mesh position={[0, 0, 0]} castShadow>
+            <boxGeometry args={[0.25, 0.12, 0.5]} />
+            <meshStandardMaterial color="#333333" metalness={0.7} roughness={0.3} />
+          </mesh>
+          
+          {/* Gun grip */}
+          <mesh position={[0, 0.1, -0.15]} castShadow>
+            <boxGeometry args={[0.1, 0.25, 0.15]} />
+            <meshStandardMaterial color="#222222" metalness={0.5} roughness={0.5} />
+          </mesh>
+          
+          {/* Gun barrel */}
+          <mesh position={[0, 0, 0.3]} castShadow>
+            <cylinderGeometry args={[0.05, 0.05, 0.3, 8]} />
+            <meshStandardMaterial color="#444444" metalness={0.8} roughness={0.2} />
+          </mesh>
+          
+          {/* Energy core - glowing */}
+          <mesh position={[0, 0.08, 0]} castShadow>
+            <sphereGeometry args={[0.08, 16, 16]} />
+            <meshStandardMaterial 
+              color="#ff3333" 
+              emissive="#ff0000" 
+              emissiveIntensity={2 + Math.sin(animationTime * 5) * 0.5}
+              toneMapped={false}
+            />
+          </mesh>
+          
+          {/* Shooting animation and effects - simulates automatic firing */}
+          {Math.sin(animationTime * 15) > 0.85 && (
+            <>
+              {/* Muzzle flash light */}
+              <pointLight 
+                position={[0, 0, 0.6]} 
+                color="#ff3300" 
+                intensity={5} 
+                distance={2} 
+                decay={2}
+              />
+              
+              {/* Visual muzzle flash */}
+              <mesh position={[0, 0, 0.5]} scale={[0.12, 0.12, 0.12]}>
+                <sphereGeometry args={[1, 16, 16]} />
+                <meshStandardMaterial 
+                  color="#ff8800" 
+                  emissive="#ff4400" 
+                  emissiveIntensity={4}
+                  transparent={true}
+                  opacity={0.8}
+                  toneMapped={false}
+                />
+              </mesh>
+            </>
+          )}
+          
+          {/* Additional flare effects around gun */}
+          {Math.sin(animationTime * 8) > 0.7 && (
+            <mesh position={[0, 0.08, 0]} scale={[0.15, 0.15, 0.15]}>
+              <sphereGeometry args={[1, 16, 16]} />
+              <meshStandardMaterial 
+                color="#ff0033" 
+                emissive="#ff0000" 
+                emissiveIntensity={3}
+                transparent={true}
+                opacity={0.5}
+                toneMapped={false}
+              />
+            </mesh>
+          )}
+        </group>
+      )}
+      
       {/* Character Model - only visible for other players */}
       {!isMainPlayer && (
         <group ref={playerBodyRef}>
