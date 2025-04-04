@@ -353,7 +353,7 @@ const Game = ({ username }: GameProps) => {
     const newBullet = {
       id: `bullet_${playerId}_${Date.now()}`,
       position: bulletPosition,
-      velocity: direction.clone().normalize().multiplyScalar(30), // Fast laser speed
+      velocity: direction.clone().normalize().multiplyScalar(60), // Extremely fast laser speed
       owner: playerId,
       createdAt: Date.now()
     };
@@ -398,7 +398,7 @@ const Game = ({ username }: GameProps) => {
   useEffect(() => {
     const cleanupInterval = setInterval(() => {
       const now = Date.now();
-      setBullets(prev => prev.filter(bullet => now - bullet.createdAt < 2000));
+      setBullets(prev => prev.filter(bullet => now - bullet.createdAt < 3000)); // Match bullet lifetime in LaserBullet component
     }, 500);
     
     return () => clearInterval(cleanupInterval);

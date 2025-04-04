@@ -15,12 +15,12 @@ const LaserBullet = ({ position, velocity, owner, id }: LaserBulletProps) => {
   const posRef = useRef(position instanceof THREE.Vector3 ? position.clone() : new THREE.Vector3(...position));
   const velRef = useRef(velocity instanceof THREE.Vector3 ? velocity.clone() : new THREE.Vector3(...velocity));
   const startTimeRef = useRef(Date.now());
-  const MAX_LIFETIME = 2000; // 2 seconds
+  const MAX_LIFETIME = 3000; // 3 seconds for longer travel distance
   
   // Normalize velocity for consistent speed
   useEffect(() => {
     const velocity = velRef.current;
-    const speed = 30; // Fast laser speed
+    const speed = 60; // Extremely fast laser speed
     velocity.normalize().multiplyScalar(speed);
   }, []);
   
@@ -99,9 +99,9 @@ const LaserBullet = ({ position, velocity, owner, id }: LaserBulletProps) => {
         />
       </mesh>
       
-      {/* Laser trail */}
+      {/* Laser trail - longer for faster bullets */}
       <mesh ref={trailRef}>
-        <cylinderGeometry args={[0.05, 0.18, 2.5, 8]} />
+        <cylinderGeometry args={[0.05, 0.18, 4.0, 8]} />
         <meshBasicMaterial 
           color="#ff6666" 
           transparent 
