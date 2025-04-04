@@ -110,8 +110,12 @@ const Game = ({ username }: GameProps) => {
     // Add mouse click event listener for weapon firing
     document.addEventListener('mousedown', handleMouseClick);
 
-    // Reset player on game start
-    resetPlayer();
+    // Reset player on game start - only do it once
+    const hasReset = useRef(false);
+    if (!hasReset.current) {
+      resetPlayer();
+      hasReset.current = true;
+    }
     
     // Clean up on unmount
     return () => {
