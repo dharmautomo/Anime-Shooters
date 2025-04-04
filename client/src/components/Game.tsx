@@ -21,6 +21,7 @@ const Game = ({ username }: GameProps) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
   const isMobile = useIsMobile();
+  const hasResetPlayer = useRef(false);
   
   // Touch controls state for mobile devices
   const [touchControls, setTouchControls] = useState({
@@ -111,10 +112,9 @@ const Game = ({ username }: GameProps) => {
     document.addEventListener('mousedown', handleMouseClick);
 
     // Reset player on game start - only do it once
-    const hasReset = useRef(false);
-    if (!hasReset.current) {
+    if (!hasResetPlayer.current) {
       resetPlayer();
-      hasReset.current = true;
+      hasResetPlayer.current = true;
     }
     
     // Clean up on unmount
