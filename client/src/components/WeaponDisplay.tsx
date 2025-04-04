@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useTexture } from '@react-three/drei';
@@ -15,11 +15,9 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   const pistolRef = useRef<THREE.Group>(null);
   const { isControlsLocked } = useGameControls();
   
-  // Store last mouse movement for view following effect
-  const lastMouseX = useRef(0);
-  const lastMouseY = useRef(0);
-  const mouseDeltaX = useRef(0);
-  const mouseDeltaY = useRef(0);
+  // Track last camera rotation to detect changes
+  const prevCameraRotation = useRef(new THREE.Euler());
+  const cameraRotationDelta = useRef(new THREE.Vector2(0, 0));
   
   // Get movement keys for weapon sway animation
   const forward = useKeyboardControls((state) => state[Controls.forward]);
@@ -37,39 +35,28 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   const bobSpeed = 4; // Speed of the bobbing effect
   const bobAmount = 0.015; // Amount of bobbing
   const swayAmount = 0.08; // Amount of weapon sway
-  const viewFollowStrength = 0.15; // How much the weapon follows the view
+  const viewFollowStrength = 0.5; // How much the weapon follows the view
   
-  // Setup mouse movement tracking for view-following effect
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isControlsLocked) return;
-      
-      // Calculate mouse delta since last frame
-      if (lastMouseX.current !== 0) {
-        mouseDeltaX.current = (e.movementX || 0) * 0.002; // Scale down movement for subtle effect
-        mouseDeltaY.current = (e.movementY || 0) * 0.002;
-      }
-      
-      lastMouseX.current = e.clientX;
-      lastMouseY.current = e.clientY;
-    };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [isControlsLocked]);
+  // Debug for development
+  const [debugInfo, setDebugInfo] = useState('');
   
   // Set up weapon position and rotation
   useEffect(() => {
     if (pistolRef.current) {
-      // Position weapon in the lower right portion of the screen
-      pistolRef.current.position.set(0.3, -0.3, -0.5);
+      // Position weapon in the lower right portion of the screen, but slightly more centered
+      pistolRef.current.position.set(0.25, -0.25, -0.5);
       // Slightly rotate the weapon for a better angle
       pistolRef.current.rotation.set(0, -Math.PI/12, 0);
+      // Scale up the weapon a bit for better visibility
+      pistolRef.current.scale.set(1.1, 1.1, 1.1);
     }
-  }, []);
+    
+    // Initialize previous camera rotation
+    prevCameraRotation.current.copy(camera.rotation);
+    
+    // Log for debugging
+    console.log('Weapon display initialized, tracking camera rotation');
+  }, [camera]);
   
   // Handle weapon animation and view following
   useFrame((_, delta) => {
@@ -77,9 +64,20 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     
     if (!pistolRef.current || !isControlsLocked || !isVisible) return;
     
+    // Calculate camera rotation delta for view following
+    const rotDeltaX = camera.rotation.x - prevCameraRotation.current.x;
+    const rotDeltaY = camera.rotation.y - prevCameraRotation.current.y;
+    
+    // Update camera rotation deltas with smoothing
+    cameraRotationDelta.current.x = rotDeltaX * 10; // Scale for better response
+    cameraRotationDelta.current.y = rotDeltaY * 10;
+    
+    // Store current camera rotation for next frame
+    prevCameraRotation.current.copy(camera.rotation);
+    
     // Reset position for idle state
-    let targetPosX = 0.3;
-    let targetPosY = -0.3;
+    let targetPosX = 0.25;
+    let targetPosY = -0.25;
     let targetRotZ = 0;
     let targetRotX = 0;
     let targetRotY = -Math.PI/12;
@@ -89,33 +87,39 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
       const bobOffsetY = Math.sin(time.current * bobSpeed) * bobAmount;
       const bobOffsetX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
       
-      targetPosY = -0.3 + bobOffsetY;
-      targetPosX = 0.3 + bobOffsetX;
+      targetPosY = -0.25 + bobOffsetY;
+      targetPosX = 0.25 + bobOffsetX;
     } else {
       // Subtle breathing movement when idle
       const breathingOffset = Math.sin(time.current * 1.5) * 0.003;
-      targetPosY = -0.3 + breathingOffset;
+      targetPosY = -0.25 + breathingOffset;
     }
     
     // Left-right sway based on movement
     if (left) targetRotZ = swayAmount;
     if (right) targetRotZ = -swayAmount;
     
-    // Apply view-following effect based on mouse movement
+    // Apply view-following effect based on camera rotation changes
     // This makes the weapon follow the player's view direction
-    targetRotY += mouseDeltaX.current * viewFollowStrength * 5;
-    targetRotX += mouseDeltaY.current * viewFollowStrength * 3;
+    targetRotY += cameraRotationDelta.current.y * viewFollowStrength;
+    targetRotX += cameraRotationDelta.current.x * viewFollowStrength;
     
-    // Gradually decay mouse movement delta
-    mouseDeltaX.current *= 0.9;
-    mouseDeltaY.current *= 0.9;
+    // Add slight tilt based on camera's current rotation for more immersion
+    // This makes the weapon feel more connected to the camera view
+    targetRotY += (camera.rotation.y + Math.PI/2) * 0.1;
+    targetRotX += camera.rotation.x * 0.1;
+    
+    // Add position shift based on rotation (makes the weapon move slightly in the direction you're looking)
+    // This creates more realistic inertia feel for the weapon
+    targetPosX -= cameraRotationDelta.current.y * 0.15; // Move horizontally based on yaw change
+    targetPosY -= cameraRotationDelta.current.x * 0.15; // Move vertically based on pitch change
     
     // Apply position and rotation with lerping for smooth transitions
     pistolRef.current.position.x += (targetPosX - pistolRef.current.position.x) * 5 * delta;
     pistolRef.current.position.y += (targetPosY - pistolRef.current.position.y) * 5 * delta;
     pistolRef.current.rotation.z += (targetRotZ - pistolRef.current.rotation.z) * 3 * delta;
-    pistolRef.current.rotation.y += (targetRotY - pistolRef.current.rotation.y) * 2 * delta;
-    pistolRef.current.rotation.x += (targetRotX - pistolRef.current.rotation.x) * 2 * delta;
+    pistolRef.current.rotation.y += (targetRotY - pistolRef.current.rotation.y) * 5 * delta;
+    pistolRef.current.rotation.x += (targetRotX - pistolRef.current.rotation.x) * 5 * delta;
   });
   
   return (
