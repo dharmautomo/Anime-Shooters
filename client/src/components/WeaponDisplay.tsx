@@ -35,9 +35,9 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   useEffect(() => {
     if (pistolRef.current) {
       // Position weapon in the lower right portion of the screen
-      pistolRef.current.position.set(0.3, -0.3, -0.5);
+      pistolRef.current.position.set(0.55, -0.5, -0.5);
       // Slightly rotate the weapon for a better angle
-      pistolRef.current.rotation.set(0, -Math.PI/12, 0);
+      pistolRef.current.rotation.set(-Math.PI/24, -Math.PI/6, Math.PI/24);
     }
     
     console.log('Weapon display initialized');
@@ -57,21 +57,31 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     // This makes the weapon directly attached to the camera view
     pistolRef.current.quaternion.copy(camera.quaternion);
     
+    // Apply additional rotation for better angle
+    const rotationX = -Math.PI/24;
+    const rotationY = -Math.PI/6;
+    const rotationZ = Math.PI/24;
+    
+    // Apply local rotation after copying camera quaternion
+    pistolRef.current.rotateX(rotationX);
+    pistolRef.current.rotateY(rotationY);
+    pistolRef.current.rotateZ(rotationZ);
+    
     // But we want to offset it to be visible in the corner, not centered
     // Set local position relative to camera
-    pistolRef.current.position.set(0.3, -0.3, -0.5);
+    pistolRef.current.position.set(0.55, -0.5, -0.5);
     
     // Add bobbing effect when moving
     if (isMoving) {
       const bobOffsetY = Math.sin(time.current * bobSpeed) * bobAmount;
       const bobOffsetX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
       
-      pistolRef.current.position.y = -0.3 + bobOffsetY;
-      pistolRef.current.position.x = 0.3 + bobOffsetX;
+      pistolRef.current.position.y = -0.5 + bobOffsetY;
+      pistolRef.current.position.x = 0.55 + bobOffsetX;
     } else {
       // Subtle breathing movement when idle
       const breathingOffset = Math.sin(time.current * 1.5) * 0.003;
-      pistolRef.current.position.y = -0.3 + breathingOffset;
+      pistolRef.current.position.y = -0.5 + breathingOffset;
     }
     
     // Left-right sway based on movement
