@@ -5,6 +5,7 @@ import { useKeyboardControls, useAnimations } from '@react-three/drei';
 import { Controls, ControlsType } from '../App';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { checkCollision } from '../lib/utils/collisionDetection';
+import WeaponDisplay from './WeaponDisplay';
 
 interface PlayerProps {
   isMainPlayer: boolean;
@@ -347,10 +348,12 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
 
   return (
     <group ref={playerRef}>
-      {/* First-person view for main player - weapon has been removed */}
+      {/* First-person view for main player with weapon display */}
       {isMainPlayer && (
-        // Empty group maintained for compatibility with any code that might reference this
-        <group></group>
+        <group>
+          {/* Import WeaponDisplay component */}
+          <WeaponDisplay isVisible={health > 0} />
+        </group>
       )}
       
       {/* Character Model - only visible for other players */}

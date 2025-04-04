@@ -65,10 +65,33 @@ const UI = () => {
     };
   }, []);
 
-  // No crosshair needed as weapon system has been removed
+  // Add crosshair for aiming
+  const crosshairStyle = {
+    position: 'absolute' as const,
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '16px',
+    height: '16px',
+    pointerEvents: 'none' as const,
+    zIndex: 1000,
+    opacity: isControlsLocked ? 1 : 0,
+    transition: 'opacity 0.2s ease'
+  };
   
   return createPortal(
     <div className="game-ui">
+      {/* Crosshair */}
+      <div style={crosshairStyle}>
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <circle cx="8" cy="8" r="1.5" fill="white" />
+          <line x1="8" y1="3" x2="8" y2="5" stroke="white" strokeWidth="1" />
+          <line x1="8" y1="11" x2="8" y2="13" stroke="white" strokeWidth="1" />
+          <line x1="3" y1="8" x2="5" y2="8" stroke="white" strokeWidth="1" />
+          <line x1="11" y1="8" x2="13" y2="8" stroke="white" strokeWidth="1" />
+        </svg>
+      </div>
+      
       {/* Health bar */}
       <div className="health-bar">
         <div className="health-bar-fill" style={{ width: `${health}%` }}></div>
@@ -129,6 +152,7 @@ const UI = () => {
           <p>WASD or Arrow Keys - Move</p>
           <p>Mouse - Look around</p>
           <p>Space - Jump</p>
+          <p>Crosshair - Aim weapon</p>
           <p>ESC - Toggle this guide</p>
           <p>Shift+D - Show debug info</p>
         </div>
