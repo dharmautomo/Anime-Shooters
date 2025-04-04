@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 interface CrosshairProps {
@@ -11,22 +11,86 @@ interface CrosshairProps {
 
 const Crosshair = ({
   color = '#ffffff',
-  size = 0.01,
-  thickness = 0.001,
-  gap = 0.002
+  size = 0.03,
+  thickness = 0.003,
+  gap = 0.005
 }: CrosshairProps) => {
   const { camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   
-  // Update crosshair position to always be in front of camera
+  // Create a 2D HTML crosshair overlay
+  useEffect(() => {
+    // Create a crosshair element
+    const crosshairContainer = document.createElement('div');
+    crosshairContainer.id = 'crosshair-container';
+    crosshairContainer.style.position = 'fixed';
+    crosshairContainer.style.top = '50%';
+    crosshairContainer.style.left = '50%';
+    crosshairContainer.style.transform = 'translate(-50%, -50%)';
+    crosshairContainer.style.pointerEvents = 'none';
+    crosshairContainer.style.zIndex = '1000';
+    
+    // Create the crosshair lines
+    const createCrosshairLine = (rotation: string, width: string, height: string) => {
+      const line = document.createElement('div');
+      line.style.position = 'absolute';
+      line.style.backgroundColor = color;
+      line.style.width = width;
+      line.style.height = height;
+      line.style.transform = rotation;
+      return line;
+    };
+    
+    // Vertical top line
+    const topLine = createCrosshairLine('translate(-50%, 0)', '2px', '15px');
+    topLine.style.top = '-20px';
+    topLine.style.left = '50%';
+    
+    // Vertical bottom line
+    const bottomLine = createCrosshairLine('translate(-50%, 0)', '2px', '15px');
+    bottomLine.style.bottom = '-20px';
+    bottomLine.style.left = '50%';
+    
+    // Horizontal left line
+    const leftLine = createCrosshairLine('translate(0, -50%)', '15px', '2px');
+    leftLine.style.left = '-20px';
+    leftLine.style.top = '50%';
+    
+    // Horizontal right line
+    const rightLine = createCrosshairLine('translate(0, -50%)', '15px', '2px');
+    rightLine.style.right = '-20px';
+    rightLine.style.top = '50%';
+    
+    // Center dot
+    const centerDot = createCrosshairLine('translate(-50%, -50%)', '4px', '4px');
+    centerDot.style.left = '50%';
+    centerDot.style.top = '50%';
+    centerDot.style.borderRadius = '50%';
+    
+    // Add all parts to the container
+    crosshairContainer.appendChild(topLine);
+    crosshairContainer.appendChild(bottomLine);
+    crosshairContainer.appendChild(leftLine);
+    crosshairContainer.appendChild(rightLine);
+    crosshairContainer.appendChild(centerDot);
+    
+    // Add the crosshair to the DOM
+    document.body.appendChild(crosshairContainer);
+    
+    // Cleanup when component unmounts
+    return () => {
+      if (document.getElementById('crosshair-container')) {
+        document.body.removeChild(crosshairContainer);
+      }
+    };
+  }, [color]);
+  
+  // We also include a 3D crosshair as a backup
   useEffect(() => {
     if (!groupRef.current) return;
     
     // Position crosshair in front of camera
-    groupRef.current.position.z = -0.2;
-    
-    // Make crosshair face the camera
-    groupRef.current.lookAt(camera.position);
+    groupRef.current.position.z = -1; // Further away to avoid clipping
     
     // Add the crosshair to the camera
     camera.add(groupRef.current);
@@ -41,34 +105,10 @@ const Crosshair = ({
   
   return (
     <group ref={groupRef}>
-      {/* Top line */}
-      <mesh position={[0, size / 2 + gap / 2, 0]}>
-        <boxGeometry args={[thickness, size, thickness]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
-      
-      {/* Bottom line */}
-      <mesh position={[0, -size / 2 - gap / 2, 0]}>
-        <boxGeometry args={[thickness, size, thickness]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
-      
-      {/* Left line */}
-      <mesh position={[-size / 2 - gap / 2, 0, 0]}>
-        <boxGeometry args={[size, thickness, thickness]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
-      
-      {/* Right line */}
-      <mesh position={[size / 2 + gap / 2, 0, 0]}>
-        <boxGeometry args={[size, thickness, thickness]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
-      
-      {/* Center dot (optional) */}
+      {/* We'll keep a minimal 3D crosshair as backup */}
       <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[thickness * 1.5, 8, 8]} />
-        <meshBasicMaterial color={color} />
+        <sphereGeometry args={[0.003, 8, 8]} />
+        <meshBasicMaterial color={color} depthTest={false} />
       </mesh>
     </group>
   );

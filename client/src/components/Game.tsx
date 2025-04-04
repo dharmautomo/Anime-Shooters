@@ -451,7 +451,7 @@ const Game = ({ username }: GameProps) => {
       
       {/* Crosshair for aiming */}
       {health > 0 && isControlsLocked && (
-        <Crosshair color="#ffffff" size={0.01} thickness={0.001} />
+        <Crosshair color="#ffffff" size={0.03} thickness={0.003} gap={0.005} />
       )}
       
       {/* Weapon display in first-person view */}
