@@ -88,12 +88,21 @@ export const useWeaponStore = create<WeaponStore>((set, get) => ({
         const bulletDirection = new THREE.Vector3();
         camera.getWorldDirection(bulletDirection);
         
-        // Adjust bullet starting position to come from the weapon, not the camera center
-        // Offset slightly forward and to the right of camera
+        // Calculate the weapon's position more accurately to match the visual gun model
+        // Get the right vector (perpendicular to the direction and pointing right)
         const rightVector = new THREE.Vector3(0, 1, 0).cross(bulletDirection).normalize();
-        bulletPosition.add(rightVector.multiplyScalar(0.3)); // Move right
-        bulletPosition.y -= 0.2; // Move down slightly
-        bulletPosition.add(bulletDirection.clone().multiplyScalar(0.5)); // Move forward
+        
+        // Position the bullet to come from the weapon barrel
+        // Right offset (matches the visible gun model's position)
+        bulletPosition.add(rightVector.clone().multiplyScalar(0.25));
+        // Down offset (slight drop from eye level to gun barrel)
+        bulletPosition.y -= 0.15;
+        // Forward offset (extend in front of the gun barrel)
+        bulletPosition.add(bulletDirection.clone().multiplyScalar(0.8));
+        
+        // Make sure bullet appears in front of the gun, not inside it
+        // This extra forward push ensures bullets don't collide with your own gun model
+        bulletPosition.add(bulletDirection.clone().multiplyScalar(0.2));
         
         // Add some randomness to bullet direction for weapon spread
         bulletDirection.x += (Math.random() - 0.5) * 0.02;

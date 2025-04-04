@@ -15,7 +15,7 @@ interface BulletProps {
 const Bullet: React.FC<BulletProps> = ({
   position,
   direction,
-  speed = 50,
+  speed = 75, // Increased speed for better feel
   lifetime = 1.5,
   onHit
 }) => {
@@ -61,8 +61,8 @@ const Bullet: React.FC<BulletProps> = ({
       directionRef.current
     );
     
-    // For now, we'll just check collisions with ground or wall (y=0 plane)
-    // Later this would be expanded for more complex collisions
+    // Get a list of objects the bullet could hit (ideally from a scene colliders array)
+    // For now, just check ground collision
     if (bulletRef.current.position.y <= 0.05) {
       // Hit the ground
       bulletRef.current.position.y = 0.05; // prevent going below ground
@@ -71,6 +71,17 @@ const Bullet: React.FC<BulletProps> = ({
         // Create a normal vector pointing up for ground impact
         const normal = new THREE.Vector3(0, 1, 0);
         onHit(bulletRef.current.position.clone(), normal);
+      }
+      
+      // Play impact sound when bullet hits something
+      const impactSound = createPositionalSound(
+        '/sounds/hit.mp3',
+        bulletRef.current.position.clone(),
+        0.2 // Lower volume for impact
+      );
+      
+      if (impactSound) {
+        impactSound.play();
       }
       
       setIsDead(true);
@@ -99,17 +110,18 @@ const Bullet: React.FC<BulletProps> = ({
   
   return (
     <group>
-      {/* Bullet mesh */}
+      {/* Bullet mesh - smaller size makes it look faster and more like a real bullet */}
       <mesh ref={bulletRef} position={position.clone()}>
-        <sphereGeometry args={[0.05, 8, 8]} />
-        <meshStandardMaterial color="#ffff00" emissive="#ff8800" emissiveIntensity={2} />
+        <sphereGeometry args={[0.03, 8, 8]} />
+        <meshStandardMaterial color="#ffff00" emissive="#ff8800" emissiveIntensity={3} />
         
-        {/* Tracer/trail effect */}
+        {/* Improved tracer/trail effect */}
         <Trail
-          width={0.15}
-          length={8}
+          width={0.08}
+          length={10}
           color="#ff8800"
-          attenuation={(width) => width}
+          attenuation={(width) => width * 2}
+          local={false}
         />
       </mesh>
     </group>
