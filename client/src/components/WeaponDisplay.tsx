@@ -36,59 +36,53 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     console.log('Weapon display initialized');
   }, []);
   
-  // Handle weapon animation - much simpler approach
-  useFrame((_, delta) => {
+  // Handle weapon animation with simplified positioning
+  useFrame((state, delta) => {
     time.current += delta;
     
-    if (!pistolRef.current || !isControlsLocked || !isVisible) return;
+    if (!pistolRef.current || !isVisible) return;
     
-    // Simply align rotation with camera
-    pistolRef.current.quaternion.copy(camera.quaternion);
+    // Basic position - fixed offset from camera
+    const cameraPosition = state.camera.position.clone();
+    const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(state.camera.quaternion);
+    const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(state.camera.quaternion);
+    const cameraDown = new THREE.Vector3(0, -1, 0).applyQuaternion(state.camera.quaternion);
     
-    // Fixed position in camera space (lower right corner of view)
-    pistolRef.current.position.copy(camera.position);
+    // Position pistol relative to camera with fixed offsets in view space
+    const pistolPosition = cameraPosition.clone()
+      .add(cameraDirection.clone().multiplyScalar(0.5))  // Move forward
+      .add(cameraRight.clone().multiplyScalar(0.3))     // Move right
+      .add(cameraDown.clone().multiplyScalar(0.3));     // Move down
     
-    // Forward direction vector (camera is looking down negative Z)
-    const forward = new THREE.Vector3(0, 0, -1);
-    forward.applyQuaternion(camera.quaternion);
-    forward.multiplyScalar(-0.5); // Move 0.5 units in front of camera
-    
-    // Right direction vector
-    const right = new THREE.Vector3(1, 0, 0);
-    right.applyQuaternion(camera.quaternion);
-    right.multiplyScalar(0.3); // Move 0.3 units to the right
-    
-    // Down direction vector
-    const down = new THREE.Vector3(0, -1, 0);
-    down.applyQuaternion(camera.quaternion);
-    down.multiplyScalar(0.3); // Move 0.3 units down
-    
-    // Apply all offsets to position pistol in lower right corner of view
-    pistolRef.current.position.add(forward);
-    pistolRef.current.position.add(right);
-    pistolRef.current.position.add(down);
+    // Update position and rotation
+    pistolRef.current.position.copy(pistolPosition);
+    pistolRef.current.quaternion.copy(state.camera.quaternion);
     
     // Add bobbing effect when moving
     if (isMoving) {
       const bobY = Math.sin(time.current * bobSpeed) * bobAmount;
-      const bobX = Math.cos(time.current * bobSpeed * 0.5) * bobAmount * 0.5;
+      const bobX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
       
-      const bobVecY = new THREE.Vector3(0, 1, 0);
-      bobVecY.applyQuaternion(camera.quaternion);
-      bobVecY.multiplyScalar(bobY);
-      
-      const bobVecX = new THREE.Vector3(1, 0, 0);
-      bobVecX.applyQuaternion(camera.quaternion);
-      bobVecX.multiplyScalar(bobX);
-      
-      pistolRef.current.position.add(bobVecY);
-      pistolRef.current.position.add(bobVecX);
+      pistolRef.current.position.add(
+        cameraRight.clone().multiplyScalar(bobX).add(
+          cameraDown.clone().multiplyScalar(-bobY)
+        )
+      );
     }
     
-    // Apply left-right sway based on movement
+    // Add left-right sway based on movement
     if (left || right) {
       const swayAmount = left ? 0.1 : -0.1;
-      pistolRef.current.rotateZ(swayAmount * delta);
+      
+      // Create a rotation matrix for the Z-axis (roll)
+      const rotationMatrix = new THREE.Matrix4().makeRotationAxis(
+        new THREE.Vector3(0, 0, 1).applyQuaternion(state.camera.quaternion),
+        swayAmount * delta
+      );
+      
+      // Apply the rotation to the pistol's quaternion
+      const rotationQuaternion = new THREE.Quaternion().setFromRotationMatrix(rotationMatrix);
+      pistolRef.current.quaternion.premultiply(rotationQuaternion);
     }
   });
   
