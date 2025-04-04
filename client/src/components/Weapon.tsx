@@ -4,7 +4,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { useWeapon, WeaponType } from '../lib/stores/initializeStores';
 import { useKeyboardControls } from '@react-three/drei';
-import { Controls } from '../App';
+import { Controls, ControlsType } from '../App';
 
 interface WeaponProps {
   position?: [number, number, number];
@@ -56,24 +56,39 @@ const Weapon: React.FC<WeaponProps> = ({
     }
   }, [isReloading, reloadAnimation, currentWeapon.reloadTime, finishReload]);
   
+  // Create a mapping of control keys to their index in the keymap for type safety
+  // This is necessary because useKeyboardControls expects numeric indexes
+  const controlMap = {
+    forward: 0,
+    backward: 1,
+    left: 2,
+    right: 3,
+    jump: 4,
+    shoot: 5,
+    reload: 6,
+    sprint: 7,
+    weaponSlot1: 8,
+    weaponSlot2: 9,
+    weaponSlot3: 10
+  };
+  
+  // Check if player is sprinting
+  const isSprinting = useKeyboardControls((state) => Boolean(state[controlMap.sprint]));
+  
+  // Check if player is moving
+  const isMovingForward = useKeyboardControls((state) => Boolean(state[controlMap.forward]));
+  const isMovingBackward = useKeyboardControls((state) => Boolean(state[controlMap.backward]));
+  const isMovingLeft = useKeyboardControls((state) => Boolean(state[controlMap.left]));
+  const isMovingRight = useKeyboardControls((state) => Boolean(state[controlMap.right]));
+  const isMoving = isMovingForward || isMovingBackward || isMovingLeft || isMovingRight;
+  
   // Handle weapon movement animations (bobbing while walking, recoil, etc.)
   useFrame((state, delta) => {
     if (weaponRef.current && !isThirdPerson) {
       // Weapon bob effect simulating walking
       const t = state.clock.getElapsedTime();
       
-      if (!isReloading) {
-        // Normal idle/walking animation
-        weaponRef.current.position.y = position[1] + Math.sin(t * 2) * 0.01;
-        weaponRef.current.position.x = position[0] + Math.sin(t * 1) * 0.005;
-        
-        // Reset rotation smoothly back to normal if not in reload animation
-        weaponRef.current.rotation.x = THREE.MathUtils.lerp(
-          weaponRef.current.rotation.x, 
-          rotation[0], 
-          delta * 5
-        );
-      } else {
+      if (isReloading) {
         // Reload animation
         const reloadProgress = (state.clock.getElapsedTime() % currentWeapon.reloadTime) / currentWeapon.reloadTime;
         
@@ -93,13 +108,94 @@ const Weapon: React.FC<WeaponProps> = ({
             (reloadProgress - 0.5) * 2
           );
         }
+        
+        // Add slight horizontal movement during reload
+        weaponRef.current.rotation.z = Math.sin(t * 5) * 0.03;
+      } else if (isSprinting && isMoving) {
+        // Sprinting animation - lower weapon position
+        weaponRef.current.position.y = THREE.MathUtils.lerp(
+          weaponRef.current.position.y,
+          position[1] - 0.15, // Lower the weapon
+          delta * 10
+        );
+        
+        // Tilt weapon forward when sprinting
+        weaponRef.current.rotation.x = THREE.MathUtils.lerp(
+          weaponRef.current.rotation.x,
+          rotation[0] + 0.7, // Tilt forward
+          delta * 8
+        );
+        
+        // Add more intense swaying when sprinting
+        const sprintBobIntensity = 0.02;
+        weaponRef.current.position.x = position[0] + Math.sin(t * 10) * sprintBobIntensity;
+        
+        // Slightly rotate when sprinting to simulate arm movement
+        weaponRef.current.rotation.z = Math.sin(t * 10) * 0.04;
+      } else if (isMoving) {
+        // Regular walking animation with enhanced bob effect
+        const walkBobIntensity = 0.015;
+        
+        // Vertical bobbing - more pronounced when walking
+        weaponRef.current.position.y = position[1] + Math.sin(t * 5) * walkBobIntensity;
+        
+        // Horizontal swaying while walking
+        weaponRef.current.position.x = position[0] + Math.sin(t * 2.5) * walkBobIntensity;
+        
+        // Slight rotation changes to simulate natural arm movement
+        weaponRef.current.rotation.z = Math.sin(t * 5) * 0.025;
+        
+        // Reset rotation toward normal slowly
+        weaponRef.current.rotation.x = THREE.MathUtils.lerp(
+          weaponRef.current.rotation.x, 
+          rotation[0] + Math.sin(t * 5) * 0.015, // Add slight up/down movement
+          delta * 5
+        );
+      } else {
+        // Idle animation - gentle weapon sway
+        const idleSwayIntensity = 0.005;
+        
+        // Very subtle vertical floating
+        weaponRef.current.position.y = position[1] + Math.sin(t * 1.5) * idleSwayIntensity;
+        
+        // Subtle horizontal drifting
+        weaponRef.current.position.x = position[0] + Math.sin(t * 1) * idleSwayIntensity;
+        
+        // Subtle rotation changes
+        weaponRef.current.rotation.z = Math.sin(t * 0.8) * 0.01;
+        
+        // Reset rotation smoothly back to normal
+        weaponRef.current.rotation.x = THREE.MathUtils.lerp(
+          weaponRef.current.rotation.x, 
+          rotation[0], 
+          delta * 3
+        );
       }
       
-      // Shooting recoil effect
+      // Adjust z-position smoothly based on state
+      if (isSprinting && isMoving) {
+        weaponRef.current.position.z = THREE.MathUtils.lerp(
+          weaponRef.current.position.z,
+          position[2] + 0.1, // Move slightly further out when sprinting
+          delta * 5
+        );
+      } else {
+        weaponRef.current.position.z = THREE.MathUtils.lerp(
+          weaponRef.current.position.z,
+          position[2],
+          delta * 5
+        );
+      }
+      
+      // Shooting recoil effect - overrides other animations temporarily
       if (isShooting) {
-        // Temporary recoil
-        weaponRef.current.position.z = position[2] + 0.05;
-        weaponRef.current.rotation.x = rotation[0] - 0.1;
+        // Temporary recoil based on weapon type
+        const recoilIntensity = currentWeapon.type === WeaponType.Pistol ? 0.05 : 
+                               (currentWeapon.type === WeaponType.Rifle ? 0.08 : 0.12);
+        
+        // Apply recoil
+        weaponRef.current.position.z = position[2] + recoilIntensity;
+        weaponRef.current.rotation.x = rotation[0] - recoilIntensity * 2; // Tilt up with recoil
         
         // Gradually return to normal position
         setTimeout(() => {
@@ -121,7 +217,7 @@ const Weapon: React.FC<WeaponProps> = ({
   useEffect(() => {
     // Subscribe to reload key
     const unsubscribeReload = subscribeKeys(
-      (state) => state[Controls.reload],
+      (state) => state[controlMap.reload],
       (pressed) => {
         if (pressed) reloadWeapon();
       }
@@ -129,7 +225,7 @@ const Weapon: React.FC<WeaponProps> = ({
     
     // Subscribe to shoot key
     const unsubscribeShoot = subscribeKeys(
-      (state) => state[Controls.shoot],
+      (state) => state[controlMap.shoot],
       (pressed) => {
         // Handle single fire weapons
         if (pressed && !currentWeapon.automatic) {
@@ -181,7 +277,7 @@ const Weapon: React.FC<WeaponProps> = ({
       unsubscribeReload();
       unsubscribeShoot();
     };
-  }, [currentWeapon.automatic, currentWeapon.fireRate, isThirdPerson, reloadWeapon, shootWeapon, subscribeKeys]);
+  }, [currentWeapon.automatic, currentWeapon.fireRate, isThirdPerson, reloadWeapon, shootWeapon, subscribeKeys, controlMap]);
   
   // Simple weapon models based on weapon type
   const renderWeaponModel = () => {
@@ -268,12 +364,61 @@ const Weapon: React.FC<WeaponProps> = ({
       {/* Basic weapon model */}
       {renderWeaponModel()}
       
-      {/* Muzzle flash during shooting (visible briefly) */}
+      {/* Enhanced muzzle flash during shooting */}
       {isShooting && (
-        <mesh position={[0, 0, -0.9]}>
-          <sphereGeometry args={[0.05, 8, 8]} />
-          <meshBasicMaterial color="#ffff00" />
-        </mesh>
+        <group position={[0, 0, currentWeapon.type === WeaponType.Pistol ? -0.7 : -0.9]}>
+          {/* Central flash */}
+          <mesh>
+            <sphereGeometry args={[0.05, 16, 16]} />
+            <meshStandardMaterial 
+              color="#ffff00" 
+              emissive="#ff7800"
+              emissiveIntensity={2}
+              toneMapped={false}
+            />
+          </mesh>
+          
+          {/* Outer glow */}
+          <mesh>
+            <sphereGeometry args={[0.08, 16, 16]} />
+            <meshStandardMaterial 
+              color="#ff5500" 
+              emissive="#ff3300"
+              emissiveIntensity={1.5}
+              transparent={true}
+              opacity={0.7}
+            />
+          </mesh>
+          
+          {/* Flash rays */}
+          {[...Array(8)].map((_, i) => (
+            <mesh 
+              key={i} 
+              position={[
+                Math.sin(i/8 * Math.PI * 2) * 0.05,
+                Math.cos(i/8 * Math.PI * 2) * 0.05,
+                -0.02
+              ]}
+              scale={[0.02, 0.02, 0.08 + Math.random() * 0.05]}
+            >
+              <boxGeometry />
+              <meshStandardMaterial 
+                color="#ffcc00" 
+                emissive="#ff8800"
+                emissiveIntensity={2}
+                toneMapped={false}
+              />
+            </mesh>
+          ))}
+          
+          {/* Light source */}
+          <pointLight 
+            color="#ff7700" 
+            intensity={5} 
+            distance={2} 
+            decay={2}
+          />
+        </group>
       )}
     </group>
   );
