@@ -4,8 +4,6 @@ import * as THREE from 'three';
 import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
 import Player from './Player';
 import World from './World';
-import LaserWeapon from './LaserWeapon';
-import LaserBullet from './LaserBullet';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
@@ -32,15 +30,6 @@ const Game = ({ username }: GameProps) => {
   const [touchStartPos, setTouchStartPos] = useState<{x: number, y: number} | null>(null);
   const lastTouchUpdateTime = useRef(0);
   const touchRotationSpeed = 0.05;
-  
-  // State for bullets
-  const [bullets, setBullets] = useState<Array<{
-    id: string;
-    position: THREE.Vector3;
-    velocity: THREE.Vector3;
-    owner: string;
-    createdAt: number;
-  }>>([]);
   
   const { 
     otherPlayers
@@ -104,24 +93,6 @@ const Game = ({ username }: GameProps) => {
       }
     };
   }, [camera, resetPlayer, setControlsLocked]);
-  
-  // Subscribe to remote bullets changes
-  useEffect(() => {
-    // Get the initial remote bullets count
-    const initialCount = useMultiplayer.getState().bullets.length;
-    console.log(`Initial remote bullets count: ${initialCount}`);
-    
-    // Subscribe to changes in the multiplayer store's bullets array
-    const unsubscribe = useMultiplayer.subscribe((state) => {
-      // This will run whenever the store updates
-      const bulletCount = state.bullets.length;
-      if (bulletCount > 0) {
-        console.log(`Remote bullets count: ${bulletCount}`);
-      }
-    });
-    
-    return () => unsubscribe();
-  }, []);
   
   // Set up mobile touch controls
   useEffect(() => {
@@ -338,242 +309,10 @@ const Game = ({ username }: GameProps) => {
 
   // Get keyboard controls state
   const [, getKeys] = useKeyboardControls();
-  const { updatePlayerPosition, fireBullet, bullets: remoteBullets } = useMultiplayer();
+  const { updatePlayerPosition } = useMultiplayer();
   
   // Track the last time we sent a position update to the server
   const lastUpdateRef = useRef<number>(0);
-  
-  // Function to create a new laser bullet
-  const shootLaser = () => {
-    // Get player state directly from store to ensure we have latest health
-    const playerStore = usePlayer.getState();
-    
-    // Don't allow shooting when player is dead
-    if (playerStore.health <= 0) {
-      console.log('Cannot shoot while dead');
-      return;
-    }
-    
-    // Create direction vector based on camera direction
-    const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction);
-    
-    // Calculate gun position in world space (in front of and to the right of camera)
-    const gunOffset = new THREE.Vector3(0.4, -0.3, -0.5); // First-person gun position
-    
-    // Create a rotation matrix from camera quaternion
-    const rotationMatrix = new THREE.Matrix4().makeRotationFromQuaternion(camera.quaternion);
-    
-    // Apply the rotation to the gun offset
-    gunOffset.applyMatrix4(rotationMatrix);
-    
-    // Calculate the bullet spawn position (at the end of the gun barrel)
-    const barrelOffset = new THREE.Vector3(0, 0, 0.5).applyMatrix4(rotationMatrix);
-    
-    // Final bullet position: camera position + gun offset + barrel length
-    const bulletPosition = new THREE.Vector3().addVectors(
-      camera.position,
-      new THREE.Vector3().addVectors(gunOffset, barrelOffset)
-    );
-    
-    // Create bullet with unique ID
-    const newBullet = {
-      id: `bullet_${playerId}_${Date.now()}`,
-      position: bulletPosition,
-      velocity: direction.clone().normalize().multiplyScalar(180), // Ultra-fast laser speed (tripled)
-      owner: playerId,
-      createdAt: Date.now()
-    };
-    
-    // Add bullet to local state for rendering (legacy support)
-    setBullets(prev => [...prev, newBullet]);
-    
-    // Add bullet to multiplayer store for syncing with other players
-    fireBullet(newBullet);
-    
-    // Play laser sound
-    const laserSound = new Audio('/sounds/laser.mp3');
-    laserSound.volume = 0.3;
-    laserSound.play().catch(e => console.error("Error playing laser sound:", e));
-    
-    // Log bullet creation
-    console.log('Created laser bullet:', newBullet);
-  };
-  
-  // Expose shootLaser function globally
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.shootBullet = shootLaser;
-      
-      // For testing
-      window.testShoot = () => {
-        shootLaser();
-        return "Bullet fired!";
-      };
-      
-      // For debugging
-      window.getBullets = () => ({
-        local: bullets,
-        remote: remoteBullets
-      });
-    }
-    
-    return () => {
-      if (typeof window !== 'undefined') {
-        delete window.shootBullet;
-        delete window.testShoot;
-        delete window.getBullets;
-      }
-    };
-  }, [bullets, playerId, position, camera]);
-  
-  // Clean up old bullets (both local and remote)
-  useEffect(() => {
-    const cleanupInterval = setInterval(() => {
-      const now = Date.now();
-      
-      // Clean up local bullets
-      setBullets(prev => prev.filter(bullet => now - bullet.createdAt < 3000)); // Match bullet lifetime
-      
-      // Get reference to multiplayer store to clean remote bullets
-      const multiplayerStore = useMultiplayer.getState();
-      
-      // Clean up remote bullets that are expired
-      multiplayerStore.bullets.forEach(bullet => {
-        if (now - bullet.createdAt > 3000) {
-          // Log for debugging
-          console.log('Removing expired remote bullet:', bullet.id);
-          multiplayerStore.removeBullet(bullet.id);
-        }
-      });
-    }, 500);
-    
-    return () => clearInterval(cleanupInterval);
-  }, []);
-  
-  // Check for bullet collisions with players
-  useEffect(() => {
-    // Collision detection interval
-    const collisionInterval = setInterval(() => {
-      // Get all bullets
-      const allBullets = [
-        ...bullets, // Local bullets
-        ...useMultiplayer.getState().bullets // Remote bullets
-      ];
-      
-      // Skip if no bullets
-      if (allBullets.length === 0) return;
-      
-      // Get other players for collision checking
-      const otherPlayersList = Object.values(otherPlayers);
-      
-      // Get multiplayer and player stores
-      const multiplayerStore = useMultiplayer.getState();
-      const playerStore = usePlayer.getState();
-      const socket = multiplayerStore.socket;
-      
-      // Check each bullet for collisions
-      allBullets.forEach(bullet => {
-        // Skip self-collisions (player can't be hit by their own bullets)
-        if (bullet.owner === playerId) {
-          // Check if bullet hits other players
-          otherPlayersList.forEach(otherPlayer => {
-            // Simple sphere collision detection
-            const bulletPos = bullet.position;
-            const playerPos = otherPlayer.position;
-            
-            // Distance between bullet and player center
-            const distance = bulletPos.distanceTo(playerPos);
-            
-            // Hit if distance is less than player "radius" (1.0 units)
-            const hitRadius = 1.5; // Increased hit radius for better hit detection
-            
-            // Debug log distance checks
-            console.log(`Distance check: Bullet ${bullet.id} to player ${otherPlayer.id}: ${distance.toFixed(2)} units (hit radius: ${hitRadius})`);
-            
-            if (distance < hitRadius) {
-              console.log(`HIT DETECTED! Bullet ${bullet.id} hit player ${otherPlayer.id}!`);
-              
-              // Remove the bullet on hit
-              if (bullet.owner === playerId) {
-                // Local bullet - remove from local state
-                setBullets(prev => prev.filter(b => b.id !== bullet.id));
-                
-                // Also remove from multiplayer store
-                multiplayerStore.removeBullet(bullet.id);
-              } else {
-                // Remote bullet - just remove from multiplayer store
-                multiplayerStore.removeBullet(bullet.id);
-              }
-              
-              // Send hit event to server
-              if (socket && socket.connected) {
-                console.log(`Sending hitPlayer event to server: target=${otherPlayer.id}, damage=20, shooter=${playerId}`);
-                socket.emit('hitPlayer', {
-                  playerId: otherPlayer.id,
-                  damage: 20, // Each hit does 20 damage
-                  shooterId: playerId
-                });
-                
-                // Apply visual feedback immediately for better responsiveness
-                console.log(`Applying visual damage to player ${otherPlayer.id} locally`);
-                // Use the store update directly
-                useMultiplayer.setState(state => ({
-                  otherPlayers: {
-                    ...state.otherPlayers,
-                    [otherPlayer.id]: {
-                      ...state.otherPlayers[otherPlayer.id],
-                      health: Math.max(0, otherPlayer.health - 20)
-                    }
-                  }
-                }));
-              }
-            }
-          });
-        } else {
-          // Bullet from other player - check if it hits this player
-          const bulletPos = bullet.position;
-          const mainPlayerPos = position;
-          
-          // Distance between bullet and player
-          const distance = bulletPos.distanceTo(mainPlayerPos);
-          
-          // Hit if distance is less than player "radius" (increase for better hit detection)
-          const hitRadius = 1.5;
-          
-          // Debug log distance checks
-          console.log(`Distance check: Bullet ${bullet.id} to local player: ${distance.toFixed(2)} units (hit radius: ${hitRadius})`);
-          
-          if (distance < hitRadius) {
-            console.log(`HIT DETECTED! Local player hit by bullet ${bullet.id} from ${bullet.owner}!`);
-            
-            // Remove the bullet (from multiplayer store)
-            multiplayerStore.removeBullet(bullet.id);
-            
-            // Apply damage to local player (handled by server)
-            playerStore.takeDamage(20); // Just visual feedback, server will confirm
-            
-            // Play hit sound
-            const hitSound = new Audio('/sounds/hit.mp3');
-            hitSound.volume = 0.5;
-            hitSound.play().catch(e => console.error("Error playing hit sound:", e));
-            
-            // Send hit event to server 
-            if (socket && socket.connected) {
-              console.log(`Sending self-hit event to server: playerId=${playerId}, damage=20, shooter=${bullet.owner}`);
-              socket.emit('hitPlayer', {
-                playerId: playerId,
-                damage: 20, // Each hit does 20 damage
-                shooterId: bullet.owner
-              });
-            }
-          }
-        }
-      });
-    }, 100); // Check every 100ms for smoother hit detection
-    
-    return () => clearInterval(collisionInterval);
-  }, [bullets, otherPlayers, playerId, position]);
   
   // Update player position and camera
   useFrame((state, delta) => {
@@ -667,26 +406,6 @@ const Game = ({ username }: GameProps) => {
       updatePlayerPosition(newPosition, rotationEuler.y);
       lastUpdateRef.current = currentTime;
     }
-    
-    // Update local bullets position
-    setBullets(prev => prev.map(bullet => ({
-      ...bullet,
-      position: bullet.position.clone().add(bullet.velocity.clone().multiplyScalar(delta))
-    })));
-    
-    // Update remote bullets position (from multiplayer store)
-    // First get the latest bullets from the store
-    const latestRemoteBullets = useMultiplayer.getState().bullets;
-    
-    // Log the number of remote bullets for debugging
-    if (latestRemoteBullets.length > 0) {
-      console.log(`Updating ${latestRemoteBullets.length} remote bullets`);
-    }
-    
-    // Update each bullet's position
-    latestRemoteBullets.forEach(bullet => {
-      bullet.position.add(bullet.velocity.clone().multiplyScalar(delta));
-    });
   });
 
   return (
@@ -734,37 +453,6 @@ const Game = ({ username }: GameProps) => {
         rotation={rotation}
         health={health}
       />
-      
-      {/* Player's weapon - first person view (only show when alive) */}
-      {isControlsLocked && health > 0 && (
-        <LaserWeapon 
-          position={[0.35, -0.4, -0.7]} 
-          rotation={[0, Math.PI / 8, 0]} 
-          onShoot={shootLaser}
-        />
-      )}
-      
-      {/* Render local bullets */}
-      {bullets.map((bullet) => (
-        <LaserBullet
-          key={bullet.id}
-          id={bullet.id}
-          position={bullet.position}
-          velocity={bullet.velocity}
-          owner={bullet.owner}
-        />
-      ))}
-      
-      {/* Render remote bullets from other players - always use latest from store */}
-      {useMultiplayer.getState().bullets.map((bullet) => (
-        <LaserBullet
-          key={bullet.id}
-          id={bullet.id}
-          position={bullet.position}
-          velocity={bullet.velocity}
-          owner={bullet.owner}
-        />
-      ))}
       
       {/* Render other players */}
       {Object.values(otherPlayers).map((player) => (

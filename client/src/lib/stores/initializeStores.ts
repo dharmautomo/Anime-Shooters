@@ -37,30 +37,17 @@ interface KillFeedItem {
   victim: string;
 }
 
-interface BulletData {
-  id: string;
-  position: THREE.Vector3;
-  velocity: THREE.Vector3;
-  owner: string;
-  createdAt: number;
-}
-
 interface MultiplayerState {
   socket: Socket | null;
   connected: boolean;
   otherPlayers: Record<string, PlayerData>;
   killFeed: KillFeedItem[];
-  bullets: BulletData[]; // Add bullets to multiplayer state
 }
 
 interface MultiplayerActions {
   initializeSocket: (username: string) => void;
   updatePlayerPosition: (position: THREE.Vector3, rotation: number) => void;
   disconnect: () => void;
-  // Add bullet-related actions
-  fireBullet: (bulletData: BulletData) => void;
-  addRemoteBullet: (bulletData: BulletData) => void;
-  removeBullet: (bulletId: string) => void;
 }
 
 // Combined interfaces
@@ -182,7 +169,6 @@ export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
   connected: false,
   otherPlayers: {},
   killFeed: [],
-  bullets: [], // Initialize empty bullets array
   
   // Actions
   initializeSocket: (username: string) => {
@@ -380,37 +366,6 @@ export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
       }
     });
     
-    // Handle remote bullet creation
-    socket.on('bulletCreated', (bulletData: {
-      id: string,
-      position: { x: number, y: number, z: number },
-      velocity: { x: number, y: number, z: number },
-      owner: string,
-      createdAt: number
-    }) => {
-      console.log(`Remote bullet received: ${bulletData.id} from ${bulletData.owner}`);
-      
-      // Convert plain objects to THREE.Vector3
-      const bullet: BulletData = {
-        id: bulletData.id,
-        position: new THREE.Vector3(
-          bulletData.position.x,
-          bulletData.position.y,
-          bulletData.position.z
-        ),
-        velocity: new THREE.Vector3(
-          bulletData.velocity.x,
-          bulletData.velocity.y,
-          bulletData.velocity.z
-        ),
-        owner: bulletData.owner,
-        createdAt: bulletData.createdAt
-      };
-      
-      // Add this remote bullet to our local state
-      get().addRemoteBullet(bullet);
-    });
-    
     // Handle kill feed updates
     socket.on('playerKilled', (data: { killer: string, victim: string }) => {
       console.log(`Player killed: ${data.victim} by ${data.killer}`);
@@ -470,63 +425,7 @@ export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
       socket.disconnect();
       set({ socket: null, connected: false });
     }
-  },
-  
-  // Bullet-related actions
-  fireBullet: (bulletData: BulletData) => {
-    const { socket } = get();
-    
-    // Add bullet to local state
-    set(state => ({
-      bullets: [...state.bullets, bulletData]
-    }));
-    
-    // Send bullet to server for broadcasting to other players
-    if (socket && socket.connected) {
-      socket.emit('bulletFired', {
-        id: bulletData.id,
-        position: {
-          x: bulletData.position.x,
-          y: bulletData.position.y,
-          z: bulletData.position.z
-        },
-        velocity: {
-          x: bulletData.velocity.x,
-          y: bulletData.velocity.y,
-          z: bulletData.velocity.z
-        },
-        owner: bulletData.owner,
-        createdAt: bulletData.createdAt
-      });
-    }
-  },
-  
-  addRemoteBullet: (bulletData: BulletData) => {
-    console.log('Adding remote bullet to store:', bulletData.id);
-    
-    // Add bullet received from server to local state
-    set(state => {
-      console.log('Current bullet count:', state.bullets.length);
-      
-      // Check if this bullet ID already exists to avoid duplicates
-      const bulletExists = state.bullets.some(bullet => bullet.id === bulletData.id);
-      if (bulletExists) {
-        console.log('Bullet already exists, not adding duplicate:', bulletData.id);
-        return state;
-      }
-      
-      const newBullets = [...state.bullets, bulletData];
-      console.log('New bullet count:', newBullets.length);
-      return { bullets: newBullets };
-    });
-  },
-  
-  removeBullet: (bulletId: string) => {
-    // Remove bullet from local state (used for cleanup)
-    set(state => ({
-      bullets: state.bullets.filter(bullet => bullet.id !== bulletId)
-    }));
-  },
+  }
 }));
 
 // Initialize the store cross-references
@@ -569,51 +468,6 @@ if (typeof window !== 'undefined') {
       multiplayer: useMultiplayer.getState()
     };
   };
-  
-  // Debug helper to get all bullets
-  (window as any).getBullets = () => {
-    const multiplayer = useMultiplayer.getState();
-    console.log('Remote bullets:', multiplayer.bullets);
-    return {
-      remote: multiplayer.bullets
-    };
-  };
-  
-  // Debug helper to test shooting
-  (window as any).testShoot = () => {
-    // Create a test bullet
-    const player = usePlayer.getState();
-    const multiplayer = useMultiplayer.getState();
-    
-    if (!player.playerId) {
-      return 'Player ID not available';
-    }
-    
-    const position = player.position.clone();
-    const bulletId = `test-${Date.now()}`;
-    
-    // Create direction vector (forward)
-    const direction = new THREE.Vector3(0, 0, -1);
-    direction.normalize();
-    
-    const bulletData = {
-      id: bulletId,
-      position: position.clone(),
-      velocity: direction.clone().multiplyScalar(15), // Speed factor
-      owner: player.playerId,
-      createdAt: Date.now()
-    };
-    
-    // Fire the bullet
-    multiplayer.fireBullet(bulletData);
-    
-    return `Fired test bullet: ${bulletId}`;
-  };
-  
-  console.log('Debug tools available in console:');
-  console.log('- usePlayer: Access player store');
-  console.log('- useMultiplayer: Access multiplayer store');
-  console.log('- getGameState(): Get all game state');
 }
 
 console.log('Stores initialized');
