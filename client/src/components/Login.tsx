@@ -164,6 +164,10 @@ export default function Login({ onLogin }: LoginProps) {
                 <div className="control-key mobile-key">👆</div>
                 <div className="control-label">Interact</div>
               </div>
+              <div className="control-item">
+                <div className="control-key mobile-key">🔫</div>
+                <div className="control-label">Fire Weapon</div>
+              </div>
               <div className="control-item" style={{ gridColumn: "span 2" }}>
                 <div className="control-key mobile-key" style={{ width: "auto", padding: "0 15px" }}>
                   ↔ Swipe Screen ↔
@@ -197,6 +201,14 @@ export default function Login({ onLogin }: LoginProps) {
               <div className="control-item">
                 <div className="control-key">E</div>
                 <div className="control-label">Interact</div>
+              </div>
+              <div className="control-item">
+                <div className="control-key">LMB</div>
+                <div className="control-label">Fire Weapon</div>
+              </div>
+              <div className="control-item">
+                <div className="control-key">SHIFT</div>
+                <div className="control-label">Sprint</div>
               </div>
               <div className="control-item" style={{ gridColumn: "span 2" }}>
                 <div className="control-key" style={{ width: "auto", padding: "0 15px" }}>Mouse</div>

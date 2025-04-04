@@ -18,6 +18,7 @@ export const Controls = {
   right: 'right',
   jump: 'jump',
   sprint: 'sprint',
+  fire: 'fire',
 } as const;
 
 // Type for Controls
@@ -31,6 +32,7 @@ const keyMap = [
   { name: Controls.right, keys: ['ArrowRight', 'KeyD'] },
   { name: Controls.jump, keys: ['Space'] },
   { name: Controls.sprint, keys: ['ShiftLeft'] },
+  { name: Controls.fire, keys: ['MouseLeft'] },
 ];
 
 // Helper function to parse URL parameters

@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
 import Player from './Player';
 import World from './World';
+import Weapon from './Weapon';
+import Crosshair from './Crosshair';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
@@ -66,6 +68,28 @@ const Game = ({ username }: GameProps) => {
       setControlsLocked(false);
     };
     
+    // Handler for mouse clicks (weapon firing)
+    const handleMouseClick = (e: MouseEvent) => {
+      if (isControlsLocked && e.button === 0) { // Left mouse button
+        // Only register clicks when controls are locked and player is alive
+        if (health > 0) {
+          console.log('Weapon fired!');
+          // TODO: Implement actual bullet firing logic
+          
+          // Visual feedback for weapon firing
+          const posSound = createPositionalSound(
+            '/sounds/hit.mp3', // Use existing sound for gun shot
+            new THREE.Vector3(position.x, position.y, position.z),
+            0.5
+          );
+          
+          if (posSound) {
+            posSound.play();
+          }
+        }
+      }
+    };
+    
     if (controlsRef.current) {
       // Add event listeners for pointer lock events
       controlsRef.current.addEventListener('lock', handleLock);
@@ -82,18 +106,22 @@ const Game = ({ username }: GameProps) => {
         }
       }
     }
+    
+    // Add mouse click event listener for weapon firing
+    document.addEventListener('mousedown', handleMouseClick);
 
     // Reset player on game start
     resetPlayer();
-
+    
     // Clean up on unmount
     return () => {
+      document.removeEventListener('mousedown', handleMouseClick);
       if (controlsRef.current) {
         controlsRef.current.removeEventListener('lock', handleLock);
         controlsRef.current.removeEventListener('unlock', handleUnlock);
       }
     };
-  }, [camera, resetPlayer, setControlsLocked]);
+  }, [camera, resetPlayer, setControlsLocked, position, health, createPositionalSound, isControlsLocked]);
   
   // Set up mobile touch controls
   useEffect(() => {
@@ -416,6 +444,16 @@ const Game = ({ username }: GameProps) => {
       
       {/* Game world with environment and obstacles */}
       <World />
+      
+      {/* Crosshair for aiming */}
+      {health > 0 && isControlsLocked && (
+        <Crosshair color="#ffffff" size={0.01} thickness={0.001} />
+      )}
+      
+      {/* Weapon display in first-person view */}
+      {health > 0 && isControlsLocked && (
+        <Weapon position={[0.3, -0.3, -0.5]} />
+      )}
       
       {/* Death overlay when player is dead */}
       {health <= 0 && (
