@@ -17,8 +17,6 @@ export type KeyMapping = {
   left?: boolean;
   right?: boolean;
   jump?: boolean;
-  shoot?: boolean;
-  reload?: boolean;
   [key: string]: boolean | undefined;
 };
 

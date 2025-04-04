@@ -45,7 +45,7 @@ export function checkBoxCollision(
 }
 
 /**
- * Ray casting for bullet collision detection
+ * Ray casting for collision detection
  */
 export function rayCastCollision(
   origin: THREE.Vector3,

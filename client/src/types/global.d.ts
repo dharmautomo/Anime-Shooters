@@ -5,15 +5,7 @@ interface Window {
   usePlayer?: any;
   useMultiplayer?: any;
   
-  // Shooting functions
-  shootBullet?: () => void;
-  testShoot?: () => string;
-  
   // Debug helper functions
-  getBullets?: () => {
-    local: any[];
-    remote: any[];
-  };
   getGameState?: () => {
     player: any;
     multiplayer: any;
@@ -23,14 +15,10 @@ interface Window {
   // DevTools
   __ZUSTAND_DEVTOOLS__?: {
     usePlayer?: {
-      getState?: () => {
-        shootBullet?: () => void;
-      };
+      getState?: () => any;
     };
     useMultiplayer?: {
-      getState?: () => {
-        bullets?: any[];
-      };
+      getState?: () => any;
     };
   };
 }

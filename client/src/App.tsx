@@ -143,6 +143,8 @@ function App() {
     return () => {
       if (typeof window !== 'undefined') {
         delete (window as any).getGameState;
+        delete (window as any).usePlayer;
+        delete (window as any).useMultiplayer;
       }
     };
   }, []);
