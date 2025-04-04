@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
 import Player from './Player';
 import World from './World';
+import LaserWeapon from './LaserWeapon';
+import LaserBullet from './LaserBullet';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
@@ -31,10 +33,20 @@ const Game = ({ username }: GameProps) => {
   const lastTouchUpdateTime = useRef(0);
   const touchRotationSpeed = 0.05;
   
+  // State for bullets
+  const [bullets, setBullets] = useState<Array<{
+    id: string;
+    position: THREE.Vector3;
+    velocity: THREE.Vector3;
+    owner: string;
+    createdAt: number;
+  }>>([]);
+  
   const { 
     otherPlayers
   } = useMultiplayer();
   const { 
+    playerId,
     position, 
     rotation,
     health,
@@ -49,7 +61,7 @@ const Game = ({ username }: GameProps) => {
     isControlsLocked 
   } = useGameControls();
   
-  const { playSound } = useAudio();
+  const { createPositionalSound } = useAudio();
 
   // Initialize player controls
   useEffect(() => {
@@ -313,6 +325,42 @@ const Game = ({ username }: GameProps) => {
   // Track the last time we sent a position update to the server
   const lastUpdateRef = useRef<number>(0);
   
+  // Function to create a new laser bullet
+  const shootLaser = () => {
+    // Create direction vector based on camera direction
+    const direction = new THREE.Vector3();
+    camera.getWorldDirection(direction);
+    
+    // Create bullet with unique ID
+    const newBullet = {
+      id: `bullet_${playerId}_${Date.now()}`,
+      position: new THREE.Vector3(
+        position.x,
+        position.y + 1.5, // Eye height
+        position.z
+      ),
+      velocity: direction.clone().normalize().multiplyScalar(30), // Fast laser speed
+      owner: playerId,
+      createdAt: Date.now()
+    };
+    
+    // Add bullet to local state
+    setBullets(prev => [...prev, newBullet]);
+    
+    // Log bullet creation
+    console.log('Created laser bullet:', newBullet);
+  };
+  
+  // Clean up old bullets
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      setBullets(prev => prev.filter(bullet => now - bullet.createdAt < 2000));
+    }, 500);
+    
+    return () => clearInterval(cleanupInterval);
+  }, []);
+  
   // Update player position and camera
   useFrame((state, delta) => {
     if (!hasInteracted) return;
@@ -402,6 +450,12 @@ const Game = ({ username }: GameProps) => {
       updatePlayerPosition(newPosition, rotationEuler.y);
       lastUpdateRef.current = currentTime;
     }
+    
+    // Update bullets position
+    setBullets(prev => prev.map(bullet => ({
+      ...bullet,
+      position: bullet.position.clone().add(bullet.velocity.clone().multiplyScalar(delta))
+    })));
   });
 
   return (
@@ -419,6 +473,26 @@ const Game = ({ username }: GameProps) => {
         rotation={rotation}
         health={health}
       />
+      
+      {/* Player's weapon */}
+      {isControlsLocked && (
+        <LaserWeapon 
+          position={[0.5, -0.5, -1]} 
+          rotation={[0, 0, 0]} 
+          onShoot={shootLaser}
+        />
+      )}
+      
+      {/* Render bullets */}
+      {bullets.map((bullet) => (
+        <LaserBullet
+          key={bullet.id}
+          id={bullet.id}
+          position={bullet.position}
+          velocity={bullet.velocity}
+          owner={bullet.owner}
+        />
+      ))}
       
       {/* Render other players */}
       {Object.values(otherPlayers).map((player) => (
