@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { useGameControls } from '../lib/stores/useGameControls';
+import { useWeapons, WeaponType, WEAPON_CONFIGS } from '../lib/stores/useWeapons';
+import { useIsMobile } from '../hooks/use-is-mobile';
 
 // Create stable selector functions outside the component to prevent infinite loops
 const healthSelector = (state: any) => state.health;
@@ -13,6 +15,8 @@ const UI = () => {
   const score = usePlayer(scoreSelector);
   const { killFeed } = useMultiplayer();
   const { hasInteracted, isControlsLocked } = useGameControls();
+  const { currentWeapon, weapons, bullets } = useWeapons();
+  const isMobile = useIsMobile();
   const [showControls, setShowControls] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
   // For tracking if pointer lock is actually working via the native API
@@ -79,6 +83,18 @@ const UI = () => {
     transition: 'opacity 0.2s ease'
   };
   
+  // Get current weapon state
+  const currentWeaponState = weapons[currentWeapon];
+  const weaponConfig = WEAPON_CONFIGS[currentWeapon];
+  
+  // Calculate ammo display color
+  const getAmmoColor = () => {
+    const ammoPercent = (currentWeaponState.ammo / weaponConfig.magazineSize) * 100;
+    if (ammoPercent <= 25) return '#ff4444'; // Red for low ammo
+    if (ammoPercent <= 50) return '#ffaa22'; // Orange for medium ammo
+    return '#ffffff'; // White for sufficient ammo
+  };
+  
   return createPortal(
     <div className="game-ui">
       {/* Crosshair */}
@@ -94,7 +110,13 @@ const UI = () => {
       
       {/* Health bar */}
       <div className="health-bar">
-        <div className="health-bar-fill" style={{ width: `${health}%` }}></div>
+        <div 
+          className="health-bar-fill" 
+          style={{ 
+            width: `${health}%`,
+            backgroundColor: health > 60 ? '#3f3' : health > 30 ? '#ff3' : '#f33'
+          }}
+        ></div>
         <div style={{ 
           position: "absolute", 
           width: "100%", 
@@ -117,7 +139,41 @@ const UI = () => {
         </div>
       </div>
       
-
+      {/* Weapon and ammo display */}
+      <div 
+        className="weapon-display"
+        style={{
+          position: "absolute",
+          bottom: "20px",
+          right: "20px",
+          padding: "10px 15px",
+          backgroundColor: "rgba(0, 0, 0, 0.6)",
+          borderRadius: "5px",
+          color: "white",
+          border: "1px solid rgba(255, 255, 255, 0.3)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          pointerEvents: "none",
+          textShadow: "0 0 3px black"
+        }}
+      >
+        <div style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "5px" }}>
+          {weaponConfig.name} 
+          {currentWeaponState.isReloading && 
+            <span style={{ color: "#ffaa22", marginLeft: "8px", fontSize: "14px" }}>
+              [RELOADING]
+            </span>
+          }
+        </div>
+        <div style={{ 
+          fontSize: "20px", 
+          fontWeight: "bold",
+          color: getAmmoColor()
+        }}>
+          {currentWeaponState.ammo} / {currentWeaponState.totalAmmo}
+        </div>
+      </div>
       
       {/* Score display */}
       <div className="score-display">
@@ -143,16 +199,16 @@ const UI = () => {
         </div>
       </div>
       
-
-      
       {/* Controls guide */}
       {showControls && (
         <div className="controls-guide">
           <h3>Controls:</h3>
           <p>WASD or Arrow Keys - Move</p>
           <p>Mouse - Look around</p>
+          <p>Left Click - Shoot</p>
+          <p>R - Reload weapon</p>
+          <p>1,2,3 - Switch weapons</p>
           <p>Space - Jump</p>
-          <p>Crosshair - Aim weapon</p>
           <p>ESC - Toggle this guide</p>
           <p>Shift+D - Show debug info</p>
         </div>
@@ -203,6 +259,15 @@ const UI = () => {
               pointerLockElement: <span style={{ color: isPointerLocked ? '#00ff00' : '#ff0000' }}>
                 {isPointerLocked ? 'YES' : 'NO'}
               </span>
+            </p>
+            <p style={{ margin: '5px 0' }}>
+              Weapon: {weaponConfig.name} ({currentWeaponState.ammo}/{currentWeaponState.totalAmmo})
+            </p>
+            <p style={{ margin: '5px 0' }}>
+              Active Bullets: {bullets.length}
+            </p>
+            <p style={{ margin: '5px 0' }}>
+              Platform: {isMobile ? 'Mobile' : 'Desktop'}
             </p>
           </div>
         </div>
