@@ -500,11 +500,17 @@ const Game = ({ username }: GameProps) => {
       lastUpdateRef.current = currentTime;
     }
     
-    // Update bullets position
+    // Update local bullets position
     setBullets(prev => prev.map(bullet => ({
       ...bullet,
       position: bullet.position.clone().add(bullet.velocity.clone().multiplyScalar(delta))
     })));
+    
+    // Update remote bullets position (from multiplayer store)
+    // This updates the bullets in place without triggering a re-render of the entire component
+    remoteBullets.forEach(bullet => {
+      bullet.position.add(bullet.velocity.clone().multiplyScalar(delta));
+    });
   });
 
   return (

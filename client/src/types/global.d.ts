@@ -10,7 +10,10 @@ interface Window {
   testShoot?: () => string;
   
   // Debug helper functions
-  getBullets?: () => any[];
+  getBullets?: () => {
+    local: any[];
+    remote: any[];
+  };
   getGameState?: () => {
     player: any;
     multiplayer: any;
