@@ -6,7 +6,8 @@ import Player from './Player';
 import World from './World';
 import Weapon from './Weapon';
 import Crosshair from './Crosshair';
-import { Controls } from '../App';
+import MouseControls from './Controls';
+import { Controls as ControlsMap } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
@@ -444,7 +445,12 @@ const Game = ({ username }: GameProps) => {
   return (
     <>
       {/* Only use PointerLockControls on desktop */}
-      {!isMobile && <PointerLockControls ref={controlsRef} />}
+      {!isMobile && (
+        <>
+          <PointerLockControls ref={controlsRef} />
+          {isControlsLocked && <MouseControls />}
+        </>
+      )}
       
       {/* Game world with environment and obstacles */}
       <World />
