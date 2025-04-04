@@ -49,29 +49,51 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     
     if (!pistolRef.current || !isControlsLocked || !isVisible) return;
     
-    // Create a vector to represent the camera's forward direction
-    const cameraDirection = new THREE.Vector3(0, 0, -1);
-    cameraDirection.applyQuaternion(camera.quaternion);
+    // IMPORTANT: Keep the weapon always in front of the camera
+    // We do this by attaching it directly to the camera
     
-    // Create a simple copy of the pistol to the camera
-    // This makes the weapon directly attached to the camera view
+    // First reset the weapon position relative to the world origin
+    pistolRef.current.position.set(0, 0, 0);
+    pistolRef.current.rotation.set(0, 0, 0);
+    
+    // Apply camera rotation to the weapon
     pistolRef.current.quaternion.copy(camera.quaternion);
     
-    // But we want to offset it to be visible in the corner, not centered
-    // Set local position relative to camera
-    pistolRef.current.position.set(0.3, -0.3, -0.5);
+    // Now, position the weapon in camera space (which is already rotated with the camera)
+    // This is the key fix - we position the weapon AFTER applying camera rotation
+    // These offsets are in the camera's local coordinate system
+    const offsetX = 0.3;  // Right offset
+    const offsetY = -0.3; // Down offset
+    const offsetZ = -0.5; // Forward offset
     
-    // Add bobbing effect when moving
+    // Create the offset vector and apply it in the camera's local space
+    const offset = new THREE.Vector3(offsetX, offsetY, offsetZ);
+    offset.applyQuaternion(camera.quaternion);
+    
+    // Apply the offset to the weapon position (which is in world space)
+    pistolRef.current.position.copy(camera.position).add(offset);
+    
+    // Add bobbing effect when moving (in local weapon space)
     if (isMoving) {
       const bobOffsetY = Math.sin(time.current * bobSpeed) * bobAmount;
       const bobOffsetX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
       
-      pistolRef.current.position.y = -0.3 + bobOffsetY;
-      pistolRef.current.position.x = 0.3 + bobOffsetX;
+      // Create bobbing vector in local space
+      const bobOffset = new THREE.Vector3(bobOffsetX, bobOffsetY, 0);
+      bobOffset.applyQuaternion(camera.quaternion);
+      
+      // Apply bobbing to position
+      pistolRef.current.position.add(bobOffset);
     } else {
       // Subtle breathing movement when idle
       const breathingOffset = Math.sin(time.current * 1.5) * 0.003;
-      pistolRef.current.position.y = -0.3 + breathingOffset;
+      
+      // Create breathing vector in local space
+      const breathVector = new THREE.Vector3(0, breathingOffset, 0);
+      breathVector.applyQuaternion(camera.quaternion);
+      
+      // Apply breathing to position
+      pistolRef.current.position.add(breathVector);
     }
     
     // Left-right sway based on movement
@@ -80,8 +102,7 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     if (right) targetRotZ = -swayAmount;
     
     // Apply rotation around local Z axis (for left-right sway)
-    const currentRotZ = pistolRef.current.rotation.z;
-    pistolRef.current.rotation.z = currentRotZ + (targetRotZ - currentRotZ) * 3 * delta;
+    pistolRef.current.rotateZ(targetRotZ * delta * 3);
   });
   
   return (
