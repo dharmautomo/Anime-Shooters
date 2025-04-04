@@ -415,20 +415,29 @@ const Game = ({ username }: GameProps) => {
     useWeaponStore.getState().updateScreenShake(delta, camera);
     
     // Calculate movement direction based on camera orientation
-    const direction = new THREE.Vector3();
-    const sideDirection = new THREE.Vector3();
     const rotationEuler = new THREE.Euler(0, 0, 0, 'YXZ');
     
-    // Get camera direction
-    camera.getWorldDirection(direction);
-    direction.y = 0; // Keep movement on horizontal plane
-    direction.normalize();
-    
-    // Calculate side direction (perpendicular to camera direction)
-    sideDirection.copy(direction).cross(new THREE.Vector3(0, 1, 0));
-    
-    // Get camera rotation
+    // Get camera rotation quaternion and convert to Euler angles
     rotationEuler.setFromQuaternion(camera.quaternion);
+    
+    // We only care about the Y rotation (yaw) for movement
+    // This ensures movement is always relative to camera direction
+    const cameraYRotation = rotationEuler.y;
+    
+    // Create forward and right vectors based on camera yaw
+    // This is the key to making WASD movement align with the camera view
+    const forwardVec = new THREE.Vector3(
+      Math.sin(cameraYRotation), 
+      0, 
+      Math.cos(cameraYRotation)
+    ).normalize();
+    
+    // Right vector is perpendicular to forward (90 degrees clockwise)
+    const rightVec = new THREE.Vector3(
+      Math.sin(cameraYRotation + Math.PI/2), 
+      0, 
+      Math.cos(cameraYRotation + Math.PI/2)
+    ).normalize();
     
     // Update player position based on controls
     const moveSpeed = 5 * delta; // Speed multiplier
@@ -454,20 +463,31 @@ const Game = ({ username }: GameProps) => {
     // Apply movement based on inputs (keyboard or touch)
     const { forward, backward, left, right, jump } = controlInput;
     
-    // Forward/backward movement
+    // Calculate movement vector (initialize with zero vector)
+    const moveVec = new THREE.Vector3(0, 0, 0);
+    
+    // Add appropriate direction vectors based on key presses
     if (forward) {
-      newPosition.add(direction.clone().multiplyScalar(moveSpeed));
+      moveVec.add(forwardVec);
     }
     if (backward) {
-      newPosition.add(direction.clone().multiplyScalar(-moveSpeed));
+      moveVec.sub(forwardVec);
     }
-    
-    // Left/right movement
     if (left) {
-      newPosition.add(sideDirection.clone().multiplyScalar(-moveSpeed));
+      moveVec.sub(rightVec);
     }
     if (right) {
-      newPosition.add(sideDirection.clone().multiplyScalar(moveSpeed));
+      moveVec.add(rightVec);
+    }
+    
+    // Normalize the movement vector if we're moving in multiple directions
+    // This prevents diagonal movement from being faster
+    if (moveVec.length() > 0) {
+      moveVec.normalize();
+      // Apply the move speed
+      moveVec.multiplyScalar(moveSpeed);
+      // Apply movement to position
+      newPosition.add(moveVec);
     }
     
     // Simple jumping
