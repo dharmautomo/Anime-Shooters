@@ -320,7 +320,7 @@ const Game = ({ username }: GameProps) => {
 
   // Get keyboard controls state
   const [, getKeys] = useKeyboardControls();
-  const { updatePlayerPosition } = useMultiplayer();
+  const { updatePlayerPosition, fireBullet, bullets: remoteBullets } = useMultiplayer();
   
   // Track the last time we sent a position update to the server
   const lastUpdateRef = useRef<number>(0);
@@ -358,8 +358,11 @@ const Game = ({ username }: GameProps) => {
       createdAt: Date.now()
     };
     
-    // Add bullet to local state
+    // Add bullet to local state for rendering (legacy support)
     setBullets(prev => [...prev, newBullet]);
+    
+    // Add bullet to multiplayer store for syncing with other players
+    fireBullet(newBullet);
     
     // Play laser sound
     const laserSound = new Audio('/sounds/laser.mp3');
@@ -382,7 +385,10 @@ const Game = ({ username }: GameProps) => {
       };
       
       // For debugging
-      window.getBullets = () => bullets;
+      window.getBullets = () => ({
+        local: bullets,
+        remote: remoteBullets
+      });
     }
     
     return () => {
@@ -526,8 +532,19 @@ const Game = ({ username }: GameProps) => {
         />
       )}
       
-      {/* Render bullets */}
+      {/* Render local bullets */}
       {bullets.map((bullet) => (
+        <LaserBullet
+          key={bullet.id}
+          id={bullet.id}
+          position={bullet.position}
+          velocity={bullet.velocity}
+          owner={bullet.owner}
+        />
+      ))}
+      
+      {/* Render remote bullets from other players */}
+      {remoteBullets.map((bullet) => (
         <LaserBullet
           key={bullet.id}
           id={bullet.id}

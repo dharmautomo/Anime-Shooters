@@ -57,6 +57,18 @@ export class SocketManager {
         });
       });
       
+      // Handle bullet firing
+      socket.on('bulletFired', (bulletData: {
+        id: string,
+        position: { x: number, y: number, z: number },
+        velocity: { x: number, y: number, z: number },
+        owner: string,
+        createdAt: number
+      }) => {
+        // Broadcast the bullet to all other players
+        socket.broadcast.emit('bulletCreated', bulletData);
+      });
+      
       // Handle player hits
       socket.on('hitPlayer', (data: { 
         playerId: string, 
