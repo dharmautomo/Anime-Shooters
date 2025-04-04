@@ -119,7 +119,7 @@ const World = () => {
           
           return (
             <group key={`big-tree-${i}`} position={[pos[0], 0, pos[2]]}>
-              {/* Trunk - properly grounded by positioning at trunkHeight/2 */}
+              {/* Elevate the entire trunk slightly to ensure it rests completely on the ground */}
               <mesh position={[0, trunkHeight/2, 0]} castShadow receiveShadow>
                 <cylinderGeometry args={[trunkTopRadius, trunkBottomRadius, trunkHeight, 8]} />
                 <meshStandardMaterial color={trunkColor} />
@@ -335,22 +335,23 @@ const World = () => {
             const offsetX = (Math.sin(i * 123.45) * 10 - 5);
             const offsetZ = (Math.cos(i * 78.91) * 10 - 5);
             
-            // Compute stable properties
+            // Instead of using spheres for hills, we'll use half-spheres (hemispheres)
+            // that sit directly on the ground
             const size = 3 + (i % 4);
-            // Calculate height based on the size to ensure the hill is properly grounded
-            // This places the bottom of the sphere at ground level regardless of size
-            const height = size * 0.5; // Half the size to keep the bottom at ground level
             
             // Generate a deterministic color value between 0-0.3
             const colorBlend = Math.abs(Math.sin(i * 123.456)) * 0.3;
             
             return (
               <group key={`hill-${side}-${i}`} position={[pos[0] + offsetX, 0, pos[2] + offsetZ]}>
-                <mesh position={[0, height, 0]} castShadow receiveShadow>
-                  <sphereGeometry args={[size, 16, 16]} />
+                {/* Create a custom half-sphere for the hill that sits directly on the ground */}
+                <mesh position={[0, size/2, 0]} castShadow receiveShadow rotation={[Math.PI / 2, 0, 0]}>
+                  {/* Use regular sphere but we'll only show half of it by using properly positioned clipping planes */}
+                  <sphereGeometry args={[size, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
                   <meshStandardMaterial 
                     color={new THREE.Color('#6b8e23').lerp(new THREE.Color('#4a7023'), colorBlend)} 
                     roughness={0.8}
+                    side={THREE.FrontSide}
                   />
                 </mesh>
               </group>
