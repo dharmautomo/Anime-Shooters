@@ -530,9 +530,9 @@ const Game = ({ username }: GameProps) => {
       {health > 0 && (
         <Weapon 
           isThirdPerson={false}
-          position={[0.3, -0.4, -0.6]} 
+          position={[0.3, -0.3, -0.5]} 
           rotation={[0.05, Math.PI, 0]}
-          scale={0.6}
+          scale={0.8}
         />
       )}
       
