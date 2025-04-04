@@ -7,12 +7,14 @@ import World from './World';
 import Weapon from './Weapon';
 import Crosshair from './Crosshair';
 import MouseControls from './Controls';
+import AmmoDisplay from './AmmoDisplay';
 import { Controls as ControlsMap } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { useAudio } from '../lib/stores/useAudio';
+import { useWeaponStore } from '../lib/stores/useWeaponStore';
 
 interface GameProps {
   username: string;
@@ -77,10 +79,12 @@ const Game = ({ username }: GameProps) => {
       if (isControlsLocked && e.button === 0) { // Left mouse button
         // Only register clicks when controls are locked and player is alive
         if (health > 0) {
-          console.log('Weapon fired!');
-          // TODO: Implement actual bullet firing logic
+          // Use the weapon store to shoot
+          useWeaponStore.getState().shoot();
           
-          // Visual feedback for weapon firing
+          console.log('Weapon fired with left mouse button!');
+          
+          // Play gun shot sound
           const posSound = createPositionalSound(
             '/sounds/hit.mp3', // Use existing sound for gun shot
             new THREE.Vector3(position.x, position.y, position.z),
@@ -351,6 +355,46 @@ const Game = ({ username }: GameProps) => {
   const lastUpdateRef = useRef<number>(0);
   
   // Update player position and camera
+  // Add keyboard handler for J and K keys (alternate shooting options)
+  useEffect(() => {
+    // Only set up when controls are locked and player is alive
+    if (!isControlsLocked || health <= 0) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // J key or K key for shooting
+      if (e.code === 'KeyJ' || e.code === 'KeyK') {
+        // Use the weapon store to shoot
+        useWeaponStore.getState().shoot();
+        
+        console.log(`Weapon fired with ${e.code}!`);
+        
+        // Play gun shot sound
+        const posSound = createPositionalSound(
+          '/sounds/hit.mp3', // Use existing sound for gun shot
+          new THREE.Vector3(position.x, position.y, position.z),
+          0.5
+        );
+        
+        if (posSound) {
+          posSound.play();
+        }
+      }
+      
+      // R key for reloading
+      if (e.code === 'KeyR') {
+        useWeaponStore.getState().reload();
+      }
+    };
+    
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isControlsLocked, health, position, createPositionalSound]);
+  
   useFrame((state, delta) => {
     if (!hasInteracted) return;
     if (!isMobile && !controlsRef.current) return;
@@ -360,6 +404,9 @@ const Game = ({ username }: GameProps) => {
     
     // Don't allow movement when player is dead
     if (health <= 0) return;
+    
+    // Apply screen shake effect to camera if needed
+    useWeaponStore.getState().updateScreenShake(delta, camera);
     
     // Calculate movement direction based on camera orientation
     const direction = new THREE.Vector3();
@@ -470,7 +517,10 @@ const Game = ({ username }: GameProps) => {
       
       {/* Weapon display in first-person view */}
       {health > 0 && isControlsLocked && (
-        <Weapon position={[0.3, -0.3, -0.5]} />
+        <>
+          <Weapon position={[0.3, -0.3, -0.5]} />
+          <AmmoDisplay />
+        </>
       )}
       
       {/* Death overlay when player is dead */}
