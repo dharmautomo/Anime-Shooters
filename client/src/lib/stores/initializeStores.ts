@@ -470,10 +470,23 @@ export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
   },
   
   addRemoteBullet: (bulletData: BulletData) => {
+    console.log('Adding remote bullet to store:', bulletData.id);
+    
     // Add bullet received from server to local state
-    set(state => ({
-      bullets: [...state.bullets, bulletData]
-    }));
+    set(state => {
+      console.log('Current bullet count:', state.bullets.length);
+      
+      // Check if this bullet ID already exists to avoid duplicates
+      const bulletExists = state.bullets.some(bullet => bullet.id === bulletData.id);
+      if (bulletExists) {
+        console.log('Bullet already exists, not adding duplicate:', bulletData.id);
+        return state;
+      }
+      
+      const newBullets = [...state.bullets, bulletData];
+      console.log('New bullet count:', newBullets.length);
+      return { bullets: newBullets };
+    });
   },
   
   removeBullet: (bulletId: string) => {
@@ -512,6 +525,63 @@ export { refreshStoreReferences };
 // Make stores globally available for debugging
 if (typeof window !== 'undefined') {
   (window as any).refreshStoreReferences = refreshStoreReferences;
+  
+  // Expose stores for easy debugging
+  (window as any).usePlayer = usePlayer;
+  (window as any).useMultiplayer = useMultiplayer;
+  
+  // Debug helper to get game state
+  (window as any).getGameState = () => {
+    return {
+      player: usePlayer.getState(),
+      multiplayer: useMultiplayer.getState()
+    };
+  };
+  
+  // Debug helper to get all bullets
+  (window as any).getBullets = () => {
+    const multiplayer = useMultiplayer.getState();
+    console.log('Remote bullets:', multiplayer.bullets);
+    return {
+      remote: multiplayer.bullets
+    };
+  };
+  
+  // Debug helper to test shooting
+  (window as any).testShoot = () => {
+    // Create a test bullet
+    const player = usePlayer.getState();
+    const multiplayer = useMultiplayer.getState();
+    
+    if (!player.playerId) {
+      return 'Player ID not available';
+    }
+    
+    const position = player.position.clone();
+    const bulletId = `test-${Date.now()}`;
+    
+    // Create direction vector (forward)
+    const direction = new THREE.Vector3(0, 0, -1);
+    direction.normalize();
+    
+    const bulletData = {
+      id: bulletId,
+      position: position.clone(),
+      velocity: direction.clone().multiplyScalar(15), // Speed factor
+      owner: player.playerId,
+      createdAt: Date.now()
+    };
+    
+    // Fire the bullet
+    multiplayer.fireBullet(bulletData);
+    
+    return `Fired test bullet: ${bulletId}`;
+  };
+  
+  console.log('Debug tools available in console:');
+  console.log('- usePlayer: Access player store');
+  console.log('- useMultiplayer: Access multiplayer store');
+  console.log('- getGameState(): Get all game state');
 }
 
 console.log('Stores initialized');

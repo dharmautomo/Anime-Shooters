@@ -65,8 +65,18 @@ export class SocketManager {
         owner: string,
         createdAt: number
       }) => {
-        // Broadcast the bullet to all other players
-        socket.broadcast.emit('bulletCreated', bulletData);
+        console.log(`BULLET FIRED by ${bulletData.owner}, ID: ${bulletData.id}`);
+        
+        try {
+          // Broadcasting the bullet to ALL CLIENTS EXCEPT sender
+          socket.broadcast.emit('bulletCreated', bulletData);
+          
+          // Log how many clients will receive this bullet
+          const clientCount = this.io.engine.clientsCount - 1; // exclude sender
+          console.log(`Broadcasting bullet to ${clientCount} other clients`);
+        } catch (error) {
+          console.error('Error broadcasting bullet:', error);
+        }
       });
       
       // Handle player hits

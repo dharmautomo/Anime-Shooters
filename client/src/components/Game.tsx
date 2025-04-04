@@ -105,6 +105,24 @@ const Game = ({ username }: GameProps) => {
     };
   }, [camera, resetPlayer, setControlsLocked]);
   
+  // Subscribe to remote bullets changes
+  useEffect(() => {
+    // Get the initial remote bullets count
+    const initialCount = useMultiplayer.getState().bullets.length;
+    console.log(`Initial remote bullets count: ${initialCount}`);
+    
+    // Subscribe to changes in the multiplayer store's bullets array
+    const unsubscribe = useMultiplayer.subscribe(
+      state => state.bullets.length,
+      (count, prevCount) => {
+        console.log(`Remote bullets count changed: ${prevCount} -> ${count}`);
+        // The component will re-render when count changes
+      }
+    );
+    
+    return () => unsubscribe();
+  }, []);
+  
   // Set up mobile touch controls
   useEffect(() => {
     if (!isMobile) return;
@@ -400,11 +418,25 @@ const Game = ({ username }: GameProps) => {
     };
   }, [bullets, playerId, position, camera]);
   
-  // Clean up old bullets
+  // Clean up old bullets (both local and remote)
   useEffect(() => {
     const cleanupInterval = setInterval(() => {
       const now = Date.now();
-      setBullets(prev => prev.filter(bullet => now - bullet.createdAt < 3000)); // Match bullet lifetime in LaserBullet component
+      
+      // Clean up local bullets
+      setBullets(prev => prev.filter(bullet => now - bullet.createdAt < 3000)); // Match bullet lifetime
+      
+      // Get reference to multiplayer store to clean remote bullets
+      const multiplayerStore = useMultiplayer.getState();
+      
+      // Clean up remote bullets that are expired
+      multiplayerStore.bullets.forEach(bullet => {
+        if (now - bullet.createdAt > 3000) {
+          // Log for debugging
+          console.log('Removing expired remote bullet:', bullet.id);
+          multiplayerStore.removeBullet(bullet.id);
+        }
+      });
     }, 500);
     
     return () => clearInterval(cleanupInterval);
@@ -507,8 +539,16 @@ const Game = ({ username }: GameProps) => {
     })));
     
     // Update remote bullets position (from multiplayer store)
-    // This updates the bullets in place without triggering a re-render of the entire component
-    remoteBullets.forEach(bullet => {
+    // First get the latest bullets from the store
+    const latestRemoteBullets = useMultiplayer.getState().bullets;
+    
+    // Log the number of remote bullets for debugging
+    if (latestRemoteBullets.length > 0) {
+      console.log(`Updating ${latestRemoteBullets.length} remote bullets`);
+    }
+    
+    // Update each bullet's position
+    latestRemoteBullets.forEach(bullet => {
       bullet.position.add(bullet.velocity.clone().multiplyScalar(delta));
     });
   });
@@ -549,8 +589,8 @@ const Game = ({ username }: GameProps) => {
         />
       ))}
       
-      {/* Render remote bullets from other players */}
-      {remoteBullets.map((bullet) => (
+      {/* Render remote bullets from other players - always use latest from store */}
+      {useMultiplayer.getState().bullets.map((bullet) => (
         <LaserBullet
           key={bullet.id}
           id={bullet.id}
