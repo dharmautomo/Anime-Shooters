@@ -366,7 +366,11 @@ const Weapon: React.FC<WeaponProps> = ({
       
       {/* Enhanced muzzle flash during shooting */}
       {isShooting && (
-        <group position={[0, 0, currentWeapon.type === WeaponType.Pistol ? -0.7 : -0.9]}>
+        <group position={[0, 0, 
+          currentWeapon.type === WeaponType.Pistol ? -0.45 : 
+          currentWeapon.type === WeaponType.Rifle ? 0.55 : 
+          currentWeapon.type === WeaponType.Shotgun ? 0.6 : -0.9
+        ]}>
           {/* Central flash */}
           <mesh>
             <sphereGeometry args={[0.05, 16, 16]} />
