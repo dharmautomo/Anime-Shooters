@@ -8,6 +8,7 @@ import Weapon from './Weapon';
 import Crosshair from './Crosshair';
 import MouseControls from './Controls';
 import AmmoDisplay from './AmmoDisplay';
+import BulletManager from './BulletManager';
 import { Controls as ControlsMap } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
@@ -61,6 +62,11 @@ const Game = ({ username }: GameProps) => {
 
   // Initialize player controls
   useEffect(() => {
+    // Store camera reference in window for bullet creation
+    if (typeof window !== 'undefined') {
+      (window as any).mainCamera = camera;
+    }
+    
     // Define the event handlers separately so we can properly remove them
     const handleLock = () => {
       console.log('Controls locked - pointer lock handler');
@@ -509,6 +515,9 @@ const Game = ({ username }: GameProps) => {
       
       {/* Game world with environment and obstacles */}
       <World />
+      
+      {/* Bullet manager for projectiles and impacts */}
+      <BulletManager bulletLifetime={2} impactLifetime={1.5} />
       
       {/* Crosshair for aiming */}
       {health > 0 && isControlsLocked && (
