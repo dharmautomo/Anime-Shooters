@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useKeyboardControls, useAnimations } from '@react-three/drei';
-import { Controls } from '../App';
+import { Controls, ControlsType } from '../App';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { checkCollision } from '../lib/utils/collisionDetection';
 
@@ -63,11 +63,18 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const accentColor = getColor(60);
 
   // Get keyboard controls for main player
-  const forward = useKeyboardControls<typeof Controls>(state => state.forward);
-  const backward = useKeyboardControls<typeof Controls>(state => state.backward);
-  const left = useKeyboardControls<typeof Controls>(state => state.left);
-  const right = useKeyboardControls<typeof Controls>(state => state.right);
-  const jump = useKeyboardControls<typeof Controls>(state => state.jump);
+  const forward = useKeyboardControls((state) => state[Controls.forward]);
+  const backward = useKeyboardControls((state) => state[Controls.backward]);
+  const left = useKeyboardControls((state) => state[Controls.left]);
+  const right = useKeyboardControls((state) => state[Controls.right]);
+  const jump = useKeyboardControls((state) => state[Controls.jump]);
+  
+  // Helper functions to get control states
+  const getForward = () => forward;
+  const getBackward = () => backward;
+  const getLeft = () => left;
+  const getRight = () => right;
+  const getJump = () => jump;
 
   // Movement parameters
   const speed = 0.1;
@@ -85,7 +92,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   // Handle animations based on player state
   useEffect(() => {
     // Set walk cycle animation state
-    setWalkCycle(forward || backward || left || right);
+    setWalkCycle(getForward() || getBackward() || getLeft() || getRight());
   }, [forward, backward, left, right]);
 
   // Set up eye blinking and expressions
@@ -147,18 +154,18 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       const moveVector = new THREE.Vector3(0, 0, 0);
 
       // Calculate forward/backward movement (Z axis)
-      if (forward) {
+      if (getForward()) {
         moveVector.z -= 1;
       }
-      if (backward) {
+      if (getBackward()) {
         moveVector.z += 1;
       }
 
       // Calculate left/right movement (X axis)
-      if (left) {
+      if (getLeft()) {
         moveVector.x -= 1;
       }
-      if (right) {
+      if (getRight()) {
         moveVector.x += 1;
       }
 
@@ -190,7 +197,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       );
 
       // Handle jumping logic
-      if (jump && !isJumping.current) {
+      if (getJump() && !isJumping.current) {
         isJumping.current = true;
         jumpVelocity.current = jumpHeight;
       }
@@ -474,6 +481,38 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
               <boxGeometry args={[0.14, 0.1, 0.14]} />
               <meshStandardMaterial color="#e6ccb3" />
             </mesh>
+            
+            {/* Laser gun attached to right hand */}
+            <group position={[-0.125, -0.7, 0.15]} rotation={[0, 0, 0]}>
+              {/* Gun body */}
+              <mesh position={[0, 0, 0]} castShadow>
+                <boxGeometry args={[0.25, 0.12, 0.5]} />
+                <meshStandardMaterial color="#333333" metalness={0.7} roughness={0.3} />
+              </mesh>
+              
+              {/* Gun grip */}
+              <mesh position={[0, 0.1, -0.15]} castShadow>
+                <boxGeometry args={[0.1, 0.25, 0.15]} />
+                <meshStandardMaterial color="#222222" metalness={0.5} roughness={0.5} />
+              </mesh>
+              
+              {/* Gun barrel */}
+              <mesh position={[0, 0, 0.3]} castShadow>
+                <cylinderGeometry args={[0.05, 0.05, 0.3, 8]} />
+                <meshStandardMaterial color="#444444" metalness={0.8} roughness={0.2} />
+              </mesh>
+              
+              {/* Energy core - glowing */}
+              <mesh position={[0, 0.08, 0]} castShadow>
+                <sphereGeometry args={[0.08, 16, 16]} />
+                <meshStandardMaterial 
+                  color="#ff3333" 
+                  emissive="#ff0000" 
+                  emissiveIntensity={2}
+                  toneMapped={false}
+                />
+              </mesh>
+            </group>
           </group>
 
           {/* Legs */}

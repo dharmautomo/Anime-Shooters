@@ -474,11 +474,11 @@ const Game = ({ username }: GameProps) => {
         health={health}
       />
       
-      {/* Player's weapon */}
+      {/* Player's weapon - first person view */}
       {isControlsLocked && (
         <LaserWeapon 
-          position={[0.5, -0.5, -1]} 
-          rotation={[0, 0, 0]} 
+          position={[0.35, -0.4, -0.7]} 
+          rotation={[0, Math.PI / 8, 0]} 
           onShoot={shootLaser}
         />
       )}
