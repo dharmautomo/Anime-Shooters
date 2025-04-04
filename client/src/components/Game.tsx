@@ -61,12 +61,14 @@ const Game = ({ username }: GameProps) => {
   useEffect(() => {
     // Define the event handlers separately so we can properly remove them
     const handleLock = () => {
-      console.log('Controls locked');
+      console.log('Controls locked - pointer lock handler');
+      console.log('PointerLockElement:', document.pointerLockElement);
       setControlsLocked(true);
     };
     
     const handleUnlock = () => {
-      console.log('Controls unlocked');
+      console.log('Controls unlocked - pointer lock handler');
+      console.log('PointerLockElement:', document.pointerLockElement);
       setControlsLocked(false);
     };
     
@@ -447,10 +449,16 @@ const Game = ({ username }: GameProps) => {
       {/* Only use PointerLockControls on desktop */}
       {!isMobile && (
         <>
-          <PointerLockControls ref={controlsRef} />
-          {isControlsLocked && <MouseControls />}
+          <PointerLockControls 
+            ref={controlsRef} 
+            onLock={() => console.log('PointerLock activated')}
+            onUnlock={() => console.log('PointerLock deactivated')}
+          />
         </>
       )}
+      
+      {/* Use our custom mouse controls for rotation when controls are locked */}
+      {!isMobile && isControlsLocked && <MouseControls />}
       
       {/* Game world with environment and obstacles */}
       <World />
