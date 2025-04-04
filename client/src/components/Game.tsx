@@ -486,9 +486,13 @@ const Game = ({ username }: GameProps) => {
             const distance = bulletPos.distanceTo(playerPos);
             
             // Hit if distance is less than player "radius" (1.0 units)
-            const hitRadius = 1.0;
+            const hitRadius = 1.5; // Increased hit radius for better hit detection
+            
+            // Debug log distance checks
+            console.log(`Distance check: Bullet ${bullet.id} to player ${otherPlayer.id}: ${distance.toFixed(2)} units (hit radius: ${hitRadius})`);
+            
             if (distance < hitRadius) {
-              console.log(`Bullet ${bullet.id} hit player ${otherPlayer.id}!`);
+              console.log(`HIT DETECTED! Bullet ${bullet.id} hit player ${otherPlayer.id}!`);
               
               // Remove the bullet on hit
               if (bullet.owner === playerId) {
@@ -504,11 +508,25 @@ const Game = ({ username }: GameProps) => {
               
               // Send hit event to server
               if (socket && socket.connected) {
+                console.log(`Sending hitPlayer event to server: target=${otherPlayer.id}, damage=20, shooter=${playerId}`);
                 socket.emit('hitPlayer', {
                   playerId: otherPlayer.id,
                   damage: 20, // Each hit does 20 damage
                   shooterId: playerId
                 });
+                
+                // Apply visual feedback immediately for better responsiveness
+                console.log(`Applying visual damage to player ${otherPlayer.id} locally`);
+                // Use the store update directly
+                useMultiplayer.setState(state => ({
+                  otherPlayers: {
+                    ...state.otherPlayers,
+                    [otherPlayer.id]: {
+                      ...state.otherPlayers[otherPlayer.id],
+                      health: Math.max(0, otherPlayer.health - 20)
+                    }
+                  }
+                }));
               }
             }
           });
@@ -520,10 +538,14 @@ const Game = ({ username }: GameProps) => {
           // Distance between bullet and player
           const distance = bulletPos.distanceTo(mainPlayerPos);
           
-          // Hit if distance is less than player "radius" (1.0 units)
-          const hitRadius = 1.0;
+          // Hit if distance is less than player "radius" (increase for better hit detection)
+          const hitRadius = 1.5;
+          
+          // Debug log distance checks
+          console.log(`Distance check: Bullet ${bullet.id} to local player: ${distance.toFixed(2)} units (hit radius: ${hitRadius})`);
+          
           if (distance < hitRadius) {
-            console.log(`Local player hit by bullet ${bullet.id} from ${bullet.owner}!`);
+            console.log(`HIT DETECTED! Local player hit by bullet ${bullet.id} from ${bullet.owner}!`);
             
             // Remove the bullet (from multiplayer store)
             multiplayerStore.removeBullet(bullet.id);
@@ -538,6 +560,7 @@ const Game = ({ username }: GameProps) => {
             
             // Send hit event to server 
             if (socket && socket.connected) {
+              console.log(`Sending self-hit event to server: playerId=${playerId}, damage=20, shooter=${bullet.owner}`);
               socket.emit('hitPlayer', {
                 playerId: playerId,
                 damage: 20, // Each hit does 20 damage
