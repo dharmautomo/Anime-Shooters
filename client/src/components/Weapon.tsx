@@ -279,23 +279,36 @@ const Weapon: React.FC<WeaponProps> = ({
     };
   }, [currentWeapon.automatic, currentWeapon.fireRate, isThirdPerson, reloadWeapon, shootWeapon, subscribeKeys, controlMap]);
   
-  // Simple weapon models based on weapon type
+  // Enhanced weapon models with more visible size and colors
   const renderWeaponModel = () => {
     switch(currentWeapon.type) {
       case WeaponType.Pistol:
         return (
           <>
+            {/* Main gun body */}
             <mesh position={[0, 0, -0.3]}>
-              <boxGeometry args={[0.1, 0.1, 0.2]} />
-              <meshStandardMaterial color="#222" />
+              <boxGeometry args={[0.15, 0.15, 0.25]} />
+              <meshStandardMaterial color="#3a3a3a" metalness={0.9} roughness={0.2} emissive="#222222" emissiveIntensity={0.2} />
             </mesh>
-            <mesh position={[0, -0.07, -0.15]}>
-              <boxGeometry args={[0.08, 0.15, 0.1]} />
-              <meshStandardMaterial color="#111" />
+            {/* Handle */}
+            <mesh position={[0, -0.1, -0.15]}>
+              <boxGeometry args={[0.12, 0.2, 0.12]} />
+              <meshStandardMaterial color="#222222" metalness={0.5} roughness={0.3} />
             </mesh>
+            {/* Barrel */}
             <mesh position={[0, 0, -0.05]}>
-              <cylinderGeometry args={[0.03, 0.03, 0.3, 8]} />
-              <meshStandardMaterial color="#333" />
+              <cylinderGeometry args={[0.04, 0.04, 0.35, 8]} />
+              <meshStandardMaterial color="#555555" metalness={0.8} roughness={0.2} />
+            </mesh>
+            {/* Gun sight */}
+            <mesh position={[0, 0.08, -0.3]}>
+              <boxGeometry args={[0.03, 0.03, 0.05]} />
+              <meshStandardMaterial color="#777777" />
+            </mesh>
+            {/* Trigger */}
+            <mesh position={[0, -0.14, -0.2]}>
+              <boxGeometry args={[0.05, 0.05, 0.03]} />
+              <meshStandardMaterial color="#111111" />
             </mesh>
           </>
         );
@@ -303,21 +316,30 @@ const Weapon: React.FC<WeaponProps> = ({
       case WeaponType.Rifle:
         return (
           <>
+            {/* Main body */}
             <mesh position={[0, 0, -0.5]}>
-              <boxGeometry args={[0.1, 0.1, 0.6]} />
-              <meshStandardMaterial color="#444" />
+              <boxGeometry args={[0.15, 0.15, 0.7]} />
+              <meshStandardMaterial color="#4d4d4d" metalness={0.9} roughness={0.2} emissive="#333333" emissiveIntensity={0.2} />
             </mesh>
-            <mesh position={[0, -0.1, -0.3]}>
-              <boxGeometry args={[0.08, 0.2, 0.15]} />
-              <meshStandardMaterial color="#222" />
+            {/* Handle/grip */}
+            <mesh position={[0, -0.13, -0.3]}>
+              <boxGeometry args={[0.12, 0.25, 0.15]} />
+              <meshStandardMaterial color="#333333" metalness={0.5} roughness={0.3} />
             </mesh>
+            {/* Long barrel */}
             <mesh position={[0, 0, -0.1]}>
-              <cylinderGeometry args={[0.03, 0.03, 0.8, 8]} />
-              <meshStandardMaterial color="#333" />
+              <cylinderGeometry args={[0.04, 0.04, 0.9, 8]} />
+              <meshStandardMaterial color="#555555" metalness={0.7} roughness={0.3} />
             </mesh>
-            <mesh position={[0, 0.05, -0.7]}>
-              <boxGeometry args={[0.05, 0.05, 0.2]} />
-              <meshStandardMaterial color="#333" />
+            {/* Front sight */}
+            <mesh position={[0, 0.08, -0.7]}>
+              <boxGeometry args={[0.05, 0.05, 0.03]} />
+              <meshStandardMaterial color="#777777" />
+            </mesh>
+            {/* Magazine */}
+            <mesh position={[0, -0.2, -0.45]}>
+              <boxGeometry args={[0.1, 0.15, 0.25]} />
+              <meshStandardMaterial color="#666666" />
             </mesh>
           </>
         );
@@ -325,21 +347,36 @@ const Weapon: React.FC<WeaponProps> = ({
       case WeaponType.Shotgun:
         return (
           <>
+            {/* Main body */}
             <mesh position={[0, 0, -0.4]}>
-              <boxGeometry args={[0.12, 0.12, 0.5]} />
-              <meshStandardMaterial color="#654321" />
+              <boxGeometry args={[0.15, 0.15, 0.6]} />
+              <meshStandardMaterial color="#654321" metalness={0.3} roughness={0.3} emissive="#441100" emissiveIntensity={0.2} />
             </mesh>
-            <mesh position={[0, -0.1, -0.25]}>
-              <boxGeometry args={[0.1, 0.2, 0.15]} />
-              <meshStandardMaterial color="#8b4513" />
+            {/* Wooden handle */}
+            <mesh position={[0, -0.12, -0.25]}>
+              <boxGeometry args={[0.12, 0.22, 0.15]} />
+              <meshStandardMaterial color="#8b4513" metalness={0.2} roughness={0.8} emissive="#552200" emissiveIntensity={0.1} />
             </mesh>
-            <mesh position={[0, 0, -0.05]}>
-              <cylinderGeometry args={[0.04, 0.04, 0.7, 8]} />
-              <meshStandardMaterial color="#111" />
-            </mesh>
+            {/* Long double barrel */}
+            <group position={[0, 0.02, -0.05]}>
+              <mesh position={[0.04, 0, 0]}>
+                <cylinderGeometry args={[0.04, 0.04, 0.75, 8]} />
+                <meshStandardMaterial color="#333333" metalness={0.6} roughness={0.4} />
+              </mesh>
+              <mesh position={[-0.04, 0, 0]}>
+                <cylinderGeometry args={[0.04, 0.04, 0.75, 8]} />
+                <meshStandardMaterial color="#333333" metalness={0.6} roughness={0.4} />
+              </mesh>
+            </group>
+            {/* Pump grip */}
             <mesh position={[0, 0.07, -0.3]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.02, 0.02, 0.1, 8]} />
-              <meshStandardMaterial color="#111" />
+              <cylinderGeometry args={[0.025, 0.025, 0.15, 8]} />
+              <meshStandardMaterial color="#222222" />
+            </mesh>
+            {/* Shell loading area */}
+            <mesh position={[0, 0.04, -0.5]}>
+              <boxGeometry args={[0.13, 0.03, 0.1]} />
+              <meshStandardMaterial color="#555555" />
             </mesh>
           </>
         );
@@ -347,8 +384,8 @@ const Weapon: React.FC<WeaponProps> = ({
       default:
         return (
           <mesh>
-            <boxGeometry args={[0.1, 0.1, 0.3]} />
-            <meshStandardMaterial color="#333" />
+            <boxGeometry args={[0.15, 0.15, 0.4]} />
+            <meshStandardMaterial color="#444444" />
           </mesh>
         );
     }
@@ -361,6 +398,17 @@ const Weapon: React.FC<WeaponProps> = ({
       rotation={rotation}
       scale={scale}
     >
+      {/* Spotlight to ensure weapon is visible */}
+      <spotLight
+        position={[0, 0.5, 0]}
+        angle={0.6}
+        penumbra={0.5}
+        intensity={0.8}
+        color="#ffffff"
+        castShadow={false}
+        distance={3}
+      />
+      
       {/* Basic weapon model */}
       {renderWeaponModel()}
       
