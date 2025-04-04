@@ -3,7 +3,7 @@ import { Suspense, useState, useEffect } from "react";
 import { KeyboardControls } from "@react-three/drei";
 import Game from "./components/Game";
 import Login from "./components/Login";
-import { usePlayer, useMultiplayer, useWeapon } from "./lib/stores/initializeStores";
+import { usePlayer, useMultiplayer } from "./lib/stores/initializeStores";
 import { useGameControls } from "./lib/stores/useGameControls";
 import AudioManager from "./components/AudioManager";
 import UI from "./components/UI";
@@ -17,12 +17,7 @@ export const Controls = {
   left: 'left',
   right: 'right',
   jump: 'jump',
-  shoot: 'shoot',
-  reload: 'reload',
   sprint: 'sprint',
-  weaponSlot1: 'weaponSlot1',
-  weaponSlot2: 'weaponSlot2',
-  weaponSlot3: 'weaponSlot3',
 } as const;
 
 // Type for Controls
@@ -35,12 +30,7 @@ const keyMap = [
   { name: Controls.left, keys: ['ArrowLeft', 'KeyA'] },
   { name: Controls.right, keys: ['ArrowRight', 'KeyD'] },
   { name: Controls.jump, keys: ['Space'] },
-  { name: Controls.shoot, keys: ['Mouse0', 'KeyJ', 'KeyK'] },
-  { name: Controls.reload, keys: ['KeyR'] },
   { name: Controls.sprint, keys: ['ShiftLeft'] },
-  { name: Controls.weaponSlot1, keys: ['Digit1'] },
-  { name: Controls.weaponSlot2, keys: ['Digit2'] },
-  { name: Controls.weaponSlot3, keys: ['Digit3'] },
 ];
 
 // Helper function to parse URL parameters
@@ -81,9 +71,6 @@ function App() {
     }
   }, []);
 
-  // Get weapon system
-  const { initializeWeapons } = useWeapon();
-  
   // Handle login
   const handleLogin = (name: string) => {
     if (name.trim()) {
@@ -93,10 +80,6 @@ function App() {
       setPlayerName(trimmedName);
       setIsLoggedIn(true);
       initializeSocket(trimmedName);
-      
-      // Initialize the weapons system
-      initializeWeapons();
-      console.log("Weapon system initialized");
     }
   };
 
@@ -111,8 +94,6 @@ function App() {
       window.removeEventListener("contextmenu", handleContextMenu);
     };
   }, []);
-  
-  // No key tracking needed
 
   // Add cursor-hidden class to body when logged in
   useEffect(() => {
@@ -136,49 +117,27 @@ function App() {
       // Expose multiplayer store globally
       (window as any).useMultiplayer = useMultiplayer;
       
-      // Expose weapon store
-      (window as any).useWeapon = useWeapon;
-      
       // Add debug helper functions
       (window as any).getGameState = () => {
         const playerState = usePlayer.getState();
         const multiplayerState = useMultiplayer.getState();
         const gameControlState = useGameControls.getState();
-        const weaponState = useWeapon.getState();
         
         console.log("Player state:", playerState);
         console.log("Multiplayer state:", multiplayerState);
         console.log("Game controls state:", gameControlState);
-        console.log("Weapon state:", weaponState);
         
         return {
           player: playerState,
           multiplayer: multiplayerState,
-          controls: gameControlState,
-          weapon: weaponState
-        };
-      };
-      
-      // Add specific debug function for shooting
-      (window as any).shootBullet = () => {
-        useWeapon.getState().shootWeapon();
-        return "Bullet fired programmatically";
-      };
-      
-      // Get bullets debug helper
-      (window as any).getBullets = () => {
-        return {
-          local: useWeapon.getState().bullets,
+          controls: gameControlState
         };
       };
       
       console.log("Debug tools available in console:");
       console.log("- usePlayer: Access player store");
       console.log("- useMultiplayer: Access multiplayer store");
-      console.log("- useWeapon: Access weapon store");
       console.log("- getGameState(): Get all game state");
-      console.log("- shootBullet(): Test firing a bullet");
-      console.log("- getBullets(): View all active bullets");
     }
     
     return () => {

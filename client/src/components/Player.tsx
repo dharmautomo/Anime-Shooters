@@ -25,7 +25,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
   const nameTagRef = useRef<THREE.Sprite>(null);
-  const weaponRef = useRef<THREE.Group>(null);
+  // Weapon ref removed
 
   const { updatePosition, takeDamage, respawn } = usePlayer();
   const { updatePlayerPosition, socket } = useMultiplayer();
@@ -39,8 +39,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const [animationTime, setAnimationTime] = useState(0);
   const [nameTagCanvas, setNameTagCanvas] = useState<HTMLCanvasElement | null>(null);
   const [bobOffset, setBobOffset] = useState(0);
-  const [isShooting, setIsShooting] = useState(false);
-  const [isReloading, setIsReloading] = useState(false);
+  // Weapon state variables removed
 
   // Movement states
   const isJumping = useRef(false);
@@ -98,41 +97,9 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
     setWalkCycle(getForward() || getBackward() || getLeft() || getRight());
   }, [forward, backward, left, right]);
   
-  // Handle weapon animations from socket events
+  // Weapon animations have been removed
   useEffect(() => {
-    if (!isMainPlayer && socket) {
-      // Listen for shooting event
-      const handlePlayerShoot = (data: any) => {
-        if (data.playerId === username) {
-          console.log(`Player ${username} is shooting`);
-          // Show shoot effect
-          setIsShooting(true);
-          // Reset after short delay
-          setTimeout(() => setIsShooting(false), 150);
-        }
-      };
-      
-      // Listen for reload event
-      const handlePlayerReload = (data: any) => {
-        if (data.playerId === username) {
-          console.log(`Player ${username} is reloading`);
-          // Show reload animation
-          setIsReloading(true);
-          // Reset after animation completes
-          setTimeout(() => setIsReloading(false), 2000);
-        }
-      };
-      
-      // Register listeners
-      socket.on('playerShoot', handlePlayerShoot);
-      socket.on('playerReload', handlePlayerReload);
-      
-      // Cleanup
-      return () => {
-        socket.off('playerShoot', handlePlayerShoot);
-        socket.off('playerReload', handlePlayerReload);
-      };
-    }
+    // No weapon-related socket event handlers needed
   }, [isMainPlayer, socket, username]);
 
   // Set up eye blinking and expressions
@@ -350,29 +317,10 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
         }
       }
 
-      // Animate arms while walking
+      // Animate arms while walking (weapon animations removed)
       if (leftArmRef.current && rightArmRef.current) {
-        if (isShooting) {
-          // Quick shooting animation - raise arm quickly
-          rightArmRef.current.rotation.x = -0.5;
-        } else if (isReloading) {
-          // Reload animation - lower arm and move it around
-          const reloadPhase = (animationTime % 2) / 2; // 0 to 1 over 2 seconds
-          if (reloadPhase < 0.3) {
-            // Lower arm
-            rightArmRef.current.rotation.x = 0.5 + reloadPhase;
-          } else if (reloadPhase < 0.6) {
-            // Move to center
-            rightArmRef.current.rotation.z = (reloadPhase - 0.3) * 3 * 0.5;
-          } else if (reloadPhase < 0.9) {
-            // Raise arm with new magazine
-            rightArmRef.current.rotation.x = 0.5 - (reloadPhase - 0.6) * 3;
-          } else {
-            // Return to normal position
-            rightArmRef.current.rotation.z = (1 - reloadPhase) * 10 * 0.5;
-            rightArmRef.current.rotation.x = 0;
-          }
-        } else if (walkCycle) {
+        if (walkCycle) {
+          // Walking animation
           leftArmRef.current.rotation.x = Math.sin(animationTime * 5) * 0.5;
           rightArmRef.current.rotation.x = Math.sin(animationTime * 5 + Math.PI) * 0.5;
         } else {
@@ -382,24 +330,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
         }
       }
       
-      // Animate weapon based on actions
-      if (weaponRef.current) {
-        if (isShooting) {
-          // Recoil animation
-          weaponRef.current.position.z = 0.25; // Move slightly back
-          weaponRef.current.rotation.x = 0.1; // Tilt up slightly
-        } else if (isReloading) {
-          // Reload animation - rotate weapon
-          const reloadPhase = (animationTime % 2) / 2; // 0 to 1 over 2 seconds
-          weaponRef.current.rotation.z = Math.sin(reloadPhase * Math.PI * 2) * 0.3;
-          weaponRef.current.position.y = -0.5 + Math.sin(reloadPhase * Math.PI) * 0.1;
-        } else {
-          // Normal position with slight weapon sway
-          weaponRef.current.position.z = 0.3 + Math.sin(animationTime * 2) * 0.02;
-          weaponRef.current.rotation.x = 0 + Math.sin(animationTime) * 0.02;
-          weaponRef.current.rotation.z = 0;
-        }
-      }
+      // Weapon animations removed
 
       // Animate legs while walking
       if (leftLegRef.current && rightLegRef.current) {
@@ -567,66 +498,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
               <meshStandardMaterial color="#e6ccb3" />
             </mesh>
             
-            {/* Third-person weapon */}
-            <group 
-              ref={weaponRef} 
-              position={[-0.15, -0.5, 0.3]} 
-              rotation={[0, Math.PI / 4, 0]}
-              scale={1}
-            >
-              {/* Base weapon model */}
-              <mesh castShadow>
-                <boxGeometry args={[0.5, 0.1, 0.07]} />
-                <meshStandardMaterial color="#333" metalness={0.7} roughness={0.2} />
-              </mesh>
-
-              {/* Barrel */}
-              <mesh position={[0.3, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-                <cylinderGeometry args={[0.03, 0.03, 0.3, 8]} />
-                <meshStandardMaterial color="#222" metalness={0.8} roughness={0.2} />
-              </mesh>
-              
-              {/* Muzzle flash - only visible when shooting */}
-              {isShooting && (
-                <>
-                  <pointLight 
-                    position={[0.45, 0, 0]} 
-                    color="#ff7700" 
-                    intensity={2} 
-                    distance={3} 
-                    decay={2}
-                  />
-                  <mesh position={[0.47, 0, 0]}>
-                    <sphereGeometry args={[0.05, 16, 16]} />
-                    <meshStandardMaterial 
-                      color="#ffaa00" 
-                      emissive="#ff5500"
-                      emissiveIntensity={2}
-                      transparent
-                      opacity={0.8}
-                    />
-                  </mesh>
-                </>
-              )}
-
-              {/* Magazine */}
-              <mesh position={[0, -0.12, 0]} castShadow>
-                <boxGeometry args={[0.1, 0.15, 0.05]} />
-                <meshStandardMaterial color="#444" metalness={0.6} roughness={0.3} />
-              </mesh>
-
-              {/* Grip */}
-              <mesh position={[-0.15, -0.1, 0]} castShadow rotation={[0, 0, Math.PI / 6]}>
-                <boxGeometry args={[0.12, 0.18, 0.05]} />
-                <meshStandardMaterial color="#222" metalness={0.5} roughness={0.5} />
-              </mesh>
-
-              {/* Scope */}
-              <mesh position={[0.1, 0.08, 0]} castShadow>
-                <boxGeometry args={[0.15, 0.06, 0.05]} />
-                <meshStandardMaterial color="#111" metalness={0.9} roughness={0.1} />
-              </mesh>
-            </group>
+            {/* Weapon removed */}
           </group>
 
           {/* Legs */}
