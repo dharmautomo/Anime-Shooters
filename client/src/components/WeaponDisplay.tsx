@@ -33,57 +33,55 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   
   // Set up weapon position and rotation
   useEffect(() => {
+    if (pistolRef.current) {
+      // Position weapon in the lower right portion of the screen
+      pistolRef.current.position.set(0.3, -0.3, -0.5);
+      // Slightly rotate the weapon for a better angle
+      pistolRef.current.rotation.set(0, -Math.PI/12, 0);
+    }
+    
     console.log('Weapon display initialized');
   }, []);
   
-  // Handle weapon animation with simplified positioning
-  useFrame((state, delta) => {
+  // Handle weapon animation
+  useFrame((_, delta) => {
     time.current += delta;
     
-    if (!pistolRef.current || !isVisible) return;
+    if (!pistolRef.current || !isControlsLocked || !isVisible) return;
     
-    // Basic position - fixed offset from camera
-    const cameraPosition = state.camera.position.clone();
-    const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(state.camera.quaternion);
-    const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(state.camera.quaternion);
-    const cameraDown = new THREE.Vector3(0, -1, 0).applyQuaternion(state.camera.quaternion);
+    // Create a vector to represent the camera's forward direction
+    const cameraDirection = new THREE.Vector3(0, 0, -1);
+    cameraDirection.applyQuaternion(camera.quaternion);
     
-    // Position pistol relative to camera with fixed offsets in view space
-    const pistolPosition = cameraPosition.clone()
-      .add(cameraDirection.clone().multiplyScalar(0.5))  // Move forward
-      .add(cameraRight.clone().multiplyScalar(0.3))     // Move right
-      .add(cameraDown.clone().multiplyScalar(0.3));     // Move down
+    // Create a simple copy of the pistol to the camera
+    // This makes the weapon directly attached to the camera view
+    pistolRef.current.quaternion.copy(camera.quaternion);
     
-    // Update position and rotation
-    pistolRef.current.position.copy(pistolPosition);
-    pistolRef.current.quaternion.copy(state.camera.quaternion);
+    // But we want to offset it to be visible in the corner, not centered
+    // Set local position relative to camera
+    pistolRef.current.position.set(0.3, -0.3, -0.5);
     
     // Add bobbing effect when moving
     if (isMoving) {
-      const bobY = Math.sin(time.current * bobSpeed) * bobAmount;
-      const bobX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
+      const bobOffsetY = Math.sin(time.current * bobSpeed) * bobAmount;
+      const bobOffsetX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
       
-      pistolRef.current.position.add(
-        cameraRight.clone().multiplyScalar(bobX).add(
-          cameraDown.clone().multiplyScalar(-bobY)
-        )
-      );
+      pistolRef.current.position.y = -0.3 + bobOffsetY;
+      pistolRef.current.position.x = 0.3 + bobOffsetX;
+    } else {
+      // Subtle breathing movement when idle
+      const breathingOffset = Math.sin(time.current * 1.5) * 0.003;
+      pistolRef.current.position.y = -0.3 + breathingOffset;
     }
     
-    // Add left-right sway based on movement
-    if (left || right) {
-      const swayAmount = left ? 0.1 : -0.1;
-      
-      // Create a rotation matrix for the Z-axis (roll)
-      const rotationMatrix = new THREE.Matrix4().makeRotationAxis(
-        new THREE.Vector3(0, 0, 1).applyQuaternion(state.camera.quaternion),
-        swayAmount * delta
-      );
-      
-      // Apply the rotation to the pistol's quaternion
-      const rotationQuaternion = new THREE.Quaternion().setFromRotationMatrix(rotationMatrix);
-      pistolRef.current.quaternion.premultiply(rotationQuaternion);
-    }
+    // Left-right sway based on movement
+    let targetRotZ = 0;
+    if (left) targetRotZ = swayAmount;
+    if (right) targetRotZ = -swayAmount;
+    
+    // Apply rotation around local Z axis (for left-right sway)
+    const currentRotZ = pistolRef.current.rotation.z;
+    pistolRef.current.rotation.z = currentRotZ + (targetRotZ - currentRotZ) * 3 * delta;
   });
   
   return (

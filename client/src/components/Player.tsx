@@ -351,7 +351,8 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       {/* First-person view for main player with weapon display */}
       {isMainPlayer && (
         <group>
-          {/* WeaponDisplay is now rendered directly in Game.tsx */}
+          {/* Import WeaponDisplay component */}
+          <WeaponDisplay isVisible={health > 0} />
         </group>
       )}
       
