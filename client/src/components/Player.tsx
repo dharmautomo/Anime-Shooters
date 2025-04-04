@@ -24,9 +24,6 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const rightArmRef = useRef<THREE.Group>(null);
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
-  const weaponRef = useRef<THREE.Group>(null);
-  const muzzleFlashRef = useRef<THREE.PointLight>(null);
-  const muzzleFlashSpriteRef = useRef<THREE.Mesh>(null);
   const nameTagRef = useRef<THREE.Sprite>(null);
 
   const { updatePosition, takeDamage, respawn } = usePlayer();
@@ -37,7 +34,6 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const [blinking, setBlinking] = useState(false);
   const [isSmiling, setIsSmiling] = useState(false);
   const [walkCycle, setWalkCycle] = useState(false);
-  const [isShooting, setIsShooting] = useState(false);
   const [damageFlash, setDamageFlash] = useState(false);
   const [animationTime, setAnimationTime] = useState(0);
   const [nameTagCanvas, setNameTagCanvas] = useState<HTMLCanvasElement | null>(null);
@@ -72,7 +68,6 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   const left = useKeyboardControls<typeof Controls>(state => state.left);
   const right = useKeyboardControls<typeof Controls>(state => state.right);
   const jump = useKeyboardControls<typeof Controls>(state => state.jump);
-  const shoot = useKeyboardControls<typeof Controls>(state => state.shoot);
 
   // Movement parameters
   const speed = 0.1;
@@ -117,39 +112,6 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       };
     }
   }, [isMainPlayer]);
-
-  // Handle shooting action
-  useEffect(() => {
-    if (isMainPlayer && shoot) {
-      handleShoot();
-    }
-  }, [shoot, isMainPlayer]);
-
-  // Function to handle shooting behavior
-  const handleShoot = () => {
-    if (isShooting) return; // Prevent rapid fire by checking current state
-
-    setIsShooting(true);
-
-    // Play shooting animation/effect
-    if (muzzleFlashRef.current && muzzleFlashSpriteRef.current) {
-      muzzleFlashRef.current.visible = true;
-      muzzleFlashSpriteRef.current.visible = true;
-
-      // Hide muzzle flash after short duration
-      setTimeout(() => {
-        if (muzzleFlashRef.current && muzzleFlashSpriteRef.current) {
-          muzzleFlashRef.current.visible = false;
-          muzzleFlashSpriteRef.current.visible = false;
-        }
-        setIsShooting(false);
-      }, 100);
-    } else {
-      setTimeout(() => setIsShooting(false), 150);
-    }
-
-    // Weapon recoil animation is handled in the useFrame hook
-  };
 
   // Function to handle taking damage with visual feedback
   const handleDamage = (amount: number) => {
@@ -363,14 +325,6 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
           rightLegRef.current.rotation.x = 0;
         }
       }
-
-      // Animate weapon for shooting effect
-      if (weaponRef.current && isShooting) {
-        weaponRef.current.rotation.x = Math.sin(animationTime * 30) * 0.2;
-        setTimeout(() => {
-          if (weaponRef.current) weaponRef.current.rotation.x = 0;
-        }, 100);
-      }
     }
   });
 
@@ -454,385 +408,197 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
             ))}
           </group>
 
-          {/* Face - better eye and mouth placement */}
-          <group position={[0, 1, 0.25]}>
-            {/* Eyes with better depth and shape */}
-            <mesh ref={leftEyeRef} position={[0.12, 0.05, 0.1]}>
-              <sphereGeometry args={[0.06, 16, 16]} />
-              <meshStandardMaterial color="#000000" />
-            </mesh>
-            <mesh ref={rightEyeRef} position={[-0.12, 0.05, 0.1]}>
-              <sphereGeometry args={[0.06, 16, 16]} />
-              <meshStandardMaterial color="#000000" />
-            </mesh>
+          {/* Eyes */}
+          <mesh ref={leftEyeRef} position={[0.15, 1.05, 0.25]} castShadow>
+            <sphereGeometry args={[0.05, 16, 16]} />
+            <meshBasicMaterial color="#111" />
+          </mesh>
+          <mesh ref={rightEyeRef} position={[-0.15, 1.05, 0.25]} castShadow>
+            <sphereGeometry args={[0.05, 16, 16]} />
+            <meshBasicMaterial color="#111" />
+          </mesh>
 
-            {/* Eye whites - gives eyes more dimension */}
-            <mesh position={[0.12, 0.07, 0.11]} scale={[0.3, 0.3, 0.3]}>
-              <sphereGeometry args={[0.06, 16, 16]} />
-              <meshStandardMaterial color="#ffffff" />
-            </mesh>
-            <mesh position={[-0.12, 0.07, 0.11]} scale={[0.3, 0.3, 0.3]}>
-              <sphereGeometry args={[0.06, 16, 16]} />
-              <meshStandardMaterial color="#ffffff" />
-            </mesh>
+          {/* Eyebrows - more expressive */}
+          <mesh position={[0.15, 1.15, 0.27]} rotation={[0, 0, 0.1]}>
+            <boxGeometry args={[0.08, 0.02, 0.01]} />
+            <meshBasicMaterial color="#222" />
+          </mesh>
+          <mesh position={[-0.15, 1.15, 0.27]} rotation={[0, 0, -0.1]}>
+            <boxGeometry args={[0.08, 0.02, 0.01]} />
+            <meshBasicMaterial color="#222" />
+          </mesh>
 
-            {/* Eyebrows - better positioned and shaped */}
-            <mesh position={[0.12, 0.15, 0.11]} rotation={[0, 0, isSmiling ? 0 : -0.2]} scale={[1, 0.3, 0.3]}>
-              <boxGeometry args={[0.1, 0.02, 0.01]} />
-              <meshStandardMaterial color="#222222" />
-            </mesh>
-            <mesh position={[-0.12, 0.15, 0.11]} rotation={[0, 0, isSmiling ? 0 : 0.2]} scale={[1, 0.3, 0.3]}>
-              <boxGeometry args={[0.1, 0.02, 0.01]} />
-              <meshStandardMaterial color="#222222" />
-            </mesh>
+          {/* Mouth */}
+          <mesh ref={mouthRef} position={[0, 0.85, 0.25]} castShadow>
+            <boxGeometry args={[0.15, 0.04, 0.01]} />
+            <meshBasicMaterial color="#a53030" />
+          </mesh>
 
-            {/* Mouth - better positioned and better animation */}
-            <mesh ref={mouthRef} position={[0, -0.15, 0.05]}>
-              <boxGeometry args={[0.1, 0.03, 0.01]} />
-              <meshStandardMaterial color="#cc6666" />
-            </mesh>
-          </group>
-
-          {/* Upper body - scaled better and with more details */}
-          <group position={[0, 0.35, 0]}>
-            {/* Torso - slightly tapered for better proportions */}
-            <mesh position={[0, 0, 0]} castShadow>
-              <boxGeometry args={[0.5, 0.6, 0.25]} />
-              <meshStandardMaterial 
-                color={health > 0 ? clothesColor : "#ff0000"} 
-                roughness={0.7}
-                metalness={0.1}
-                opacity={health > 0 ? 1 : 0.5}
-                transparent={health <= 0}
-              />
-            </mesh>
-
-            {/* Shirt collar */}
-            <mesh position={[0, 0.28, 0.13]} castShadow>
-              <boxGeometry args={[0.3, 0.05, 0.02]} />
-              <meshStandardMaterial color={accentColor} roughness={0.6} />
-            </mesh>
-
-            {/* Shirt details - pockets, trim, etc. */}
-            <mesh position={[0.15, 0.1, 0.13]} castShadow>
-              <boxGeometry args={[0.12, 0.12, 0.01]} />
-              <meshStandardMaterial color={accentColor} roughness={0.6} />
-            </mesh>
-            <mesh position={[-0.15, 0.1, 0.13]} castShadow>
-              <boxGeometry args={[0.12, 0.12, 0.01]} />
-              <meshStandardMaterial color={accentColor} roughness={0.6} />
-            </mesh>
-          </group>
-
-          {/* Lower body */}
-          <group position={[0, -0.2, 0]}>
-            {/* Waist/hips - slightly wider than upper body for better shape */}
-            <mesh position={[0, 0, 0]} castShadow>
-              <boxGeometry args={[0.52, 0.2, 0.25]} />
-              <meshStandardMaterial 
-                color={health > 0 ? clothesColor : "#ff0000"} 
-                roughness={0.7}
-                opacity={health > 0 ? 1 : 0.5}
-                transparent={health <= 0}
-              />
-            </mesh>
-
-            {/* Belt */}
-            <mesh position={[0, -0.1, 0.13]} castShadow>
-              <boxGeometry args={[0.53, 0.05, 0.02]} />
-              <meshStandardMaterial color="#553311" roughness={0.6} metalness={0.4} />
-            </mesh>
-
-            {/* Belt buckle */}
-            <mesh position={[0, -0.1, 0.15]} castShadow>
-              <boxGeometry args={[0.1, 0.05, 0.01]} />
-              <meshStandardMaterial color="#ddbb66" roughness={0.3} metalness={0.8} />
-            </mesh>
-          </group>
-
-          {/* Arms - improved proportions and joint positions */}
-          <group ref={leftArmRef} position={[0.35, 0.35, 0]} rotation-z={-0.1}>
-            {/* Upper arm with shoulder joint */}
-            <mesh position={[0, -0.15, 0]} castShadow>
-              <boxGeometry args={[0.15, 0.4, 0.15]} />
-              <meshStandardMaterial color="#e6ccb3" roughness={0.7} />
-            </mesh>
-
-            {/* Lower arm with elbow joint */}
-            <group position={[0, -0.35, 0]}>
-              <mesh position={[0, -0.2, 0]} castShadow>
-                <boxGeometry args={[0.13, 0.4, 0.13]} />
-                <meshStandardMaterial color="#e6ccb3" roughness={0.7} />
-              </mesh>
-
-              {/* Hand */}
-              <mesh position={[0, -0.45, 0]} castShadow>
-                <boxGeometry args={[0.14, 0.1, 0.14]} />
-                <meshStandardMaterial color="#d9c9b9" roughness={0.6} />
-              </mesh>
-
-              {/* Sleeve detail */}
-              <mesh position={[0, 0, 0]} castShadow>
-                <cylinderGeometry args={[0.14, 0.14, 0.05, 16]} />
-                <meshStandardMaterial color={clothesColor} roughness={0.7} />
-              </mesh>
-            </group>
-          </group>
-
-          <group ref={rightArmRef} position={[-0.35, 0.35, 0]} rotation-z={0.1}>
-            {/* Upper arm with shoulder joint */}
-            <mesh position={[0, -0.15, 0]} castShadow>
-              <boxGeometry args={[0.15, 0.4, 0.15]} />
-              <meshStandardMaterial color="#e6ccb3" roughness={0.7} />
-            </mesh>
-
-            {/* Lower arm with elbow joint */}
-            <group position={[0, -0.35, 0]}>
-              <mesh position={[0, -0.2, 0]} castShadow>
-                <boxGeometry args={[0.13, 0.4, 0.13]} />
-                <meshStandardMaterial color="#e6ccb3" roughness={0.7} />
-              </mesh>
-
-              {/* Hand */}
-              <mesh position={[0, -0.45, 0]} castShadow>
-                <boxGeometry args={[0.14, 0.1, 0.14]} />
-                <meshStandardMaterial color="#d9c9b9" roughness={0.6} />
-              </mesh>
-
-              {/* Sleeve detail */}
-              <mesh position={[0, 0, 0]} castShadow>
-                <cylinderGeometry args={[0.14, 0.14, 0.05, 16]} />
-                <meshStandardMaterial color={clothesColor} roughness={0.7} />
-              </mesh>
-            </group>
-          </group>
-
-          {/* Legs - improved proportions and joint positions */}
-          <group ref={leftLegRef} position={[0.15, -0.4, 0]}>
-            {/* Upper leg with hip joint */}
-            <mesh position={[0, -0.25, 0]} castShadow>
-              <boxGeometry args={[0.16, 0.5, 0.16]} />
-              <meshStandardMaterial color={pantsColor} roughness={0.8} />
-            </mesh>
-
-            {/* Lower leg with knee joint */}
-            <group position={[0, -0.5, 0]}>
-              <mesh position={[0, -0.25, 0]} castShadow>
-                <boxGeometry args={[0.15, 0.5, 0.15]} />
-                <meshStandardMaterial color={pantsColor} roughness={0.8} />
-              </mesh>
-
-              {/* Foot */}
-              <mesh position={[0, -0.53, 0.05]} castShadow>
-                <boxGeometry args={[0.16, 0.08, 0.26]} />
-                <meshStandardMaterial color="#222222" roughness={0.5} metalness={0.2} />
-              </mesh>
-            </group>
-          </group>
-
-          <group ref={rightLegRef} position={[-0.15, -0.4, 0]}>
-            {/* Upper leg with hip joint */}
-            <mesh position={[0, -0.25, 0]} castShadow>
-              <boxGeometry args={[0.16, 0.5, 0.16]} />
-              <meshStandardMaterial color={pantsColor} roughness={0.8} />
-            </mesh>
-
-            {/* Lower leg with knee joint */}
-            <group position={[0, -0.5, 0]}>
-              <mesh position={[0, -0.25, 0]} castShadow>
-                <boxGeometry args={[0.15, 0.5, 0.15]} />
-                <meshStandardMaterial color={pantsColor} roughness={0.8} />
-              </mesh>
-
-              {/* Foot */}
-              <mesh position={[0, -0.53, 0.05]} castShadow>
-                <boxGeometry args={[0.16, 0.08, 0.26]} />
-                <meshStandardMaterial color="#222222" roughness={0.5} metalness={0.2} />
-              </mesh>
-            </group>
-          </group>
-
-          {/* Weapon - enhanced pistol with better details */}
-          <group ref={weaponRef} position={[0.5, 0, 0.3]} rotation={[0, -Math.PI / 2, 0]}>
-            {/* Gun slide - metallic finish */}
-            <mesh position={[0, 0.04, 0]} castShadow>
-              <boxGeometry args={[0.28, 0.08, 0.12]} />
-              <meshStandardMaterial color="#444444" metalness={0.8} roughness={0.2} />
-            </mesh>
-
-            {/* Gun body - main frame */}
-            <mesh position={[0, 0, 0]} castShadow>
-              <boxGeometry args={[0.35, 0.12, 0.12]} />
-              <meshStandardMaterial color="#333333" metalness={0.6} roughness={0.3} />
-            </mesh>
-
-            {/* Gun barrel - cylindrical for realism */}
-            <mesh position={[0.22, 0.02, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-              <cylinderGeometry args={[0.04, 0.04, 0.15, 8]} />
-              <meshStandardMaterial color="#222222" metalness={0.9} roughness={0.1} />
-            </mesh>
-
-            {/* Gun handle - angled for ergonomics */}
-            <mesh position={[0, -0.15, 0]} rotation={[0, 0, -Math.PI / 12]} castShadow>
-              <boxGeometry args={[0.1, 0.25, 0.1]} />
-              <meshStandardMaterial color="#111111" roughness={0.8} />
-            </mesh>
-
-            {/* Gun details - sights */}
-            <mesh position={[0.15, 0.09, 0]} castShadow>
-              <boxGeometry args={[0.03, 0.03, 0.14]} />
-              <meshStandardMaterial color="#222222" />
-            </mesh>
-            <mesh position={[-0.1, 0.09, 0]} castShadow>
-              <boxGeometry args={[0.02, 0.02, 0.14]} />
-              <meshStandardMaterial color="#222222" />
-            </mesh>
-
-            {/* Trigger and guard */}
-            <mesh position={[0, -0.05, 0]} castShadow>
-              <boxGeometry args={[0.03, 0.05, 0.05]} />
-              <meshStandardMaterial color="#111111" />
-            </mesh>
-            <mesh position={[0.02, -0.03, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-              <torusGeometry args={[0.04, 0.008, 8, 12, Math.PI]} />
-              <meshStandardMaterial color="#222222" />
-            </mesh>
-
-            {/* Muzzle flash effects */}
-            <pointLight 
-              ref={muzzleFlashRef} 
-              position={[0.3, 0.02, 0]} 
-              intensity={5} 
-              distance={2} 
-              color="#ffaa55" 
-              visible={false}
+          {/* Torso */}
+          <mesh position={[0, 0.3, 0]} castShadow>
+            <boxGeometry args={[0.5, 0.8, 0.25]} />
+            <meshStandardMaterial 
+              color={health > 0 ? clothesColor : "#ff0000"} 
+              roughness={0.8}
+              opacity={health > 0 ? 1 : 0.7}
+              transparent={health <= 0}
             />
-            <mesh 
-              ref={muzzleFlashSpriteRef} 
-              position={[0.3, 0.02, 0]}
-              visible={false}
-            >
-              <sphereGeometry args={[0.06, 8, 8]} />
-              <meshBasicMaterial color="#ffaa55" transparent opacity={0.8} />
+          </mesh>
+
+          {/* Arms */}
+          <group ref={leftArmRef} position={[0.35, 0.5, 0]}>
+            <mesh position={[0.125, -0.25, 0]} castShadow>
+              <boxGeometry args={[0.15, 0.6, 0.15]} />
+              <meshStandardMaterial color={health > 0 ? clothesColor : "#ff0000"} 
+                roughness={0.7}
+                opacity={health > 0 ? 1 : 0.7}
+                transparent={health <= 0}
+              />
+            </mesh>
+            <mesh position={[0.125, -0.6, 0]} castShadow>
+              <boxGeometry args={[0.14, 0.1, 0.14]} />
+              <meshStandardMaterial color="#e6ccb3" />
             </mesh>
           </group>
 
-          {/* Equipment/accessories - adds character detail */}
-          {/* Small backpack */}
-          <mesh position={[0, 0.35, -0.2]} castShadow>
-            <boxGeometry args={[0.4, 0.4, 0.15]} />
-            <meshStandardMaterial color="#444444" roughness={0.9} />
-          </mesh>
-
-          {/* Shoulder strap */}
-          <mesh position={[0.2, 0.35, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
-            <boxGeometry args={[0.08, 0.45, 0.05]} />
-            <meshStandardMaterial color="#555555" roughness={0.9} />
-          </mesh>
-          <mesh position={[-0.2, 0.35, 0]} rotation={[0, 0, -Math.PI / 4]} castShadow>
-            <boxGeometry args={[0.08, 0.45, 0.05]} />
-            <meshStandardMaterial color="#555555" roughness={0.9} />
-          </mesh>
-
-          {/* Damage flash effect */}
-          {damageFlash && (
-            <mesh position={[0, 0, 0]} scale={[2, 3, 2]}>
-              <sphereGeometry args={[1, 16, 16]} />
-              <meshBasicMaterial color="#ff0000" transparent opacity={0.3} />
+          <group ref={rightArmRef} position={[-0.35, 0.5, 0]}>
+            <mesh position={[-0.125, -0.25, 0]} castShadow>
+              <boxGeometry args={[0.15, 0.6, 0.15]} />
+              <meshStandardMaterial color={health > 0 ? clothesColor : "#ff0000"} 
+                roughness={0.7}
+                opacity={health > 0 ? 1 : 0.7}
+                transparent={health <= 0}
+              />
             </mesh>
+            <mesh position={[-0.125, -0.6, 0]} castShadow>
+              <boxGeometry args={[0.14, 0.1, 0.14]} />
+              <meshStandardMaterial color="#e6ccb3" />
+            </mesh>
+          </group>
+
+          {/* Legs */}
+          <group ref={leftLegRef} position={[0.15, -0.3, 0]}>
+            <mesh position={[0, -0.4, 0]} castShadow>
+              <boxGeometry args={[0.18, 0.8, 0.18]} />
+              <meshStandardMaterial color={health > 0 ? pantsColor : "#ff0000"} 
+                roughness={0.7}
+                opacity={health > 0 ? 1 : 0.7}
+                transparent={health <= 0}
+              />
+            </mesh>
+            <mesh position={[0, -0.85, 0.05]} castShadow>
+              <boxGeometry args={[0.2, 0.1, 0.28]} />
+              <meshStandardMaterial color="#333" />
+            </mesh>
+          </group>
+
+          <group ref={rightLegRef} position={[-0.15, -0.3, 0]}>
+            <mesh position={[0, -0.4, 0]} castShadow>
+              <boxGeometry args={[0.18, 0.8, 0.18]} />
+              <meshStandardMaterial color={health > 0 ? pantsColor : "#ff0000"} 
+                roughness={0.7}
+                opacity={health > 0 ? 1 : 0.7}
+                transparent={health <= 0}
+              />
+            </mesh>
+            <mesh position={[0, -0.85, 0.05]} castShadow>
+              <boxGeometry args={[0.2, 0.1, 0.28]} />
+              <meshStandardMaterial color="#333" />
+            </mesh>
+          </group>
+
+          {/* Add accessories - stylish items that match the player colors */}
+          {/* Belt */}
+          <mesh position={[0, -0.1, 0]} castShadow>
+            <boxGeometry args={[0.52, 0.05, 0.27]} />
+            <meshStandardMaterial color={accentColor} metalness={0.5} roughness={0.5} />
+          </mesh>
+
+          {/* Scarf/collar */}
+          <mesh position={[0, 0.7, 0]} castShadow>
+            <torusGeometry args={[0.15, 0.05, 16, 32, Math.PI]} />
+            <meshStandardMaterial color={accentColor} roughness={0.5} />
+          </mesh>
+
+          {/* Name Tag as a floating sprite above character */}
+          {nameTagCanvas && (
+            <sprite 
+              ref={nameTagRef}
+              position={[0, 2.5, 0]} 
+              scale={[2, 0.6, 1]}
+            >
+              <spriteMaterial 
+                map={new THREE.CanvasTexture(nameTagCanvas)} 
+                transparent={true}
+                sizeAttenuation={true}
+              />
+            </sprite>
           )}
 
-          {/* Footstep effect when walking */}
-          {walkCycle && animationTime % 0.5 < 0.05 && (
-            <mesh position={[0, -1.5, 0]} rotation={[-Math.PI/2, 0, 0]}>
-              <ringGeometry args={[0.1, 0.2, 16]} />
-              <meshBasicMaterial color="#ffffff" transparent opacity={0.3} />
-            </mesh>
+          {/* Damage/death effect */}
+          {damageFlash && (
+            <pointLight 
+              color="#ff0000" 
+              intensity={2} 
+              distance={3} 
+              decay={2}
+            />
+          )}
+
+          {/* Ghost effect for dead players */}
+          {health <= 0 && (
+            <pointLight 
+              color="#ff0000" 
+              intensity={0.5} 
+              distance={2} 
+              decay={2}
+            />
           )}
         </group>
-      )}
-
-      {/* Player name tag with health bar (only for other players) */}
-      {!isMainPlayer && nameTagCanvas && (
-        <sprite
-          ref={nameTagRef}
-          position={[0, 2.5, 0]}
-          scale={[3, 1, 1]}
-        >
-          <spriteMaterial attach="material">
-            <canvasTexture attach="map" image={nameTagCanvas} />
-          </spriteMaterial>
-        </sprite>
       )}
     </group>
   );
 };
 
-// Helper function to create player name tag with health bar
+// Helper function to create name tag with health bar
 function createNameTag(name: string, health: number): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 80; // Taller to accommodate health bar
-  const context = canvas.getContext('2d');
-
-  if (context) {
-    // Get player-specific color for the border based on username
-    const playerSeed = name || 'default';
-    const hashCode = playerSeed.split('').reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc);
-    }, 0);
-
-    const h = Math.abs((hashCode) % 360);
-    const borderColor = `hsl(${h}, 70%, 60%)`;
-
-    // Clear canvas with transparent background
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw background with rounded corners
-    context.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    roundRect(context, 0, 0, canvas.width, canvas.height, 10, true, false);
-
-    // Add border with player-specific color
-    context.strokeStyle = borderColor;
-    context.lineWidth = 3;
-    roundRect(context, 0, 0, canvas.width, canvas.height, 10, false, true);
-
-    // Draw name text
-    context.font = 'bold 24px Arial, sans-serif';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-
-    // Text shadow for better visibility
-    context.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    context.shadowBlur = 4;
-    context.shadowOffsetX = 2;
-    context.shadowOffsetY = 2;
-
-    // Draw text
-    context.fillStyle = '#ffffff';
-    context.fillText(name, canvas.width / 2, canvas.height / 3);
-
-    // Reset shadow for health bar
-    context.shadowColor = 'transparent';
-    context.shadowBlur = 0;
-    context.shadowOffsetX = 0;
-    context.shadowOffsetY = 0;
-
-    // Draw health bar background
-    context.fillStyle = '#444444';
-    roundRect(context, 30, canvas.height - 30, canvas.width - 60, 15, 5, true, false);
-
-    // Draw health bar fill with color based on health level
-    const healthColor = health > 70 ? '#66cc66' : health > 30 ? '#cccc66' : '#cc6666';
-    context.fillStyle = healthColor;
-    roundRect(context, 30, canvas.height - 30, 
-      Math.max(0, (canvas.width - 60) * (health / 100)), 15, 5, true, false);
-  }
-
+  const width = 256;
+  const height = 64;
+  canvas.width = width;
+  canvas.height = height;
+  
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+  
+  // Clear background with transparent
+  ctx.clearRect(0, 0, width, height);
+  
+  // Draw background for name tag
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  roundRect(ctx, 5, 5, width - 10, height - 10, 10, true, false);
+  
+  // Draw text
+  ctx.font = '24px Arial';
+  ctx.fillStyle = 'white';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText(name, width / 2, 8);
+  
+  // Draw health bar background
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  roundRect(ctx, 20, 40, width - 40, 15, 5, true, false);
+  
+  // Draw health bar fill
+  const healthWidth = Math.max(0, (width - 40) * (health / 100));
+  const healthColor = health > 60 ? '#00ff00' : health > 30 ? '#ffff00' : '#ff0000';
+  ctx.fillStyle = healthColor;
+  roundRect(ctx, 20, 40, healthWidth, 15, 5, true, false);
+  
   return canvas;
 }
 
-// Helper function for drawing rounded rectangles
+// Helper function for drawing rounded rectangles on canvas
 function roundRect(
   ctx: CanvasRenderingContext2D, 
   x: number, 
@@ -842,7 +608,7 @@ function roundRect(
   radius: number, 
   fill: boolean, 
   stroke: boolean
-) {
+): void {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);
@@ -854,8 +620,12 @@ function roundRect(
   ctx.lineTo(x, y + radius);
   ctx.quadraticCurveTo(x, y, x + radius, y);
   ctx.closePath();
-  if (fill) ctx.fill();
-  if (stroke) ctx.stroke();
+  if (fill) {
+    ctx.fill();
+  }
+  if (stroke) {
+    ctx.stroke();
+  }
 }
 
 export default Player;

@@ -5,17 +5,11 @@ import { useGameControls } from '../lib/stores/useGameControls';
 
 // Create stable selector functions outside the component to prevent infinite loops
 const healthSelector = (state: any) => state.health;
-const ammoSelector = (state: any) => {
-  // Log every time ammo is accessed to verify it's being updated correctly
-  console.log("🎯 UI - Reading current ammo value:", state.ammo);
-  return state.ammo;
-};
 const scoreSelector = (state: any) => state.score;
 
 const UI = () => {
   // Get the latest player state using individual selectors 
   const health = usePlayer(healthSelector);
-  const ammo = usePlayer(ammoSelector);
   const score = usePlayer(scoreSelector);
   const { killFeed } = useMultiplayer();
   const { hasInteracted, isControlsLocked } = useGameControls();
@@ -71,7 +65,6 @@ const UI = () => {
     };
   }, []);
 
-
   
   // Create crosshair SVG
   const crosshairSvg = `
@@ -111,33 +104,6 @@ const UI = () => {
         </div>
       </div>
       
-      {/* Ammo counter with reload indicator */}
-      <div className="ammo-counter">
-        <div style={{ 
-          position: "absolute",
-          width: "100%", 
-          textAlign: "center", 
-          fontSize: "14px",
-          fontWeight: "bold",
-          color: "white",
-          textShadow: "0 0 3px black, 0 0 3px black, 0 0 3px black",
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100%",
-          zIndex: 10,
-          top: 0,
-          left: 0,
-          pointerEvents: "none"
-        }}>
-          <span style={{ color: ammo === 0 ? '#ff6b6b' : 'white' }}>
-            Ammo: <b>{ammo}</b>/10 {ammo === 0 ? "- EMPTY!" : ""}
-          </span>
-        </div>
-        {ammo === 0 && <div className="reload-indicator">Press R to reload!</div>}
-      </div>
-      
       {/* Crosshair */}
       <div 
         className="crosshair"
@@ -174,8 +140,6 @@ const UI = () => {
           <h3>Controls:</h3>
           <p>WASD or Arrow Keys - Move</p>
           <p>Mouse - Look around</p>
-          <p>Left Click - Shoot</p>
-          <p>R - Reload</p>
           <p>Space - Jump</p>
           <p>ESC - Toggle this guide</p>
           <p>Shift+D - Show debug info</p>
@@ -228,38 +192,8 @@ const UI = () => {
                 {isPointerLocked ? 'YES' : 'NO'}
               </span>
             </p>
-            <p style={{ margin: '5px 0' }}>
-              Current Ammo: <span style={{ color: ammo === 0 ? '#ff0000' : '#00ff00' }}>
-                {ammo}/10
-              </span>
-            </p>
           </div>
         </div>
-      )}
-
-      {/* Debug Shoot Button - only shown in debug mode */}
-      {showDebug && (
-        <button 
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            left: '20px',
-            padding: '10px',
-            background: 'red',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            zIndex: 10000,
-            cursor: 'pointer'
-          }}
-          onClick={() => {
-            console.log("🔫 DEBUG: Manual shoot button clicked");
-            // Force a shot
-            usePlayer.getState().shootBullet();
-          }}
-        >
-          FORCE SHOOT
-        </button>
       )}
     </div>,
     document.body

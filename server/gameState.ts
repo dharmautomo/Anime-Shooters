@@ -1,12 +1,10 @@
-import { PlayerData, BulletData } from '../shared/types';
+import { PlayerData } from '../shared/types';
 
 export class GameState {
   private players: Record<string, PlayerData>;
-  private bullets: Record<string, BulletData>;
   
   constructor() {
     this.players = {};
-    this.bullets = {};
   }
   
   // Player methods
@@ -78,24 +76,5 @@ export class GameState {
       player.position = { x: randomX, y: 1.6, z: randomZ };
       player.health = 100;
     }
-  }
-  
-  // Bullet methods
-  
-  public addBullet(bulletData: BulletData): void {
-    this.bullets[bulletData.id] = bulletData;
-    
-    // Set timeout to remove bullet after 3 seconds
-    setTimeout(() => {
-      this.removeBullet(bulletData.id);
-    }, 3000);
-  }
-  
-  public removeBullet(bulletId: string): void {
-    delete this.bullets[bulletId];
-  }
-  
-  public getBullets(): Record<string, BulletData> {
-    return this.bullets;
   }
 }

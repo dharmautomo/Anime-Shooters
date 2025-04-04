@@ -1,9 +1,6 @@
 import { create } from "zustand";
 import * as THREE from 'three';
 
-type SoundType = 'gunshot' | 'reload';
-type SoundFunction = (type: SoundType) => void;
-
 interface AudioState {
   backgroundMusic: HTMLAudioElement | null;
   hitSound: HTMLAudioElement | null;
@@ -14,13 +11,12 @@ interface AudioState {
   setBackgroundMusic: (music: HTMLAudioElement) => void;
   setHitSound: (sound: HTMLAudioElement) => void;
   setSuccessSound: (sound: HTMLAudioElement) => void;
-  setSoundFunction: (fn: SoundFunction) => void;
+  setSoundFunction: (fn: any) => void;
   
   // Control functions
   toggleMute: () => void;
   playHit: () => void;
   playSuccess: () => void;
-  playSound: (type: SoundType) => void;
   
   // Additional functions for positional audio
   createPositionalSound: (
@@ -39,27 +35,8 @@ export const useAudio = create<AudioState>((set, get) => ({
   setBackgroundMusic: (music) => set({ backgroundMusic: music }),
   setHitSound: (sound) => set({ hitSound: sound }),
   setSuccessSound: (sound) => set({ successSound: sound }),
-  setSoundFunction: (fn) => {
-    // Store the function in a private variable using closure
-    const playFunc = fn;
-    
-    // Set the playSound method to use this function
-    set((state) => ({
-      ...state,
-      playSound: (type: SoundType) => {
-        if (!state.isMuted) {
-          console.log(`Playing sound: ${type}`);
-          playFunc(type);
-        } else {
-          console.log(`Sound skipped (muted): ${type}`);
-        }
-      }
-    }));
-  },
-  
-  // Default placeholder for playSound until setSoundFunction is called
-  playSound: (type: SoundType) => {
-    console.log(`No sound function set yet for: ${type}`);
+  setSoundFunction: () => {
+    // Empty function - no sound functions needed
   },
   
   toggleMute: () => {
@@ -74,49 +51,11 @@ export const useAudio = create<AudioState>((set, get) => ({
   },
   
   playHit: () => {
-    const { hitSound, isMuted } = get();
-    if (hitSound) {
-      // If sound is muted, don't play anything
-      if (isMuted) {
-        console.log("Hit sound skipped (muted)");
-        return;
-      }
-      
-      // Clone the sound to allow overlapping playback
-      const soundClone = hitSound.cloneNode() as HTMLAudioElement;
-      soundClone.volume = 0.3;
-      
-      // Add event logging to debug audio issues
-      console.log("Playing gunshot sound");
-      
-      // Reset to beginning in case it was partially played
-      soundClone.currentTime = 0;
-      
-      // Play with error handling
-      soundClone.play()
-        .then(() => console.log("Gunshot sound started playing"))
-        .catch(error => {
-          console.log("Hit sound play prevented:", error);
-        });
-    } else {
-      console.log("No hit sound loaded yet");
-    }
+    // No hit sound needed
   },
   
   playSuccess: () => {
-    const { successSound, isMuted } = get();
-    if (successSound) {
-      // If sound is muted, don't play anything
-      if (isMuted) {
-        console.log("Success sound skipped (muted)");
-        return;
-      }
-      
-      successSound.currentTime = 0;
-      successSound.play().catch(error => {
-        console.log("Success sound play prevented:", error);
-      });
-    }
+    // No success sound needed
   },
   
   // Create positional audio for 3D sound effects

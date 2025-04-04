@@ -11,22 +11,6 @@ export interface PlayerData {
   health: number;
 }
 
-// Bullet data structure
-export interface BulletData {
-  id: string;
-  position: {
-    x: number;
-    y: number;
-    z: number;
-  };
-  velocity: {
-    x: number;
-    y: number;
-    z: number;
-  };
-  owner: string;
-}
-
 // Kill feed item structure
 export interface KillFeedItem {
   killer: string;

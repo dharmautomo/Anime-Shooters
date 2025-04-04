@@ -4,8 +4,6 @@ import * as THREE from 'three';
 import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
 import Player from './Player';
 import World from './World';
-import Weapon from './Weapon';
-import Bullet from './Bullet';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
@@ -29,27 +27,20 @@ const Game = ({ username }: GameProps) => {
     left: false,
     right: false,
   });
-  const [isShooting, setIsShooting] = useState(false);
   const [touchStartPos, setTouchStartPos] = useState<{x: number, y: number} | null>(null);
   const lastTouchUpdateTime = useRef(0);
   const touchRotationSpeed = 0.05;
   
   const { 
-    otherPlayers, 
-    bullets,
-    addBullet,
-    removeBullet
+    otherPlayers
   } = useMultiplayer();
   const { 
     position, 
     rotation,
     health,
-    ammo,
     score,
     updatePosition, 
     updateRotation,
-    shootBullet,
-    reloadAmmo,
     resetPlayer
   } = usePlayer();
   const { 
@@ -58,7 +49,6 @@ const Game = ({ username }: GameProps) => {
     isControlsLocked 
   } = useGameControls();
   
-  // Get audio function
   const { playSound } = useAudio();
 
   // Initialize player controls
@@ -103,7 +93,6 @@ const Game = ({ username }: GameProps) => {
     };
   }, [camera, resetPlayer, setControlsLocked]);
   
-  // Attempt to lock controls when user has interacted
   // Set up mobile touch controls
   useEffect(() => {
     if (!isMobile) return;
@@ -157,48 +146,8 @@ const Game = ({ username }: GameProps) => {
       const backwardBtn = createButton('mobile-backward', '↓', '120px', '60px');
       controlsContainer.appendChild(backwardBtn);
       
-      // Create shoot button (right side of screen)
-      const shootBtn = document.createElement('div');
-      shootBtn.id = 'mobile-shoot';
-      shootBtn.innerText = '🔫';
-      shootBtn.style.position = 'fixed';
-      shootBtn.style.bottom = '20px';
-      shootBtn.style.right = '20px';
-      shootBtn.style.width = '80px';
-      shootBtn.style.height = '80px';
-      shootBtn.style.backgroundColor = 'rgba(255,0,0,0.3)';
-      shootBtn.style.borderRadius = '40px';
-      shootBtn.style.display = 'flex';
-      shootBtn.style.justifyContent = 'center';
-      shootBtn.style.alignItems = 'center';
-      shootBtn.style.fontSize = '40px';
-      shootBtn.style.color = 'white';
-      shootBtn.style.userSelect = 'none';
-      shootBtn.style.touchAction = 'manipulation';
-      
-      // Create reload button (above shoot button)
-      const reloadBtn = document.createElement('div');
-      reloadBtn.id = 'mobile-reload';
-      reloadBtn.innerText = '🔄';
-      reloadBtn.style.position = 'fixed';
-      reloadBtn.style.bottom = '110px';
-      reloadBtn.style.right = '20px';
-      reloadBtn.style.width = '60px';
-      reloadBtn.style.height = '60px';
-      reloadBtn.style.backgroundColor = 'rgba(0,255,0,0.3)';
-      reloadBtn.style.borderRadius = '30px';
-      reloadBtn.style.display = 'flex';
-      reloadBtn.style.justifyContent = 'center';
-      reloadBtn.style.alignItems = 'center';
-      reloadBtn.style.fontSize = '30px';
-      reloadBtn.style.color = 'white';
-      reloadBtn.style.userSelect = 'none';
-      reloadBtn.style.touchAction = 'manipulation';
-      
       // Add the controls to the page
       document.body.appendChild(controlsContainer);
-      document.body.appendChild(shootBtn);
-      document.body.appendChild(reloadBtn);
       
       // Set up touch event handlers
       const setupTouchHandler = (element: HTMLElement, controlKey: keyof typeof touchControls, start: () => void, end: () => void) => {
@@ -241,23 +190,6 @@ const Game = ({ username }: GameProps) => {
         () => setTouchControls(prev => ({ ...prev, right: true })),
         () => setTouchControls(prev => ({ ...prev, right: false }))
       );
-      
-      // Setup shoot and reload buttons
-      shootBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        setIsShooting(true);
-        shootBullet();
-      });
-      
-      shootBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        setIsShooting(false);
-      });
-      
-      reloadBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (ammo < 10) reloadAmmo();
-      });
       
       // Setup screen touch for camera rotation
       document.addEventListener('touchstart', (e) => {
@@ -304,14 +236,9 @@ const Game = ({ username }: GameProps) => {
     return () => {
       // Clean up mobile controls on unmount
       const controlsContainer = document.getElementById('mobile-controls');
-      const shootBtn = document.getElementById('mobile-shoot');
-      const reloadBtn = document.getElementById('mobile-reload');
-      
       if (controlsContainer) document.body.removeChild(controlsContainer);
-      if (shootBtn) document.body.removeChild(shootBtn);
-      if (reloadBtn) document.body.removeChild(reloadBtn);
     };
-  }, [isMobile, hasInteracted, isControlsLocked, shootBullet, ammo, reloadAmmo, rotation, updateRotation]);
+  }, [isMobile, hasInteracted, isControlsLocked, rotation, updateRotation]);
   
   // Handle desktop pointer lock
   useEffect(() => {
@@ -386,64 +313,6 @@ const Game = ({ username }: GameProps) => {
   // Track the last time we sent a position update to the server
   const lastUpdateRef = useRef<number>(0);
   
-  // Keyboard event handling for reloading
-  useEffect(() => {
-    // Track if we're currently in a reload animation to prevent multiple reload calls
-    let isCurrentlyReloading = false;
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // 'R' key for reloading
-      if (e.code === 'KeyR' && !isCurrentlyReloading && ammo < 10 && isControlsLocked && hasInteracted) {
-        console.log('Reloading weapon - Current ammo:', ammo);
-        
-        // Set reloading flag
-        isCurrentlyReloading = true;
-        
-        // Play reload sound
-        try {
-          // Use the imported audio function
-          setTimeout(() => {
-            playSound('reload');
-          }, 100);
-        } catch (error) {
-          console.error('Failed to play reload sound:', error);
-        }
-        
-        // Actual reload happens after a delay to match animation
-        setTimeout(() => {
-          // Use the reloadAmmo function from the player store
-          reloadAmmo();
-          console.log('Weapon reloaded - New ammo count:', usePlayer.getState().ammo);
-          
-          // Clear reloading state after complete
-          setTimeout(() => {
-            isCurrentlyReloading = false;
-          }, 500);
-        }, 750);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [reloadAmmo, ammo, isControlsLocked, hasInteracted, playSound]);
-  
-  // Space key as backup shooting method
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Use Space as a backup shooting key
-      if (e.code === 'Space' && isControlsLocked && hasInteracted) {
-        console.log("SPACE key shooting attempt");
-        shootBullet();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [shootBullet, isControlsLocked, hasInteracted]);
-
   // Update player position and camera
   useFrame((state, delta) => {
     if (!hasInteracted) return;
@@ -484,12 +353,6 @@ const Game = ({ username }: GameProps) => {
         right: touchControls.right,
         jump: false // Mobile doesn't have jump yet
       };
-      
-      // Auto-shoot if shoot button is being held and we're not at zero ammo
-      if (isShooting && ammo > 0 && Date.now() - lastTouchUpdateTime.current > 500) {
-        lastTouchUpdateTime.current = Date.now();
-        shootBullet();
-      }
     } else {
       // Use keyboard controls on desktop
       controlInput = getKeys() as KeyMapping;
@@ -541,34 +404,6 @@ const Game = ({ username }: GameProps) => {
     }
   });
 
-  // Add test function for shooting from console
-  useEffect(() => {
-    // Create a global reference to the shootBullet function
-    (window as any).testShoot = () => {
-      console.log("Test shoot function called");
-      try {
-        shootBullet();
-        return "Shoot function called successfully";
-      } catch (e) {
-        console.error("Error in test shoot:", e);
-        return "Error: " + (e as Error).message;
-      }
-    };
-    
-    // Also create a direct reference to the shootBullet function itself
-    (window as any).shootBullet = shootBullet;
-    
-    // Let the player know these functions are available
-    console.log("TEST FUNCTIONS AVAILABLE:");
-    console.log("1. Call window.testShoot() in console to test shooting with error handling");
-    console.log("2. Call window.shootBullet() in console for direct shooting");
-    
-    return () => {
-      delete (window as any).testShoot;
-      delete (window as any).shootBullet;
-    };
-  }, [shootBullet]);
-
   return (
     <>
       {/* Only use PointerLockControls on desktop */}
@@ -597,28 +432,6 @@ const Game = ({ username }: GameProps) => {
         />
       ))}
       
-      {/* Render active bullets - optimize for mobile */}
-      {bullets.slice(0, isMobile ? 10 : 20).map((bullet) => (
-        <Bullet 
-          key={bullet.id}
-          id={bullet.id} // Pass bullet ID explicitly
-          position={bullet.position}
-          velocity={bullet.velocity}
-          owner={bullet.owner}
-        />
-      ))}
-      
-      {/* First-person weapon - positioned to match the reference image */}
-      <Weapon 
-        position={[0.35, -0.25, -0.4]} 
-        rotation={[0, Math.PI, 0]}
-        ammo={ammo}
-        onShoot={() => {
-          // Call the shootBullet function directly
-          shootBullet();
-        }}
-      />
-
       {/* Add mobile game stats text UI */}
       {isMobile && (
         <mesh position={[0, 0, -1]} renderOrder={1000}>
@@ -626,7 +439,7 @@ const Game = ({ username }: GameProps) => {
             <spriteMaterial transparent depthTest={false}>
               <canvasTexture attach="map" args={[
                 (() => {
-                  // Create a canvas to show ammo and health stats
+                  // Create a canvas to show player stats
                   const canvas = document.createElement('canvas');
                   canvas.width = 256;
                   canvas.height = 128;
@@ -636,7 +449,7 @@ const Game = ({ username }: GameProps) => {
                   ctx.font = '24px Arial';
                   ctx.fillStyle = 'white';
                   ctx.textAlign = 'center';
-                  ctx.fillText(`Ammo: ${ammo}/10 | Health: ${health}`, canvas.width/2, canvas.height/2);
+                  ctx.fillText(`Health: ${health}`, canvas.width/2, canvas.height/2);
                   return canvas;
                 })()
               ]} />

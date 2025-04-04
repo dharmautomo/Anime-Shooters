@@ -17,8 +17,6 @@ export const Controls = {
   left: 'left',
   right: 'right',
   jump: 'jump',
-  shoot: 'shoot',
-  reload: 'reload',
 } as const;
 
 // Type for Controls
@@ -31,8 +29,6 @@ const keyMap = [
   { name: Controls.left, keys: ['ArrowLeft', 'KeyA'] },
   { name: Controls.right, keys: ['ArrowRight', 'KeyD'] },
   { name: Controls.jump, keys: ['Space'] },
-  { name: Controls.shoot, keys: ['click', 'KeyJ'] }, // Added J key as an alternative to mouse click
-  { name: Controls.reload, keys: ['KeyR'] },
 ];
 
 // Helper function to parse URL parameters
@@ -97,29 +93,7 @@ function App() {
     };
   }, []);
   
-  // Track J key specifically for better shooting diagnostics
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'KeyJ') {
-        console.log("J KEY PRESSED - Direct keyboard shoot trigger");
-        document.body.setAttribute('data-pressed-j', 'true');
-      }
-    };
-    
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'KeyJ') {
-        document.body.setAttribute('data-pressed-j', 'false');
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
+  // No key tracking needed
 
   // Add cursor-hidden class to body when logged in
   useEffect(() => {
@@ -144,12 +118,6 @@ function App() {
       (window as any).useMultiplayer = useMultiplayer;
       
       // Add debug helper functions
-      (window as any).getBullets = () => {
-        const bullets = useMultiplayer.getState().bullets;
-        console.log("Current bullets:", bullets);
-        return bullets;
-      };
-      
       (window as any).getGameState = () => {
         const playerState = usePlayer.getState();
         const multiplayerState = useMultiplayer.getState();
@@ -169,15 +137,11 @@ function App() {
       console.log("Debug tools available in console:");
       console.log("- usePlayer: Access player store");
       console.log("- useMultiplayer: Access multiplayer store");
-      console.log("- getBullets(): Get current bullets");
       console.log("- getGameState(): Get all game state");
-      console.log("- window.testShoot(): Test shooting with error handling");
-      console.log("- window.shootBullet(): Direct shooting");
     }
     
     return () => {
       if (typeof window !== 'undefined') {
-        delete (window as any).getBullets;
         delete (window as any).getGameState;
       }
     };
@@ -204,15 +168,6 @@ function App() {
             }}
             onClick={(e) => {
               console.log("Canvas clicked directly");
-              // Get game state
-              const { hasInteracted, isControlsLocked } = useGameControls.getState();
-              const { shootBullet } = usePlayer.getState();
-              
-              // Attempt direct shot if pointer is locked
-              if (document.pointerLockElement && hasInteracted && isControlsLocked) {
-                console.log("Direct shooting attempt from Canvas click");
-                shootBullet();
-              }
               
               // Try to lock pointer if not already locked
               if (!document.pointerLockElement) {

@@ -9,7 +9,6 @@ interface PlayerState {
   position: THREE.Vector3;
   rotation: number;
   health: number;
-  ammo: number;
   score: number;
   isAlive: boolean;
 }
@@ -21,17 +20,8 @@ interface PlayerActions {
   updateRotation: (rotation: number) => void;
   takeDamage: (amount: number) => void;
   addScore: (points: number) => void;
-  shootBullet: () => boolean;
-  reloadAmmo: () => void;
   respawn: () => void;
   resetPlayer: () => void;
-}
-
-interface BulletData {
-  id: string;
-  position: THREE.Vector3;
-  velocity: THREE.Vector3;
-  owner: string;
 }
 
 interface PlayerData {
@@ -51,16 +41,12 @@ interface MultiplayerState {
   socket: Socket | null;
   connected: boolean;
   otherPlayers: Record<string, PlayerData>;
-  bullets: BulletData[];
   killFeed: KillFeedItem[];
 }
 
 interface MultiplayerActions {
   initializeSocket: (username: string) => void;
   updatePlayerPosition: (position: THREE.Vector3, rotation: number) => void;
-  addBullet: (position: THREE.Vector3, direction: THREE.Vector3, owner: string) => string;
-  removeBullet: (id: string) => void;
-  checkBulletCollision: (bulletPosition: THREE.Vector3, bulletOwner: string) => boolean;
   disconnect: () => void;
 }
 
@@ -85,7 +71,6 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
   position: new THREE.Vector3(0, 1.6, 10),
   rotation: 0,
   health: 100,
-  ammo: 10,
   score: 0,
   isAlive: true,
   
@@ -124,78 +109,6 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
     set((state) => ({ score: state.score + points }));
   },
   
-  shootBullet: () => {
-    // Get the current state
-    const { ammo, isAlive, position, playerId } = get();
-    
-    console.log("🔫 STORE: shootBullet called at", new Date().toISOString());
-    console.log("🔫 STORE: Current ammo:", ammo, "isAlive:", isAlive);
-    
-    // VALIDATION: Check if we're allowed to shoot
-    if (ammo <= 0) {
-      console.log("🔫❌ STORE: Cannot shoot - no ammo available");
-      return false;
-    }
-    
-    if (!isAlive) {
-      console.log("🔫❌ STORE: Cannot shoot - player is not alive");
-      return false;
-    }
-    
-    try {
-      // First decrement ammo - this should happen whether or not bullet creation succeeds
-      set({ ammo: ammo - 1 });
-      console.log('🔫 STORE: Ammo decremented to:', get().ammo);
-      
-      // Get camera for bullet direction
-      const canvas = document.querySelector('canvas');
-      const camera = canvas && (canvas as any)?.__r3f?.root?.camera;
-      
-      if (!camera) {
-        console.error("🔫❌ STORE: Failed to shoot - camera not found!");
-        return false;
-      }
-      
-      // Calculate bullet direction from camera
-      const direction = new THREE.Vector3(0, 0, -1);
-      direction.applyQuaternion(camera.quaternion);
-      direction.normalize();
-      
-      // Set bullet spawn position (slightly in front of camera)
-      const bulletPosition = position.clone().add(direction.clone().multiplyScalar(0.5));
-      bulletPosition.y += 1.5; // Eye height
-      
-      // Access multiplayer store through context
-      const multiplayerStore = storeContext.multiplayerStore;
-      if (!multiplayerStore) {
-        console.error("🔫❌ STORE: Multiplayer store not initialized!");
-        return false;
-      }
-      
-      // Ensure we have the player ID before creating a bullet
-      if (!playerId) {
-        console.error("🔫❌ STORE: Failed to shoot - player ID not set!");
-        return false;
-      }
-      
-      try {
-        const bulletId = multiplayerStore.addBullet(bulletPosition, direction, playerId);
-        console.log('🔫✅ STORE: Created bullet with ID:', bulletId);
-        return true;
-      } catch (bulletError) {
-        console.error("🔫❌ STORE: Error creating bullet:", bulletError);
-        return false;
-      }
-    } catch (error) {
-      console.error("🔫❌ STORE: Error in shootBullet:", error);
-      return false;
-    }
-  },
-  
-  reloadAmmo: () => {
-    set({ ammo: 10 });
-  },
-  
   respawn: () => {
     const randomX = (Math.random() - 0.5) * 40;
     const randomZ = (Math.random() - 0.5) * 40;
@@ -203,7 +116,6 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
     set({
       position: new THREE.Vector3(randomX, 1.6, randomZ),
       health: 100,
-      ammo: 10,
       isAlive: true
     });
   },
@@ -213,7 +125,6 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
       position: new THREE.Vector3(0, 1.6, 10),
       rotation: 0,
       health: 100,
-      ammo: 10,
       score: 0,
       isAlive: true
     });
@@ -225,7 +136,6 @@ export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
   socket: null,
   connected: false,
   otherPlayers: {},
-  bullets: [],
   killFeed: [],
   
   // Actions
@@ -424,48 +334,6 @@ export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
       }
     });
     
-    // Handle bullet creation
-    socket.on('bulletCreated', (bulletData: any) => {
-      console.log(`Bullet created: ${bulletData.id}`);
-      
-      // Skip bullets created by this player (we already have them)
-      if (bulletData.owner === socket.id) {
-        console.log('Skipping local bullet');
-        return;
-      }
-      
-      // Add bullet to local state
-      set((state) => ({
-        bullets: [
-          ...state.bullets,
-          {
-            id: bulletData.id,
-            position: new THREE.Vector3(
-              bulletData.position.x,
-              bulletData.position.y,
-              bulletData.position.z
-            ),
-            velocity: new THREE.Vector3(
-              bulletData.velocity.x,
-              bulletData.velocity.y,
-              bulletData.velocity.z
-            ),
-            owner: bulletData.owner,
-          },
-        ],
-      }));
-    });
-    
-    // Handle bullet removal
-    socket.on('bulletRemoved', (bulletId: string) => {
-      console.log(`Bullet removed: ${bulletId}`);
-      
-      // Remove bullet from local state
-      set((state) => ({
-        bullets: state.bullets.filter((bullet) => bullet.id !== bulletId),
-      }));
-    });
-    
     // Handle kill feed updates
     socket.on('playerKilled', (data: { killer: string, victim: string }) => {
       console.log(`Player killed: ${data.victim} by ${data.killer}`);
@@ -517,122 +385,11 @@ export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
     }
   },
   
-  addBullet: (position: THREE.Vector3, direction: THREE.Vector3, owner: string) => {
-    const { socket } = get();
-    const bulletId = `bullet-${Math.random().toString(36).substring(2, 9)}`;
-    
-    console.log(`Creating bullet ${bulletId} at position:`, position);
-    
-    // Normalize direction vector
-    const normalizedDirection = direction.clone().normalize();
-    
-    // Add bullet locally
-    set((state) => ({
-      bullets: [
-        ...state.bullets,
-        {
-          id: bulletId,
-          position: position.clone(),
-          velocity: normalizedDirection.clone(),
-          owner,
-        },
-      ],
-    }));
-    
-    // Send to server
-    if (socket && socket.connected) {
-      socket.emit('createBullet', {
-        id: bulletId,
-        position: { x: position.x, y: position.y, z: position.z },
-        velocity: { 
-          x: normalizedDirection.x, 
-          y: normalizedDirection.y, 
-          z: normalizedDirection.z 
-        },
-        owner,
-      });
-    }
-    
-    return bulletId;
-  },
-  
-  removeBullet: (id: string) => {
-    const { socket } = get();
-    
-    // Remove locally
-    set((state) => ({
-      bullets: state.bullets.filter((bullet) => bullet.id !== id),
-    }));
-    
-    // Send to server
-    if (socket && socket.connected) {
-      socket.emit('removeBullet', id);
-    }
-  },
-  
-  checkBulletCollision: (bulletPosition: THREE.Vector3, bulletOwner: string) => {
-    const { socket, otherPlayers } = get();
-    
-    // Get player store from context
-    const playerStore = storeContext.playerStore;
-    if (!playerStore) {
-      console.error("checkBulletCollision error: Player store not initialized");
-      return false;
-    }
-    
-    const { playerId, takeDamage } = playerStore;
-    
-    // Check collision with other players
-    for (const [id, player] of Object.entries(otherPlayers)) {
-      if (player.health <= 0) continue; // Skip dead players
-      
-      // Use a larger collision radius for better hit detection
-      const distance = bulletPosition.distanceTo(player.position);
-      
-      // Use 1.5 units for a more generous hit box
-      if (distance < 1.5) {
-        // Hit another player
-        console.log(`COLLISION DETECTED with player ${id}! Emitting hitPlayer event`);
-        if (socket && socket.connected) {
-          socket.emit('hitPlayer', {
-            playerId: id,
-            damage: 25,
-            shooterId: bulletOwner,
-          });
-        }
-        return true;
-      }
-    }
-    
-    // Check collision with main player (if bullet isn't from main player)
-    if (bulletOwner !== playerId) {
-      const playerPosition = playerStore.position;
-      const distance = bulletPosition.distanceTo(playerPosition);
-      
-      if (distance < 1.5 && playerStore.health > 0) {
-        // Apply damage locally
-        console.log("COLLISION with main player! Taking damage: 25");
-        takeDamage(25);
-        
-        // Notify server
-        if (socket && socket.connected) {
-          socket.emit('hitPlayer', {
-            playerId,
-            damage: 25,
-            shooterId: bulletOwner,
-          });
-        }
-        return true;
-      }
-    }
-    
-    return false;
-  },
-  
   disconnect: () => {
     const { socket } = get();
     
     if (socket) {
+      console.log('Disconnecting from server');
       socket.disconnect();
       set({ socket: null, connected: false });
     }
@@ -664,4 +421,9 @@ refreshStoreReferences();
 // Export this function so it can be called from other components if needed
 export { refreshStoreReferences };
 
-console.log("✅ Game stores initialized successfully");
+// Make stores globally available for debugging
+if (typeof window !== 'undefined') {
+  (window as any).refreshStoreReferences = refreshStoreReferences;
+}
+
+console.log('Stores initialized');

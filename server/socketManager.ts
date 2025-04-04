@@ -1,7 +1,7 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import { GameState } from './gameState';
-import { PlayerData, BulletData } from '../shared/types';
+import { PlayerData } from '../shared/types';
 
 export class SocketManager {
   private io: Server;
@@ -55,24 +55,6 @@ export class SocketManager {
           health: data.health,
           username: data.username || this.gameState.getPlayerUsername(socket.id)
         });
-      });
-      
-      // Handle bullet creation
-      socket.on('createBullet', (bulletData: BulletData) => {
-        // Add bullet to game state
-        this.gameState.addBullet(bulletData);
-        
-        // Broadcast bullet creation to all players (including sender)
-        this.io.emit('bulletCreated', bulletData);
-      });
-      
-      // Handle bullet removal
-      socket.on('removeBullet', (bulletId: string) => {
-        // Remove bullet from game state
-        this.gameState.removeBullet(bulletId);
-        
-        // Broadcast bullet removal to all players
-        this.io.emit('bulletRemoved', bulletId);
       });
       
       // Handle player hits
