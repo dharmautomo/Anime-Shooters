@@ -101,21 +101,32 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
   
   takeDamage: (amount: number) => {
     set((state) => {
+      // Calculate new health
       const newHealth = Math.max(0, state.health - amount);
+      const wasAlive = state.isAlive;
       const isAlive = newHealth > 0;
+      
+      // Check if player just died (was alive before, now dead)
+      if (wasAlive && !isAlive) {
+        console.log('Player died! Scheduling respawn in 3 seconds...');
+        
+        // Play death sound
+        const deathSound = new Audio('/sounds/death.mp3');
+        deathSound.volume = 0.7;
+        deathSound.play().catch(e => console.error("Error playing death sound:", e));
+        
+        // Schedule respawn
+        setTimeout(() => {
+          console.log('Respawning player...');
+          get().respawn();
+        }, 3000);
+      }
       
       return { 
         health: newHealth, 
         isAlive 
       };
     });
-    
-    // If player died, schedule respawn
-    if (get().health <= 0) {
-      setTimeout(() => {
-        get().respawn();
-      }, 3000);
-    }
   },
   
   addScore: (points: number) => {
@@ -123,14 +134,35 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
   },
   
   respawn: () => {
+    // Generate a random position for respawn
     const randomX = (Math.random() - 0.5) * 40;
     const randomZ = (Math.random() - 0.5) * 40;
+    const newPosition = new THREE.Vector3(randomX, 1.6, randomZ);
     
+    // Play respawn sound
+    const respawnSound = new Audio('/sounds/respawn.mp3');
+    respawnSound.volume = 0.5;
+    respawnSound.play().catch(e => console.error("Error playing respawn sound:", e));
+    
+    // Update local player state
     set({
-      position: new THREE.Vector3(randomX, 1.6, randomZ),
+      position: newPosition,
       health: 100,
       isAlive: true
     });
+    
+    // Notify server about respawn
+    const multiplayerStore = storeContext.multiplayerStore;
+    if (multiplayerStore?.socket && multiplayerStore.socket.connected) {
+      console.log('Notifying server about respawn');
+      multiplayerStore.socket.emit('playerRespawn', {
+        position: { 
+          x: newPosition.x, 
+          y: newPosition.y, 
+          z: newPosition.z 
+        }
+      });
+    }
   },
   
   resetPlayer: () => {

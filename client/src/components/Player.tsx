@@ -686,12 +686,66 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
 
           {/* Ghost effect for dead players */}
           {health <= 0 && (
-            <pointLight 
-              color="#ff0000" 
-              intensity={0.5} 
-              distance={2} 
-              decay={2}
-            />
+            <>
+              {/* Pulsing ghost light */}
+              <pointLight 
+                color="#00aaff" 
+                intensity={2 + Math.sin(animationTime * 4) * 1} 
+                distance={5}
+                decay={2}
+              />
+              
+              {/* Ghost effect particles */}
+              <group>
+                {[...Array(5)].map((_, i) => (
+                  <mesh 
+                    key={i}
+                    position={[
+                      Math.sin(animationTime * (2 + i * 0.2)) * 0.3,
+                      1 + Math.cos(animationTime * (1.5 + i * 0.2)) * 0.2,
+                      Math.sin(animationTime * (1 + i * 0.2) + 2) * 0.3
+                    ]}
+                  >
+                    <sphereGeometry args={[0.1, 8, 8]} />
+                    <meshStandardMaterial 
+                      color="#00ccff"
+                      emissive="#0088ff"
+                      emissiveIntensity={1.5}
+                      transparent={true}
+                      opacity={0.7 + Math.sin(animationTime * 3 + i) * 0.3}
+                    />
+                  </mesh>
+                ))}
+              </group>
+              
+              {/* Death message above player */}
+              <sprite position={[0, 3, 0]} scale={[3, 0.8, 1]}>
+                <spriteMaterial 
+                  transparent={true}
+                  map={(() => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 256;
+                    canvas.height = 64;
+                    const ctx = canvas.getContext('2d')!;
+                    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.font = 'bold 32px Arial';
+                    ctx.fillStyle = '#ff3333';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('RESPAWNING...', canvas.width/2, canvas.height/2);
+                    return new THREE.CanvasTexture(canvas);
+                  })()}
+                />
+              </sprite>
+              
+              <pointLight 
+                color="#0066ff" 
+                intensity={0.5} 
+                distance={2} 
+                decay={2}
+              />
+            </>
           )}
         </group>
       )}

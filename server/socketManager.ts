@@ -139,6 +139,36 @@ export class SocketManager {
         }
       });
       
+      // Handle player respawn request
+      socket.on('playerRespawn', (data: { position: { x: number, y: number, z: number } }) => {
+        console.log(`Player ${socket.id} requested respawn at position:`, data.position);
+        
+        // Get current player data
+        const player = this.gameState.getPlayer(socket.id);
+        if (!player) {
+          console.error(`Player ${socket.id} not found in game state during respawn request`);
+          return;
+        }
+        
+        // Update player in game state with respawn data
+        this.gameState.updatePlayer(socket.id, {
+          position: data.position,
+          health: 100, // Reset health to full
+          // Keep other properties unchanged
+          rotation: player.rotation,
+          username: player.username
+        });
+        
+        // Get updated player data
+        const updatedPlayer = this.gameState.getPlayer(socket.id);
+        
+        if (updatedPlayer) {
+          console.log(`Player ${socket.id} respawned with health ${updatedPlayer.health}`);
+          // Broadcast the respawned player to all clients
+          this.io.emit('playerUpdated', updatedPlayer);
+        }
+      });
+      
       // Handle disconnection
       socket.on('disconnect', () => {
         console.log(`Player disconnected: ${socket.id}`);

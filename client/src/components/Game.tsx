@@ -112,13 +112,13 @@ const Game = ({ username }: GameProps) => {
     console.log(`Initial remote bullets count: ${initialCount}`);
     
     // Subscribe to changes in the multiplayer store's bullets array
-    const unsubscribe = useMultiplayer.subscribe(
-      state => state.bullets.length,
-      (count, prevCount) => {
-        console.log(`Remote bullets count changed: ${prevCount} -> ${count}`);
-        // The component will re-render when count changes
+    const unsubscribe = useMultiplayer.subscribe((state) => {
+      // This will run whenever the store updates
+      const bulletCount = state.bullets.length;
+      if (bulletCount > 0) {
+        console.log(`Remote bullets count: ${bulletCount}`);
       }
-    );
+    });
     
     return () => unsubscribe();
   }, []);
@@ -345,6 +345,15 @@ const Game = ({ username }: GameProps) => {
   
   // Function to create a new laser bullet
   const shootLaser = () => {
+    // Get player state directly from store to ensure we have latest health
+    const playerStore = usePlayer.getState();
+    
+    // Don't allow shooting when player is dead
+    if (playerStore.health <= 0) {
+      console.log('Cannot shoot while dead');
+      return;
+    }
+    
     // Create direction vector based on camera direction
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
@@ -442,6 +451,107 @@ const Game = ({ username }: GameProps) => {
     return () => clearInterval(cleanupInterval);
   }, []);
   
+  // Check for bullet collisions with players
+  useEffect(() => {
+    // Collision detection interval
+    const collisionInterval = setInterval(() => {
+      // Get all bullets
+      const allBullets = [
+        ...bullets, // Local bullets
+        ...useMultiplayer.getState().bullets // Remote bullets
+      ];
+      
+      // Skip if no bullets
+      if (allBullets.length === 0) return;
+      
+      // Get other players for collision checking
+      const otherPlayersList = Object.values(otherPlayers);
+      
+      // Get multiplayer and player stores
+      const multiplayerStore = useMultiplayer.getState();
+      const playerStore = usePlayer.getState();
+      const socket = multiplayerStore.socket;
+      
+      // Check each bullet for collisions
+      allBullets.forEach(bullet => {
+        // Skip self-collisions (player can't be hit by their own bullets)
+        if (bullet.owner === playerId) {
+          // Check if bullet hits other players
+          otherPlayersList.forEach(otherPlayer => {
+            // Simple sphere collision detection
+            const bulletPos = bullet.position;
+            const playerPos = otherPlayer.position;
+            
+            // Distance between bullet and player center
+            const distance = bulletPos.distanceTo(playerPos);
+            
+            // Hit if distance is less than player "radius" (1.0 units)
+            const hitRadius = 1.0;
+            if (distance < hitRadius) {
+              console.log(`Bullet ${bullet.id} hit player ${otherPlayer.id}!`);
+              
+              // Remove the bullet on hit
+              if (bullet.owner === playerId) {
+                // Local bullet - remove from local state
+                setBullets(prev => prev.filter(b => b.id !== bullet.id));
+                
+                // Also remove from multiplayer store
+                multiplayerStore.removeBullet(bullet.id);
+              } else {
+                // Remote bullet - just remove from multiplayer store
+                multiplayerStore.removeBullet(bullet.id);
+              }
+              
+              // Send hit event to server
+              if (socket && socket.connected) {
+                socket.emit('hitPlayer', {
+                  playerId: otherPlayer.id,
+                  damage: 20, // Each hit does 20 damage
+                  shooterId: playerId
+                });
+              }
+            }
+          });
+        } else {
+          // Bullet from other player - check if it hits this player
+          const bulletPos = bullet.position;
+          const mainPlayerPos = position;
+          
+          // Distance between bullet and player
+          const distance = bulletPos.distanceTo(mainPlayerPos);
+          
+          // Hit if distance is less than player "radius" (1.0 units)
+          const hitRadius = 1.0;
+          if (distance < hitRadius) {
+            console.log(`Local player hit by bullet ${bullet.id} from ${bullet.owner}!`);
+            
+            // Remove the bullet (from multiplayer store)
+            multiplayerStore.removeBullet(bullet.id);
+            
+            // Apply damage to local player (handled by server)
+            playerStore.takeDamage(20); // Just visual feedback, server will confirm
+            
+            // Play hit sound
+            const hitSound = new Audio('/sounds/hit.mp3');
+            hitSound.volume = 0.5;
+            hitSound.play().catch(e => console.error("Error playing hit sound:", e));
+            
+            // Send hit event to server 
+            if (socket && socket.connected) {
+              socket.emit('hitPlayer', {
+                playerId: playerId,
+                damage: 20, // Each hit does 20 damage
+                shooterId: bullet.owner
+              });
+            }
+          }
+        }
+      });
+    }, 100); // Check every 100ms for smoother hit detection
+    
+    return () => clearInterval(collisionInterval);
+  }, [bullets, otherPlayers, playerId, position]);
+  
   // Update player position and camera
   useFrame((state, delta) => {
     if (!hasInteracted) return;
@@ -449,6 +559,9 @@ const Game = ({ username }: GameProps) => {
     
     // On mobile we don't need pointer lock, on desktop we do
     if (!isMobile && !isControlsLocked) return;
+    
+    // Don't allow movement when player is dead
+    if (health <= 0) return;
     
     // Calculate movement direction based on camera orientation
     const direction = new THREE.Vector3();
@@ -561,6 +674,36 @@ const Game = ({ username }: GameProps) => {
       {/* Game world with environment and obstacles */}
       <World />
       
+      {/* Death overlay when player is dead */}
+      {health <= 0 && (
+        <mesh position={[0, 0, -1]} renderOrder={2000}>
+          <planeGeometry args={[100, 100]} />
+          <meshBasicMaterial transparent opacity={0.5} color="#ff0000" depthTest={false} />
+          <sprite position={[0, 0, 0.1]} scale={[5, 1, 1]}>
+            <spriteMaterial 
+              transparent={true}
+              depthTest={false}
+              map={(() => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d')!;
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.font = 'bold 48px Arial';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('YOU DIED', canvas.width/2, canvas.height/2 - 20);
+                ctx.font = '24px Arial';
+                ctx.fillText('Respawning in 3 seconds...', canvas.width/2, canvas.height/2 + 20);
+                return new THREE.CanvasTexture(canvas);
+              })()}
+            />
+          </sprite>
+        </mesh>
+      )}
+      
       {/* Main player */}
       <Player 
         isMainPlayer={true}
@@ -569,8 +712,8 @@ const Game = ({ username }: GameProps) => {
         health={health}
       />
       
-      {/* Player's weapon - first person view */}
-      {isControlsLocked && (
+      {/* Player's weapon - first person view (only show when alive) */}
+      {isControlsLocked && health > 0 && (
         <LaserWeapon 
           position={[0.35, -0.4, -0.7]} 
           rotation={[0, Math.PI / 8, 0]} 
@@ -615,21 +758,61 @@ const Game = ({ username }: GameProps) => {
       {/* Add mobile game stats text UI */}
       {isMobile && (
         <mesh position={[0, 0, -1]} renderOrder={1000}>
-          <sprite scale={[1, 0.5, 1]} position={[0, 0.5, 0]}>
+          <sprite scale={[2, 1, 1]} position={[0, 0.7, 0]}>
             <spriteMaterial transparent depthTest={false}>
               <canvasTexture attach="map" args={[
                 (() => {
                   // Create a canvas to show player stats
                   const canvas = document.createElement('canvas');
-                  canvas.width = 256;
-                  canvas.height = 128;
+                  canvas.width = 512;
+                  canvas.height = 256;
                   const ctx = canvas.getContext('2d')!;
-                  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                  ctx.fillRect(0, 0, canvas.width, canvas.height);
-                  ctx.font = '24px Arial';
+                  
+                  // Background with rounded corners
+                  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                  ctx.beginPath();
+                  ctx.roundRect(0, 0, canvas.width, canvas.height, 20);
+                  ctx.fill();
+                  
+                  // Title
+                  ctx.font = 'bold 32px Arial';
                   ctx.fillStyle = 'white';
                   ctx.textAlign = 'center';
-                  ctx.fillText(`Health: ${health}`, canvas.width/2, canvas.height/2);
+                  ctx.fillText('PLAYER STATS', canvas.width/2, 40);
+                  
+                  // Draw health text
+                  ctx.font = '28px Arial';
+                  ctx.textAlign = 'left';
+                  ctx.fillText(`Health:`, 40, 100);
+                  
+                  // Health bar background
+                  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                  ctx.beginPath();
+                  ctx.roundRect(150, 85, 320, 30, 10);
+                  ctx.fill();
+                  
+                  // Health bar fill
+                  const healthWidth = Math.max(0, 320 * (health / 100));
+                  const healthColor = health > 60 ? '#00ff00' : health > 30 ? '#ffff00' : '#ff0000';
+                  ctx.fillStyle = healthColor;
+                  ctx.beginPath();
+                  ctx.roundRect(150, 85, healthWidth, 30, 10);
+                  ctx.fill();
+                  
+                  // Health text
+                  ctx.fillStyle = 'white';
+                  ctx.textAlign = 'center';
+                  ctx.font = 'bold 20px Arial';
+                  ctx.fillText(`${health}/100`, 150 + 160, 105);
+                  
+                  // Status
+                  ctx.font = '24px Arial';
+                  ctx.textAlign = 'left';
+                  ctx.fillText(`Status: ${health > 0 ? 'ALIVE' : 'DEAD - RESPAWNING...'}`, 40, 160);
+                  
+                  // Additional info
+                  ctx.fillText(`Respawns are automatic`, 40, 200);
+                  
                   return canvas;
                 })()
               ]} />
