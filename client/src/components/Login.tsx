@@ -162,7 +162,11 @@ export default function Login({ onLogin }: LoginProps) {
               </div>
               <div className="control-item">
                 <div className="control-key mobile-key">👆</div>
-                <div className="control-label">Interact</div>
+                <div className="control-label">Shoot</div>
+              </div>
+              <div className="control-item">
+                <div className="control-key mobile-key">R</div>
+                <div className="control-label">Reload</div>
               </div>
               <div className="control-item" style={{ gridColumn: "span 2" }}>
                 <div className="control-key mobile-key" style={{ width: "auto", padding: "0 15px" }}>
@@ -195,12 +199,28 @@ export default function Login({ onLogin }: LoginProps) {
                 <div className="control-label">Jump</div>
               </div>
               <div className="control-item">
-                <div className="control-key">E</div>
-                <div className="control-label">Interact</div>
+                <div className="control-key">LMB</div>
+                <div className="control-label">Shoot</div>
+              </div>
+              <div className="control-item">
+                <div className="control-key">J</div>
+                <div className="control-label">Shoot</div>
+              </div>
+              <div className="control-item">
+                <div className="control-key">K</div>
+                <div className="control-label">Shoot</div>
+              </div>
+              <div className="control-item">
+                <div className="control-key">R</div>
+                <div className="control-label">Reload</div>
               </div>
               <div className="control-item" style={{ gridColumn: "span 2" }}>
                 <div className="control-key" style={{ width: "auto", padding: "0 15px" }}>Mouse</div>
                 <div className="control-label">Look Around</div>
+              </div>
+              <div className="control-item">
+                <div className="control-key">ESC</div>
+                <div className="control-label">Toggle Guide</div>
               </div>
             </div>
           )}
