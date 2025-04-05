@@ -349,12 +349,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
   return (
     <group ref={playerRef}>
       {/* First-person view for main player with weapon display */}
-      {isMainPlayer && (
-        <group>
-          {/* Import WeaponDisplay component directly as a child of the player */}
-          <WeaponDisplay isVisible={health > 0} />
-        </group>
-      )}
+      {isMainPlayer && health > 0 && <WeaponDisplay isVisible={true} />}
       
       {/* Character Model - only visible for other players */}
       {!isMainPlayer && (

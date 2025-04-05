@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
 import Player from './Player';
 import World from './World';
+import WeaponDisplay from './WeaponDisplay';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
@@ -416,6 +417,11 @@ const Game = ({ username }: GameProps) => {
       
       {/* Game world with environment and obstacles */}
       <World />
+      
+      {/* Add weapon display directly in the Game component */}
+      {isControlsLocked && health > 0 && (
+        <WeaponDisplay isVisible={true} />
+      )}
       
       {/* Death overlay when player is dead */}
       {health <= 0 && (

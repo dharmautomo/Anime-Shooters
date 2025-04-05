@@ -31,22 +31,23 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   const bobAmount = 0.015; // Amount of bobbing
   const swayAmount = 0.08; // Amount of weapon sway
   
+  // Setup weapon display
   useEffect(() => {
-    if (pistolRef.current) {
-      // Position the weapon always in the bottom right corner
-      pistolRef.current.position.set(0.4, -0.4, -0.5);
-      // Rotate for a better angle
-      pistolRef.current.rotation.set(0, -Math.PI/12, 0);
-    }
-    
     console.log('Weapon display initialized');
-  }, []);
+    
+    // Clean up function to remove the weapon from the camera when component unmounts
+    return () => {
+      if (pistolRef.current && pistolRef.current.parent === camera) {
+        camera.remove(pistolRef.current);
+      }
+    };
+  }, [camera]);
   
   // Handle weapon animation
   useFrame((_, delta) => {
     time.current += delta;
     
-    if (!pistolRef.current || !isControlsLocked || !isVisible) return;
+    if (!pistolRef.current || !isControlsLocked) return;
     
     // Fixed position values for the weapon (bottom right)
     let posX = 0.4;
@@ -66,26 +67,19 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
       posY += breathingOffset;
     }
     
-    // IMPORTANT: This is the key change - we position the weapon relative to the camera
-    // This makes it stay in the bottom right corner of the screen regardless of camera rotation
-    pistolRef.current.position.set(0, 0, 0);
-    pistolRef.current.rotation.set(0, 0, 0);
+    // Position the pistol in the bottom right of the camera view
+    pistolRef.current.position.set(posX, posY, posZ);
     
-    // Apply the position offset in local camera space
-    pistolRef.current.translateX(posX);
-    pistolRef.current.translateY(posY);
-    pistolRef.current.translateZ(posZ);
-    
-    // Apply base rotation for natural aiming position
-    pistolRef.current.rotateY(-Math.PI/12);
+    // Reset rotation to base values first
+    pistolRef.current.rotation.set(0, -Math.PI/12, 0);
     
     // Add movement-based rotation effects
     let targetRotZ = 0;
     if (left) targetRotZ = swayAmount;
     if (right) targetRotZ = -swayAmount;
     
-    // Apply left/right sway
-    pistolRef.current.rotateZ(targetRotZ);
+    // Apply rotation for left/right sway
+    pistolRef.current.rotation.z = targetRotZ;
     
     // Add forward/backward tilt
     let targetRotX = 0;
@@ -93,18 +87,7 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     if (backward) targetRotX = swayAmount * 0.5;
     
     // Apply forward/backward tilt
-    pistolRef.current.rotateX(targetRotX);
-    
-    // CRITICAL: Make the weapon a child of the camera
-    // This ensures it moves with the camera's rotation
-    if (pistolRef.current.parent !== camera) {
-      // Remove from current parent
-      if (pistolRef.current.parent) {
-        pistolRef.current.parent.remove(pistolRef.current);
-      }
-      // Add to camera
-      camera.add(pistolRef.current);
-    }
+    pistolRef.current.rotation.x = targetRotX;
   });
   
   return (
