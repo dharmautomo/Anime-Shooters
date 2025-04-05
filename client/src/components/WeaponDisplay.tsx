@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useKeyboardControls } from '@react-three/drei';
@@ -31,12 +31,11 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   const bobAmount = 0.015; // Amount of bobbing
   const swayAmount = 0.08; // Amount of weapon sway
   
-  // Set up weapon position and rotation
   useEffect(() => {
     if (pistolRef.current) {
-      // Position weapon in the lower right portion of the screen
-      pistolRef.current.position.set(0.3, -0.3, -0.5);
-      // Slightly rotate the weapon for a better angle
+      // Position the weapon always in the bottom right corner
+      pistolRef.current.position.set(0.4, -0.4, -0.5);
+      // Rotate for a better angle
       pistolRef.current.rotation.set(0, -Math.PI/12, 0);
     }
     
@@ -49,39 +48,63 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     
     if (!pistolRef.current || !isControlsLocked || !isVisible) return;
     
-    // Create a vector to represent the camera's forward direction
-    const cameraDirection = new THREE.Vector3(0, 0, -1);
-    cameraDirection.applyQuaternion(camera.quaternion);
-    
-    // Create a simple copy of the pistol to the camera
-    // This makes the weapon directly attached to the camera view
-    pistolRef.current.quaternion.copy(camera.quaternion);
-    
-    // But we want to offset it to be visible in the corner, not centered
-    // Set local position relative to camera
-    pistolRef.current.position.set(0.3, -0.3, -0.5);
+    // Fixed position values for the weapon (bottom right)
+    let posX = 0.4;
+    let posY = -0.4;
+    const posZ = -0.5;
     
     // Add bobbing effect when moving
     if (isMoving) {
       const bobOffsetY = Math.sin(time.current * bobSpeed) * bobAmount;
       const bobOffsetX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
       
-      pistolRef.current.position.y = -0.3 + bobOffsetY;
-      pistolRef.current.position.x = 0.3 + bobOffsetX;
+      posY += bobOffsetY;
+      posX += bobOffsetX;
     } else {
       // Subtle breathing movement when idle
       const breathingOffset = Math.sin(time.current * 1.5) * 0.003;
-      pistolRef.current.position.y = -0.3 + breathingOffset;
+      posY += breathingOffset;
     }
     
-    // Left-right sway based on movement
+    // IMPORTANT: This is the key change - we position the weapon relative to the camera
+    // This makes it stay in the bottom right corner of the screen regardless of camera rotation
+    pistolRef.current.position.set(0, 0, 0);
+    pistolRef.current.rotation.set(0, 0, 0);
+    
+    // Apply the position offset in local camera space
+    pistolRef.current.translateX(posX);
+    pistolRef.current.translateY(posY);
+    pistolRef.current.translateZ(posZ);
+    
+    // Apply base rotation for natural aiming position
+    pistolRef.current.rotateY(-Math.PI/12);
+    
+    // Add movement-based rotation effects
     let targetRotZ = 0;
     if (left) targetRotZ = swayAmount;
     if (right) targetRotZ = -swayAmount;
     
-    // Apply rotation around local Z axis (for left-right sway)
-    const currentRotZ = pistolRef.current.rotation.z;
-    pistolRef.current.rotation.z = currentRotZ + (targetRotZ - currentRotZ) * 3 * delta;
+    // Apply left/right sway
+    pistolRef.current.rotateZ(targetRotZ);
+    
+    // Add forward/backward tilt
+    let targetRotX = 0;
+    if (forward) targetRotX = -swayAmount * 0.5;
+    if (backward) targetRotX = swayAmount * 0.5;
+    
+    // Apply forward/backward tilt
+    pistolRef.current.rotateX(targetRotX);
+    
+    // CRITICAL: Make the weapon a child of the camera
+    // This ensures it moves with the camera's rotation
+    if (pistolRef.current.parent !== camera) {
+      // Remove from current parent
+      if (pistolRef.current.parent) {
+        pistolRef.current.parent.remove(pistolRef.current);
+      }
+      // Add to camera
+      camera.add(pistolRef.current);
+    }
   });
   
   return (

@@ -351,7 +351,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       {/* First-person view for main player with weapon display */}
       {isMainPlayer && (
         <group>
-          {/* Import WeaponDisplay component */}
+          {/* Import WeaponDisplay component directly as a child of the player */}
           <WeaponDisplay isVisible={health > 0} />
         </group>
       )}
