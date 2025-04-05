@@ -126,9 +126,15 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
     const direction = new THREE.Vector3(0, 0, -1);
     direction.applyQuaternion(camera.quaternion).normalize();
     
+    // Create bullet ID with weapon type for size determination
+    let bulletId = generateId();
+    if (weaponIndex === 2) { // Special weapon
+      bulletId = `special-${bulletId}`;
+    }
+    
     // Create a new bullet
     const newBullet = {
-      id: generateId(),
+      id: bulletId,
       position: new THREE.Vector3(
         camera.position.x,
         camera.position.y,
