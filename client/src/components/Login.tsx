@@ -92,7 +92,7 @@ export default function Login({ onLogin }: LoginProps) {
       <div className="login-container" style={containerStyle}>
         <div className="game-title">
           <span className="title-top">ANIME</span>
-          <span className="title-bottom">SHOOTER</span>
+          <span className="title-bottom">SHOOTERS</span>
         </div>
         
         <div className="login-card">
@@ -124,7 +124,7 @@ export default function Login({ onLogin }: LoginProps) {
               className="primary-button"
               disabled={!username.trim()}
             >
-              Start Exploring
+              Start Shooting
             </Button>
           </form>
         </div>
@@ -225,7 +225,7 @@ export default function Login({ onLogin }: LoginProps) {
             </div>
           )}
           
-          <div className="version-info">v1.0.1 • Multiplayer Exploration{isMobile ? ' (Mobile)' : ''}</div>
+          <div className="version-info">v1.0.1 • Multiplayer FPS{isMobile ? ' (Mobile)' : ''}</div>
         </div>
       </div>
       

@@ -444,9 +444,9 @@ const Game = ({ username }: GameProps) => {
                 ctx.fillStyle = '#ffffff';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('YOU DIED', canvas.width/2, canvas.height/2 - 20);
+                ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2 - 20);
                 ctx.font = '24px Arial';
-                ctx.fillText('Click to respawn', canvas.width/2, canvas.height/2 + 20);
+                ctx.fillText('Click to respawn in ANIME SHOOTERS', canvas.width/2, canvas.height/2 + 20);
                 const texture = new THREE.CanvasTexture(canvas);
                 return texture;
               })()}
