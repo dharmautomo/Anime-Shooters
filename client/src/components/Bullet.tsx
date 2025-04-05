@@ -96,7 +96,7 @@ const Bullet = ({ position, direction, bulletId, playerId, speed = 30, onHit }: 
   return (
     <mesh ref={bulletRef} castShadow>
       <sphereGeometry args={[0.1, 8, 8]} />
-      <meshStandardMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+      <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={0.5} />
     </mesh>
   );
 };
