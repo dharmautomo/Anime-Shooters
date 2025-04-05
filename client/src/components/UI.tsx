@@ -303,7 +303,7 @@ const UI = () => {
               alignItems: 'center',
               gap: '8px',
               lineHeight: '1',
-              fontSize: '16px'
+              fontSize: '14px'
             }}>
               <svg 
                 width="18" 
@@ -327,9 +327,9 @@ const UI = () => {
               display: 'flex',
               alignItems: 'center',
               lineHeight: '1',
-              fontSize: '16px'
+              fontSize: '14px'
             }}>
-              {weaponState.ammo === 0 ? 'EMPTY' : `AMMO: ${weaponState.ammo}/${weaponState.maxAmmo}`}
+              {weaponState.ammo === 0 ? 'EMPTY - PRESS R TO RELOAD' : `AMMO: ${weaponState.ammo}/${weaponState.maxAmmo}`}
             </span>
           )}
         </div>
