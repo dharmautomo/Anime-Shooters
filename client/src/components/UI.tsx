@@ -364,13 +364,9 @@ const UI = () => {
           <p>WASD or Arrow Keys - Move</p>
           <p>Mouse - Look around</p>
           <p>Space - Jump</p>
-          <p>Left Mouse Button - Fire primary weapon</p>
-          <p>J Key - Fire secondary weapon</p>
-          <p>K Key - Fire special weapon</p>
+          <p>Left Mouse Button / J Key / K Key - Shoot</p>
           <p>R Key - Reload weapon</p>
-          <p>Crosshair - Aim weapon</p>
           <p>ESC - Toggle this guide</p>
-          <p>Shift+D - Show debug info</p>
         </div>
       )}
       
