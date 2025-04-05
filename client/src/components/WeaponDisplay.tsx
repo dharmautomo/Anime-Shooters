@@ -1,7 +1,7 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useKeyboardControls } from '@react-three/drei';
+import { useKeyboardControls, Html } from '@react-three/drei';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 
@@ -9,9 +9,11 @@ interface WeaponDisplayProps {
   isVisible: boolean;
 }
 
+// This component uses a completely different approach with HTML overlay
+// It renders a DOM element fixed to the bottom right of the screen
+// This guarantees the weapon will always be visible in the bottom right
 const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   const { camera } = useThree();
-  const pistolRef = useRef<THREE.Group>(null);
   const { isControlsLocked } = useGameControls();
   
   // Get movement keys for weapon sway animation
@@ -23,117 +25,151 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   // Track movement for sway effect
   const isMoving = forward || backward || left || right;
   
-  // Track time for animations
+  // Track animation values
+  const [bobOffset, setBobOffset] = useState({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 });
   const time = useRef(0);
   
   // Animation parameters
-  const bobSpeed = 4; // Speed of the bobbing effect
-  const bobAmount = 0.015; // Amount of bobbing
-  const swayAmount = 0.08; // Amount of weapon sway
+  const bobSpeed = 4; 
+  const bobAmount = 10; // In pixels for DOM
+  const swayAmount = 5; // In degrees for DOM
   
-  // Setup weapon display
+  // Handle visibility
+  const [visible, setVisible] = useState(isVisible);
+  
+  // Update visibility based on props
+  useEffect(() => {
+    setVisible(isVisible && isControlsLocked);
+  }, [isVisible, isControlsLocked]);
+  
+  // Set up initial weapon display
   useEffect(() => {
     console.log('Weapon display initialized');
-    
-    // Clean up function to remove the weapon from the camera when component unmounts
-    return () => {
-      if (pistolRef.current && pistolRef.current.parent === camera) {
-        camera.remove(pistolRef.current);
-      }
-    };
-  }, [camera]);
+  }, []);
   
   // Handle weapon animation
   useFrame((_, delta) => {
+    if (!isControlsLocked || !isVisible) return;
+    
     time.current += delta;
     
-    if (!pistolRef.current || !isControlsLocked) return;
+    // Calculate bobbing effect
+    let newBobX = 0;
+    let newBobY = 0;
     
-    // Fixed position values for the weapon (bottom right)
-    let posX = 0.4;
-    let posY = -0.4;
-    const posZ = -0.5;
-    
-    // Add bobbing effect when moving
     if (isMoving) {
-      const bobOffsetY = Math.sin(time.current * bobSpeed) * bobAmount;
-      const bobOffsetX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
-      
-      posY += bobOffsetY;
-      posX += bobOffsetX;
+      newBobY = Math.sin(time.current * bobSpeed) * bobAmount;
+      newBobX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
     } else {
       // Subtle breathing movement when idle
-      const breathingOffset = Math.sin(time.current * 1.5) * 0.003;
-      posY += breathingOffset;
+      newBobY = Math.sin(time.current * 1.5) * 2;
     }
     
-    // Position the pistol in the bottom right of the camera view
-    pistolRef.current.position.set(posX, posY, posZ);
+    // Calculate rotation effects
+    let rotZ = 0;
+    if (left) rotZ = swayAmount;
+    if (right) rotZ = -swayAmount;
     
-    // Reset rotation to base values first
-    pistolRef.current.rotation.set(0, -Math.PI/12, 0);
+    let rotX = 0;
+    if (forward) rotX = -swayAmount * 0.5;
+    if (backward) rotX = swayAmount * 0.5;
     
-    // Add movement-based rotation effects
-    let targetRotZ = 0;
-    if (left) targetRotZ = swayAmount;
-    if (right) targetRotZ = -swayAmount;
-    
-    // Apply rotation for left/right sway
-    pistolRef.current.rotation.z = targetRotZ;
-    
-    // Add forward/backward tilt
-    let targetRotX = 0;
-    if (forward) targetRotX = -swayAmount * 0.5;
-    if (backward) targetRotX = swayAmount * 0.5;
-    
-    // Apply forward/backward tilt
-    pistolRef.current.rotation.x = targetRotX;
+    // Update state for HTML rendering
+    setBobOffset({ x: newBobX, y: newBobY });
+    setRotation({ x: rotX, y: -5, z: rotZ }); // -5 is the base angle for weapon
   });
   
+  if (!visible) return null;
+  
   return (
-    <group ref={pistolRef} visible={isVisible && isControlsLocked}>
-      {/* Pistol body */}
-      <mesh position={[0, 0, 0]} castShadow>
-        <boxGeometry args={[0.08, 0.15, 0.25]} />
-        <meshStandardMaterial color="#111" roughness={0.5} metalness={0.7} />
-      </mesh>
-      
-      {/* Pistol grip */}
-      <mesh position={[0, -0.13, 0.05]} rotation={[0.3, 0, 0]} castShadow>
-        <boxGeometry args={[0.07, 0.15, 0.1]} />
-        <meshStandardMaterial color="#222" roughness={0.8} metalness={0.3} />
-      </mesh>
-      
-      {/* Pistol barrel */}
-      <mesh position={[0, 0.05, -0.15]} castShadow>
-        <boxGeometry args={[0.05, 0.05, 0.1]} />
-        <meshStandardMaterial color="#111" roughness={0.3} metalness={0.9} />
-      </mesh>
-      
-      {/* Trigger */}
-      <mesh position={[0, -0.05, 0.1]} castShadow>
-        <boxGeometry args={[0.03, 0.03, 0.05]} />
-        <meshStandardMaterial color="#333" roughness={0.5} metalness={0.5} />
-      </mesh>
-      
-      {/* Muzzle */}
-      <mesh position={[0, 0.05, -0.22]} castShadow>
-        <cylinderGeometry args={[0.02, 0.03, 0.04, 16]} />
-        <meshStandardMaterial color="#000" roughness={0.2} metalness={1} />
-      </mesh>
-      
-      {/* Slide */}
-      <mesh position={[0, 0.075, -0.05]} castShadow>
-        <boxGeometry args={[0.08, 0.05, 0.2]} />
-        <meshStandardMaterial color="#222" roughness={0.4} metalness={0.8} />
-      </mesh>
-      
-      {/* Sight */}
-      <mesh position={[0, 0.11, -0.13]} castShadow>
-        <boxGeometry args={[0.02, 0.02, 0.02]} />
-        <meshStandardMaterial color="#fff" emissive="#ff0000" emissiveIntensity={0.5} />
-      </mesh>
-    </group>
+    <Html
+      className="weapon-container"
+      style={{
+        position: 'fixed',
+        bottom: '10px',
+        right: '10px',
+        width: '300px',
+        height: '200px',
+        pointerEvents: 'none',
+        transform: `translate3d(${bobOffset.x}px, ${bobOffset.y}px, 0px)`,
+        zIndex: 1000
+      }}
+      prepend
+      center={false}
+      fullscreen={false}
+    >
+      <div style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        transformStyle: 'preserve-3d',
+        transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) rotateZ(${rotation.z}deg)`
+      }}>
+        {/* Render a weapon image with CSS */}
+        <div style={{
+          position: 'absolute',
+          bottom: '0',
+          right: '0',
+          width: '150px',
+          height: '100px',
+          backgroundImage: 'linear-gradient(to bottom, #333, #222)',
+          borderRadius: '2px',
+          boxShadow: '0 0 5px rgba(0,0,0,0.5)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-end',
+          overflow: 'hidden'
+        }}>
+          {/* Pistol body */}
+          <div style={{
+            width: '80px',
+            height: '25px',
+            backgroundColor: '#222',
+            position: 'absolute',
+            bottom: '40px',
+            right: '40px',
+            borderRadius: '2px',
+            boxShadow: '0 0 3px rgba(0,0,0,0.7)'
+          }}></div>
+          
+          {/* Pistol barrel */}
+          <div style={{
+            width: '60px',
+            height: '15px',
+            backgroundColor: '#111',
+            position: 'absolute',
+            bottom: '45px',
+            right: '20px',
+            borderRadius: '2px'
+          }}></div>
+          
+          {/* Pistol grip */}
+          <div style={{
+            width: '25px',
+            height: '40px',
+            backgroundColor: '#333',
+            position: 'absolute',
+            bottom: '10px',
+            right: '70px',
+            borderRadius: '2px',
+            transform: 'rotate(10deg)'
+          }}></div>
+          
+          {/* Pistol sight */}
+          <div style={{
+            width: '5px',
+            height: '5px',
+            backgroundColor: '#f00',
+            position: 'absolute',
+            bottom: '55px',
+            right: '45px',
+            borderRadius: '50%',
+            boxShadow: '0 0 5px #f00'
+          }}></div>
+        </div>
+      </div>
+    </Html>
   );
 };
 

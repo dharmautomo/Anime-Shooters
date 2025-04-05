@@ -418,10 +418,8 @@ const Game = ({ username }: GameProps) => {
       {/* Game world with environment and obstacles */}
       <World />
       
-      {/* Add weapon display directly in the Game component */}
-      {isControlsLocked && health > 0 && (
-        <WeaponDisplay isVisible={true} />
-      )}
+      {/* Add weapon display with our new HTML implementation */}
+      <WeaponDisplay isVisible={isControlsLocked && health > 0} />
       
       {/* Death overlay when player is dead */}
       {health <= 0 && (
