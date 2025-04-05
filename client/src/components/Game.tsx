@@ -41,6 +41,7 @@ const Game = ({ username }: GameProps) => {
     rotation,
     health,
     score,
+    isAlive,
     updatePosition, 
     updateRotation,
     resetPlayer
@@ -425,7 +426,7 @@ const Game = ({ username }: GameProps) => {
       
       {/* Death overlay when player is dead */}
       {health <= 0 && (
-        <mesh position={[0, 0, -1]} renderOrder={2000}>
+        <mesh position={[0, 0, -1]} renderOrder={2000} onClick={() => usePlayer.getState().respawn()}>
           <planeGeometry args={[100, 100]} />
           <meshBasicMaterial transparent opacity={0.5} color="#ff0000" depthTest={false} />
           <sprite position={[0, 0, 0.1]} scale={[5, 1, 1]}>

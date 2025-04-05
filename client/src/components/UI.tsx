@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { useGameControls } from '../lib/stores/useGameControls';
@@ -17,6 +17,11 @@ const UI = () => {
   const [showDebug, setShowDebug] = useState(false);
   // For tracking if pointer lock is actually working via the native API
   const [isPointerLocked, setIsPointerLocked] = useState<boolean>(!!document.pointerLockElement);
+  // For damage effect
+  const [showDamageEffect, setShowDamageEffect] = useState(false);
+  // For score animation
+  const [scoreAnimation, setScoreAnimation] = useState(false);
+  const [prevScore, setPrevScore] = useState(score);
   
   // Toggle controls guide with ESC key
   useEffect(() => {
@@ -64,6 +69,59 @@ const UI = () => {
       document.removeEventListener('webkitpointerlockchange', handlePointerLockChange);
     };
   }, []);
+  
+  // Effect for monitoring player health changes
+  useEffect(() => {
+    // Create a local variable to check if we've initialized yet
+    const isInitialRender = useRef(true);
+    
+    // Skip effect on first render
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
+    
+    // Show damage effect if health decreased 
+    const handleHealthChange = () => {
+      // If health decreased, show damage effect
+      if (health < 100) {
+        setShowDamageEffect(true);
+        
+        // Play damage sound
+        const damageSound = new Audio('/sounds/hit.mp3');
+        damageSound.volume = 0.3;
+        damageSound.play().catch(e => console.error("Error playing damage sound:", e));
+        
+        // Clear damage effect after short delay
+        setTimeout(() => {
+          setShowDamageEffect(false);
+        }, 300);
+      }
+    };
+    
+    handleHealthChange();
+  }, [health]);
+  
+  // Effect for monitoring score changes
+  useEffect(() => {
+    // If score increased, show animation
+    if (score > prevScore) {
+      setScoreAnimation(true);
+      
+      // Play success sound
+      const successSound = new Audio('/sounds/success.mp3');
+      successSound.volume = 0.2;
+      successSound.play().catch(e => console.error("Error playing score sound:", e));
+      
+      // Clear animation after short delay
+      setTimeout(() => {
+        setScoreAnimation(false);
+      }, 1000);
+      
+      // Update previous score
+      setPrevScore(score);
+    }
+  }, [score, prevScore]);
 
   // Add crosshair for aiming
   const crosshairStyle = {
@@ -81,6 +139,44 @@ const UI = () => {
   
   return createPortal(
     <div className="game-ui">
+      {/* Blood splatter effect when taking damage */}
+      {showDamageEffect && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(255, 0, 0, 0.2)',
+            pointerEvents: 'none',
+            zIndex: 1000,
+            animation: 'pulse 0.3s forwards'
+          }}
+        />
+      )}
+      
+      {/* Score animation */}
+      {scoreAnimation && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: '#00ff00',
+            fontSize: '32px',
+            fontWeight: 'bold',
+            textShadow: '0 0 5px black',
+            pointerEvents: 'none',
+            zIndex: 1001,
+            animation: 'fadeUp 1s forwards'
+          }}
+        >
+          +1 Hit!
+        </div>
+      )}
+      
       {/* Crosshair */}
       <div style={crosshairStyle}>
         <svg width="24" height="24" viewBox="0 0 24 24">

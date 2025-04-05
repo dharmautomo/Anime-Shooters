@@ -60,6 +60,9 @@ const Bullet = ({ position, direction, bulletId, playerId, speed = 30, onHit }: 
         // Skip if this is a bullet from the same player
         if (otherPlayer.id === playerId) return;
         
+        // Skip if player is already dead (health <= 0)
+        if (otherPlayer.health <= 0) return;
+        
         // Create a bounding sphere for the bullet
         const bulletPosition = bulletRef.current!.position;
         const bulletRadius = 0.1;
@@ -80,10 +83,24 @@ const Bullet = ({ position, direction, bulletId, playerId, speed = 30, onHit }: 
           console.log(`Bullet ${bulletId} hit player ${otherPlayer.id}`);
           hitDetected.current = true;
           
-          // If this is a local player's bullet, award points
+          // Calculate damage amount (could vary by weapon type)
+          const damageAmount = 10;
+          
+          // Emit a hit event to the server if this is the local player's bullet
           if (playerId === localPlayerId) {
-            console.log('Score +1 for hit');
+            console.log(`Player ${localPlayerId} hit ${otherPlayer.id} for ${damageAmount} damage`);
+            
+            // Add score for the hit
             addScore(1);
+            
+            // Emit hit event to update other players
+            const { socket } = useMultiplayer.getState();
+            if (socket) {
+              socket.emit('playerHit', {
+                playerId: otherPlayer.id,
+                damage: damageAmount
+              });
+            }
           }
           
           // Trigger hit effect

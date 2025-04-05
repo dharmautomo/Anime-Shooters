@@ -58,11 +58,46 @@ export class SocketManager {
       });
       
       // Handle player damage and respawn events
-      // Note: Weapon system has been removed, but we'll keep health/respawn mechanics for future use
+      socket.on('playerHit', (data: { playerId: string, damage: number }) => {
+        console.log(`Hit request received: Player ${socket.id} hit ${data.playerId} for ${data.damage} damage`);
+        
+        // Get target player
+        const targetPlayer = this.gameState.getPlayer(data.playerId);
+        if (!targetPlayer) {
+          console.error(`Player ${data.playerId} not found in game state`);
+          return;
+        }
+        
+        // Apply damage to the player
+        const wasKilled = this.gameState.damagePlayer(data.playerId, data.damage);
+        
+        // Broadcast the hit to all clients so they can update UI
+        this.io.emit('playerHit', {
+          playerId: data.playerId,
+          damage: data.damage
+        });
+        
+        // If player was killed, broadcast kill event
+        if (wasKilled) {
+          console.log(`Player ${data.playerId} was killed by ${socket.id}`);
+          
+          // Get usernames for kill feed
+          const killerName = this.gameState.getPlayerUsername(socket.id);
+          const victimName = this.gameState.getPlayerUsername(data.playerId);
+          
+          // Broadcast kill event
+          this.io.emit('playerKilled', {
+            killer: killerName,
+            victim: victimName,
+            killerId: socket.id,
+            victimId: data.playerId
+          });
+        }
+      });
       
       // Handle player respawn request
-      socket.on('playerRespawn', (data: { position: { x: number, y: number, z: number } }) => {
-        console.log(`Player ${socket.id} requested respawn at position:`, data.position);
+      socket.on('playerRespawn', () => {
+        console.log(`Player ${socket.id} requested respawn`);
         
         // Get current player data
         const player = this.gameState.getPlayer(socket.id);
@@ -71,22 +106,24 @@ export class SocketManager {
           return;
         }
         
-        // Update player in game state with respawn data
-        this.gameState.updatePlayer(socket.id, {
-          position: data.position,
-          health: 100, // Reset health to full
-          // Keep other properties unchanged
-          rotation: player.rotation,
-          username: player.username
-        });
+        // Respawn the player (this will set health to 100 and randomize position)
+        this.gameState.respawnPlayer(socket.id);
         
         // Get updated player data
         const updatedPlayer = this.gameState.getPlayer(socket.id);
         
         if (updatedPlayer) {
-          console.log(`Player ${socket.id} respawned with health ${updatedPlayer.health}`);
+          console.log(`Player ${socket.id} respawned with health ${updatedPlayer.health} at position:`, updatedPlayer.position);
+          
           // Broadcast the respawned player to all clients
           this.io.emit('playerUpdated', updatedPlayer);
+          
+          // Also send a direct message to the player that just respawned to let them know
+          // where they've been placed
+          socket.emit('playerRespawned', {
+            position: updatedPlayer.position,
+            health: updatedPlayer.health
+          });
         }
       });
       

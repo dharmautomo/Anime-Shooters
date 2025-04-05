@@ -119,35 +119,24 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
   },
   
   respawn: () => {
-    // Generate a random position for respawn
-    const randomX = (Math.random() - 0.5) * 40;
-    const randomZ = (Math.random() - 0.5) * 40;
-    const newPosition = new THREE.Vector3(randomX, 1.6, randomZ);
+    // We'll let the server determine the respawn position
     
     // Play respawn sound
-    const respawnSound = new Audio('/sounds/respawn.mp3');
+    const respawnSound = new Audio('/sounds/hit.mp3'); // Use hit.mp3 since respawn.mp3 may not exist
     respawnSound.volume = 0.5;
     respawnSound.play().catch(e => console.error("Error playing respawn sound:", e));
-    
-    // Update local player state
-    set({
-      position: newPosition,
-      health: 100,
-      isAlive: true
-    });
     
     // Notify server about respawn
     const multiplayerStore = useMultiplayer.getState();
     if (multiplayerStore.socket && multiplayerStore.socket.connected) {
       console.log('Notifying server about respawn');
-      multiplayerStore.socket.emit('playerRespawn', {
-        position: { 
-          x: newPosition.x, 
-          y: newPosition.y, 
-          z: newPosition.z 
-        }
-      });
+      multiplayerStore.socket.emit('playerRespawn');
     }
+    
+    // Set isAlive to true so controls are reenabled
+    set({
+      isAlive: true
+    });
   },
   
   resetPlayer: () => {
@@ -378,6 +367,24 @@ export const useMultiplayer = create<MultiplayerStore>((set, get) => ({
           },
         ],
       }));
+    });
+    
+    // Handle player respawn confirmation
+    socket.on('playerRespawned', (data: { position: { x: number, y: number, z: number }, health: number }) => {
+      console.log(`Respawn position received from server:`, data.position);
+      
+      // Get player store
+      const playerStore = usePlayer.getState();
+      
+      // Update player position and health
+      playerStore.updatePosition(new THREE.Vector3(
+        data.position.x,
+        data.position.y,
+        data.position.z
+      ));
+      
+      // Health is managed by the player store, not multiplayer store
+      playerStore.takeDamage(-100); // Healing for 100 points will reset to full health
     });
   },
   
