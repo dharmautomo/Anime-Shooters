@@ -274,24 +274,26 @@ const UI = () => {
         left: '20px',
         backgroundColor: 'rgba(0, 0, 0, 0.6)',
         color: 'white',
-        padding: '10px 15px',
+        padding: '5px 15px',
         borderRadius: '5px',
         border: '1px solid rgba(255, 255, 255, 0.3)',
         fontFamily: 'monospace',
-        fontSize: '20px',
+        fontSize: '16px',
         fontWeight: 'bold',
         zIndex: 1000,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         width: '200px',
+        height: '30px',
         boxSizing: 'border-box'
       }}>
         <div style={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          width: '100%'
+          width: '100%',
+          height: '100%'
         }}>
           {weaponState.isReloading ? (
             <span style={{
@@ -299,7 +301,9 @@ const UI = () => {
               animation: 'reloadBlink 0.6s infinite',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px'
+              gap: '8px',
+              lineHeight: '1',
+              fontSize: '16px'
             }}>
               <svg 
                 width="18" 
@@ -319,42 +323,18 @@ const UI = () => {
             </span>
           ) : (
             <span style={{
-              color: weaponState.ammo === 0 ? '#ff3333' : 'white'
+              color: weaponState.ammo === 0 ? '#ff3333' : 'white',
+              display: 'flex',
+              alignItems: 'center',
+              lineHeight: '1',
+              fontSize: '16px'
             }}>
-              {weaponState.ammo === 0 ? 'EMPTY' : `${weaponState.ammo}/${weaponState.maxAmmo}`}
+              {weaponState.ammo === 0 ? 'EMPTY' : `AMMO: ${weaponState.ammo}/${weaponState.maxAmmo}`}
             </span>
           )}
         </div>
         
-        {/* Reload progress bar */}
-        {weaponState.isReloading && (
-          <div style={{
-            width: '100%',
-            height: '4px',
-            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            marginTop: '5px',
-            borderRadius: '2px',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              height: '100%',
-              width: `${weaponState.reloadProgress * 100}%`,
-              backgroundColor: '#44ff44',
-              transition: 'width 0.1s linear'
-            }} />
-          </div>
-        )}
-        
-        {/* Reload hint */}
-        {!weaponState.isReloading && weaponState.ammo < weaponState.maxAmmo && (
-          <div style={{
-            fontSize: '12px',
-            marginTop: '5px',
-            opacity: 0.8
-          }}>
-            Press R to reload
-          </div>
-        )}
+        {/* Progress bar hidden because we're fixing height */}
       </div>
       
       {/* Controls guide */}
