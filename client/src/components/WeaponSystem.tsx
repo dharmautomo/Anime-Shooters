@@ -19,16 +19,41 @@ interface Weapon {
   fireSound: string;
   useJKey: boolean;
   useKKey: boolean;
+  currentAmmo: number;
+  maxAmmo: number;
+  isReloading: boolean;
+  reloadStartTime: number;
+  reloadTime: number; // in milliseconds
 }
 
 interface WeaponSystemProps {
   position: THREE.Vector3;
 }
 
+// Weapon system global state for UI access
+interface WeaponSystemState {
+  ammo: number;
+  maxAmmo: number;
+  isReloading: boolean;
+  reloadProgress: number;
+}
+
+// Make weapon state available to window for UI component
+declare global {
+  interface Window {
+    weaponSystem?: WeaponSystemState;
+  }
+}
+
 const WeaponSystem = ({ position }: WeaponSystemProps) => {
   const { camera } = useThree();
   const { playerId, health } = usePlayer();
   const { isControlsLocked } = useGameControls();
+  
+  // Ammo state for UI display
+  const [ammo, setAmmo] = useState<number>(10);
+  const [isReloading, setIsReloading] = useState<boolean>(false);
+  const [reloadProgress, setReloadProgress] = useState<number>(0);
   
   // Single primary weapon
   const weapons = useRef<Weapon[]>([
@@ -40,7 +65,12 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
       damage: 10,
       fireSound: '/sounds/hit.mp3', // Using existing sound
       useJKey: false,
-      useKKey: false
+      useKKey: false,
+      currentAmmo: 10,
+      maxAmmo: 10,
+      isReloading: false,
+      reloadStartTime: 0,
+      reloadTime: 2000 // 2 seconds to reload
     }
   ]);
   
@@ -57,6 +87,76 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
   const shakeIntensity = useRef(0);
   const originalCameraPosition = useRef(new THREE.Vector3());
   
+  // Make weapon state available to window for UI access
+  useEffect(() => {
+    window.weaponSystem = {
+      ammo,
+      maxAmmo: weapons.current[0].maxAmmo,
+      isReloading,
+      reloadProgress
+    };
+    
+    return () => {
+      delete window.weaponSystem;
+    };
+  }, [ammo, isReloading, reloadProgress]);
+  
+  // Update reload progress during reload animation
+  useEffect(() => {
+    if (!isReloading) return;
+    
+    const intervalId = setInterval(() => {
+      const weapon = weapons.current[0];
+      if (weapon.isReloading) {
+        const elapsed = performance.now() - weapon.reloadStartTime;
+        const progress = Math.min(1, elapsed / weapon.reloadTime);
+        setReloadProgress(progress);
+        
+        // If reload complete, clear interval
+        if (progress >= 1) {
+          clearInterval(intervalId);
+        }
+      } else {
+        clearInterval(intervalId);
+      }
+    }, 50);
+    
+    return () => clearInterval(intervalId);
+  }, [isReloading]);
+  
+  // Function to reload weapon
+  const reloadWeapon = (weaponIndex: number) => {
+    const weapon = weapons.current[weaponIndex];
+    
+    // Already reloading or full ammo
+    if (weapon.isReloading || weapon.currentAmmo === weapon.maxAmmo) {
+      return;
+    }
+    
+    console.log(`Reloading ${weapon.name} weapon`);
+    
+    // Start reload process
+    weapon.isReloading = true;
+    weapon.reloadStartTime = performance.now();
+    setIsReloading(true);
+    setReloadProgress(0);
+    
+    // Play reload sound
+    playGunSound(weapon.fireSound, 0.2); // Using fire sound for reload since we don't have a specific reload sound
+    
+    // Complete reload after delay
+    setTimeout(() => {
+      if (weapons.current[weaponIndex]) {
+        weapons.current[weaponIndex].currentAmmo = weapons.current[weaponIndex].maxAmmo;
+        weapons.current[weaponIndex].isReloading = false;
+        setAmmo(weapons.current[weaponIndex].maxAmmo);
+        setIsReloading(false);
+        setReloadProgress(1);
+        console.log(`${weapons.current[weaponIndex].name} weapon reloaded`);
+      }
+    }, weapon.reloadTime);
+  };
+  
   // Handle mouse click for shooting
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
@@ -68,12 +168,17 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
       }
     };
     
-    // Handle key presses for the primary weapon
+    // Handle key presses for the primary weapon and reloading
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isControlsLocked || health <= 0) return;
       
       if (e.code === 'KeyJ' || e.code === 'KeyK') {
         fireWeapon(0); // Primary weapon for all keys
+      }
+      
+      // Handle reload key (R)
+      if (e.code === 'KeyR') {
+        reloadWeapon(0); // Reload primary weapon
       }
     };
     
@@ -92,6 +197,18 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
     const weapon = weapons.current[weaponIndex];
     const now = performance.now();
     
+    // Don't fire if reloading
+    if (weapon.isReloading) {
+      return;
+    }
+    
+    // Don't fire if no ammo
+    if (weapon.currentAmmo <= 0) {
+      // Play empty click sound and show "empty" indicator
+      console.log(`${weapon.name} weapon is empty! Press R to reload.`);
+      return;
+    }
+    
     // Check if weapon can fire based on fire rate
     if (now - weapon.lastFired < 1000 / weapon.fireRate) {
       return;
@@ -99,6 +216,15 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
     
     // Update last fired time
     weapons.current[weaponIndex].lastFired = now;
+    
+    // Decrease ammo
+    weapons.current[weaponIndex].currentAmmo--;
+    setAmmo(weapons.current[weaponIndex].currentAmmo);
+    
+    // Auto-reload when empty
+    if (weapons.current[weaponIndex].currentAmmo === 0) {
+      reloadWeapon(weaponIndex);
+    }
     
     // Get camera direction for bullet trajectory
     const direction = new THREE.Vector3(0, 0, -1);
@@ -123,19 +249,19 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
     setBullets(prev => [...prev, newBullet]);
     
     // Play gunshot sound
-    playGunSound(weapon.fireSound);
+    playGunSound(weapon.fireSound, 0.3);
     
     // Apply screen shake
     applyScreenShake(0.15, 0.05);
     
-    console.log(`Fired ${weapon.name} weapon`);
+    console.log(`Fired ${weapon.name} weapon (${weapon.currentAmmo}/${weapon.maxAmmo} ammo)`);
   };
   
   // Function to play gun sound
-  const playGunSound = (soundUrl: string) => {
+  const playGunSound = (soundUrl: string, volume: number = 0.3) => {
     try {
       const sound = new Audio(soundUrl);
-      sound.volume = 0.3;
+      sound.volume = volume;
       sound.play().catch(e => console.error('Error playing gunshot sound:', e));
     } catch (error) {
       console.error('Failed to play gunshot sound:', error);

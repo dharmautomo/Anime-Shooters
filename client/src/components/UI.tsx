@@ -137,6 +137,36 @@ const UI = () => {
     transition: 'opacity 0.2s ease'
   };
   
+  // Get weapon system state if available
+  const [weaponState, setWeaponState] = useState({
+    ammo: 10,
+    maxAmmo: 10,
+    isReloading: false,
+    reloadProgress: 0
+  });
+  
+  // Update weapon state from global window object
+  useEffect(() => {
+    const updateWeaponState = () => {
+      if (window.weaponSystem) {
+        setWeaponState({
+          ammo: window.weaponSystem.ammo,
+          maxAmmo: window.weaponSystem.maxAmmo,
+          isReloading: window.weaponSystem.isReloading,
+          reloadProgress: window.weaponSystem.reloadProgress
+        });
+      }
+    };
+    
+    // Initial update
+    updateWeaponState();
+    
+    // Poll for updates
+    const intervalId = setInterval(updateWeaponState, 100);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+  
   return createPortal(
     <div className="game-ui">
       {/* Blood splatter effect when taking damage */}
@@ -213,8 +243,6 @@ const UI = () => {
         </div>
       </div>
       
-
-      
       {/* Score display */}
       <div className="score-display">
         <div style={{ 
@@ -239,7 +267,94 @@ const UI = () => {
         </div>
       </div>
       
-
+      {/* Ammo counter */}
+      <div className="ammo-counter" style={{
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        color: 'white',
+        padding: '10px 15px',
+        borderRadius: '5px',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        fontFamily: 'monospace',
+        fontSize: '20px',
+        fontWeight: 'bold',
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        minWidth: '120px'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%'
+        }}>
+          {weaponState.isReloading ? (
+            <span style={{
+              color: '#ffaa00',
+              animation: 'reloadBlink 0.6s infinite',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <svg 
+                width="18" 
+                height="18" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+                style={{ animation: 'reloadSpin 1s infinite linear' }}
+              >
+                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+                <path d="M21 3v5h-5" />
+              </svg>
+              RELOADING
+            </span>
+          ) : (
+            <span style={{
+              color: weaponState.ammo === 0 ? '#ff3333' : 'white'
+            }}>
+              {weaponState.ammo === 0 ? 'EMPTY' : `${weaponState.ammo}/${weaponState.maxAmmo}`}
+            </span>
+          )}
+        </div>
+        
+        {/* Reload progress bar */}
+        {weaponState.isReloading && (
+          <div style={{
+            width: '100%',
+            height: '4px',
+            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+            marginTop: '5px',
+            borderRadius: '2px',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${weaponState.reloadProgress * 100}%`,
+              backgroundColor: '#44ff44',
+              transition: 'width 0.1s linear'
+            }} />
+          </div>
+        )}
+        
+        {/* Reload hint */}
+        {!weaponState.isReloading && weaponState.ammo < weaponState.maxAmmo && (
+          <div style={{
+            fontSize: '12px',
+            marginTop: '5px',
+            opacity: 0.8
+          }}>
+            Press R to reload
+          </div>
+        )}
+      </div>
       
       {/* Controls guide */}
       {showControls && (
@@ -251,6 +366,7 @@ const UI = () => {
           <p>Left Mouse Button - Fire primary weapon</p>
           <p>J Key - Fire secondary weapon</p>
           <p>K Key - Fire special weapon</p>
+          <p>R Key - Reload weapon</p>
           <p>Crosshair - Aim weapon</p>
           <p>ESC - Toggle this guide</p>
           <p>Shift+D - Show debug info</p>
@@ -302,6 +418,12 @@ const UI = () => {
               pointerLockElement: <span style={{ color: isPointerLocked ? '#00ff00' : '#ff0000' }}>
                 {isPointerLocked ? 'YES' : 'NO'}
               </span>
+            </p>
+            <p style={{ margin: '5px 0' }}>
+              Ammo: {weaponState.ammo}/{weaponState.maxAmmo}
+            </p>
+            <p style={{ margin: '5px 0' }}>
+              Reloading: {weaponState.isReloading ? 'YES' : 'NO'}
             </p>
           </div>
         </div>
