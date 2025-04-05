@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useKeyboardControls } from '@react-three/drei';
@@ -10,6 +10,7 @@ interface WeaponDisplayProps {
 }
 
 const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
+  const [weaponLoaded, setWeaponLoaded] = useState(false);
   const { camera } = useThree();
   const pistolRef = useRef<THREE.Group>(null);
   const { isControlsLocked } = useGameControls();
@@ -63,8 +64,10 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   useEffect(() => {
     console.log('Weapon display initialized');
     
-    // Make the pistol a child of the camera
+    // Only proceed if pistolRef is defined
     if (pistolRef.current) {
+      console.log('Pistol ref exists, attaching to camera');
+      
       // Remove the pistol from its current parent if it has one
       if (pistolRef.current.parent && pistolRef.current.parent !== camera) {
         pistolRef.current.parent.remove(pistolRef.current);
@@ -73,6 +76,14 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
       // If it's not already a child of the camera, add it
       if (pistolRef.current.parent !== camera) {
         camera.add(pistolRef.current);
+        
+        // Position it correctly initially
+        pistolRef.current.position.set(0.3, -0.4, -0.6);
+        pistolRef.current.rotation.set(0, -Math.PI/12, 0);
+        
+        // Set the state to indicate the weapon has been loaded
+        setWeaponLoaded(true);
+        console.log('Weapon attached to camera');
       }
     }
     
@@ -82,19 +93,19 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
         camera.remove(pistolRef.current);
       }
     };
-  }, [camera]);
+  }, [camera, pistolRef.current]);
   
   // Handle weapon animation and positioning
   useFrame((_, delta) => {
     time.current += delta;
     
-    if (!pistolRef.current || !isControlsLocked || !isVisible) return;
+    if (!pistolRef.current || !weaponLoaded) return;
     
     // Position the weapon in the bottom right corner of the screen
     // These coordinates are relative to the camera
-    let posX = 0.4;
-    let posY = -0.3;
-    const posZ = -0.5;
+    let posX = 0.3;
+    let posY = -0.4;
+    const posZ = -0.6;
     
     // Add bobbing effect when moving
     if (isMoving) {
@@ -128,8 +139,13 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     pistolRef.current.rotation.x = targetRotX;
   });
   
+  // Log the isVisible state to help with debugging
+  useEffect(() => {
+    console.log(`Weapon visibility state: ${isVisible}, Controls locked: ${isControlsLocked}`);
+  }, [isVisible, isControlsLocked]);
+  
   return (
-    <group ref={pistolRef} visible={isVisible && isControlsLocked}>
+    <group ref={pistolRef}>
       {/* Pistol body */}
       <mesh position={[0, 0, 0]} castShadow>
         <boxGeometry args={[0.08, 0.15, 0.25]} />
