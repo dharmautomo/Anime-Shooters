@@ -92,7 +92,7 @@ export default function Login({ onLogin }: LoginProps) {
       <div className="login-container" style={containerStyle}>
         <div className="game-title">
           <span className="title-top">ANIME</span>
-          <span className="title-bottom">EXPLORER</span>
+          <span className="title-bottom">SHOOTER</span>
         </div>
         
         <div className="login-card">
