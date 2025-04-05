@@ -55,11 +55,11 @@ export default function Login({ onLogin }: LoginProps) {
       maxHeight: '100vh',
       overflow: 'hidden'
     }}>
-      {/* Simple gradient background */}
+      {/* Green-themed gradient background to match game environment */}
       <div 
         className="gradient-bg"
         style={{ 
-          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+          background: 'linear-gradient(135deg, #2c3e50 0%, #5c8474 50%, #6b8e23 100%)',
           position: 'absolute',
           top: 0,
           left: 0,

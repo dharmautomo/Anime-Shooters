@@ -159,11 +159,11 @@ canvas {
 
 /* Login card styling */
 .login-card {
-  background: linear-gradient(135deg, rgba(40, 40, 60, 0.8) 0%, rgba(20, 20, 35, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(44, 62, 80, 0.8) 0%, rgba(92, 132, 116, 0.9) 100%);
   border-radius: 12px;
   width: 100%;
   max-width: 450px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(107, 142, 35, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.2);
   overflow: hidden;
   backdrop-filter: blur(10px);
@@ -178,7 +178,7 @@ canvas {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #ff5f6d, #ffc371, #4158d0);
+  background: linear-gradient(90deg, #556b2f, #8fbc8f, #a0d850);
   z-index: 5;
 }
 
@@ -269,7 +269,7 @@ canvas {
   display: block;
   width: 100%;
   padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #6b8e23 0%, #556b2f 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -281,7 +281,7 @@ canvas {
   letter-spacing: 1px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 4px 12px rgba(107, 142, 35, 0.4);
 }
 
 .primary-button::before {
@@ -302,8 +302,8 @@ canvas {
 
 .primary-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(79, 70, 229, 0.5);
-  background: linear-gradient(135deg, #7172f2 0%, #5b53e8 100%);
+  box-shadow: 0 6px 15px rgba(107, 142, 35, 0.5);
+  background: linear-gradient(135deg, #8fbc8f 0%, #6b8e23 100%);
 }
 
 .primary-button:hover::before {
@@ -312,14 +312,14 @@ canvas {
 
 .primary-button:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 2px 8px rgba(107, 142, 35, 0.4);
 }
 
 .primary-button:disabled {
-  background: linear-gradient(135deg, #a5a6f3 0%, #9c96e9 100%);
+  background: linear-gradient(135deg, #a3c785 0%, #8fbc8f 100%);
   cursor: not-allowed;
   opacity: 0.7;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 2px 8px rgba(107, 142, 35, 0.2);
 }
 
 .primary-button.loading {
@@ -329,7 +329,7 @@ canvas {
 
 /* Controls panel styling */
 .controls-panel {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(20, 20, 35, 0.8) 100%);
+  background: linear-gradient(135deg, rgba(44, 62, 80, 0.7) 0%, rgba(92, 132, 116, 0.8) 100%);
   border-radius: 12px;
   padding: 1.5rem;
   width: 100%;
@@ -383,13 +383,13 @@ canvas {
   align-items: center;
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #3b3d56 0%, #1f2030 100%);
+  background: linear-gradient(135deg, #2c3e50 0%, #1a2e1a 100%);
   color: #ffffff;
   border-radius: 6px;
   font-weight: bold;
   font-size: 0.9rem;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(107, 142, 35, 0.3);
+  border: 1px solid rgba(107, 142, 35, 0.3);
 }
 
 .control-label {
@@ -540,11 +540,11 @@ canvas {
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: linear-gradient(135deg, rgba(40, 40, 60, 0.8) 0%, rgba(20, 20, 35, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(44, 62, 80, 0.8) 0%, rgba(92, 132, 116, 0.9) 100%);
   border-radius: 12px;
   max-width: 500px;
   width: 100%;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(107, 142, 35, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.2);
   text-align: center;
   pointer-events: auto; /* Ensure it can receive click events */
@@ -584,7 +584,7 @@ canvas {
 
 .start-button {
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #ff4136 0%, #d70466 100%);
+  background: linear-gradient(135deg, #6b8e23 0%, #556b2f 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -594,12 +594,12 @@ canvas {
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 2px;
-  box-shadow: 0 4px 12px rgba(255, 65, 54, 0.6), 0 0 20px rgba(255, 65, 54, 0.3);
+  box-shadow: 0 4px 12px rgba(107, 142, 35, 0.6), 0 0 20px rgba(107, 142, 35, 0.3);
   pointer-events: auto !important; /* Ensure it can receive click events */
   z-index: 100000; /* Highest z-index */
   position: relative;
   overflow: hidden;
-  animation: pulse-glow 2s infinite;
+  animation: pulse-glow-green 2s infinite;
 }
 
 .start-button::before {
@@ -618,8 +618,8 @@ canvas {
 
 .start-button:hover {
   transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(255, 65, 54, 0.7), 0 0 30px rgba(255, 65, 54, 0.4);
-  background: linear-gradient(135deg, #ff5a4f 0%, #f02b7f 100%);
+  box-shadow: 0 8px 20px rgba(107, 142, 35, 0.7), 0 0 30px rgba(107, 142, 35, 0.4);
+  background: linear-gradient(135deg, #8fbc8f 0%, #6b8e23 100%);
 }
 
 .start-button:hover::before {
@@ -641,15 +641,15 @@ canvas {
   }
 }
 
-@keyframes pulse-glow {
+@keyframes pulse-glow-green {
   0% {
-    box-shadow: 0 4px 12px rgba(255, 65, 54, 0.6), 0 0 20px rgba(255, 65, 54, 0.3);
+    box-shadow: 0 4px 12px rgba(107, 142, 35, 0.6), 0 0 20px rgba(107, 142, 35, 0.3);
   }
   50% {
-    box-shadow: 0 4px 15px rgba(255, 65, 54, 0.8), 0 0 30px rgba(255, 65, 54, 0.5);
+    box-shadow: 0 4px 15px rgba(107, 142, 35, 0.8), 0 0 30px rgba(107, 142, 35, 0.5);
   }
   100% {
-    box-shadow: 0 4px 12px rgba(255, 65, 54, 0.6), 0 0 20px rgba(255, 65, 54, 0.3);
+    box-shadow: 0 4px 12px rgba(107, 142, 35, 0.6), 0 0 20px rgba(107, 142, 35, 0.3);
   }
 }
 
