@@ -267,11 +267,11 @@ const UI = () => {
         </div>
       </div>
       
-      {/* Ammo counter */}
+      {/* Ammo counter - positioned below health bar */}
       <div className="ammo-counter" style={{
         position: 'fixed',
-        bottom: '20px',
-        right: '20px',
+        top: '60px',
+        left: '20px',
         backgroundColor: 'rgba(0, 0, 0, 0.6)',
         color: 'white',
         padding: '10px 15px',
@@ -284,7 +284,8 @@ const UI = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        minWidth: '120px'
+        width: '200px',
+        boxSizing: 'border-box'
       }}>
         <div style={{
           display: 'flex',

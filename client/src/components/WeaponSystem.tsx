@@ -221,10 +221,7 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
     weapons.current[weaponIndex].currentAmmo--;
     setAmmo(weapons.current[weaponIndex].currentAmmo);
     
-    // Auto-reload when empty
-    if (weapons.current[weaponIndex].currentAmmo === 0) {
-      reloadWeapon(weaponIndex);
-    }
+    // No auto-reload - user must manually press R key when empty
     
     // Get camera direction for bullet trajectory
     const direction = new THREE.Vector3(0, 0, -1);
