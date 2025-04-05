@@ -1,6 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useEffect } from 'react';
 import { useKeyboardControls } from '@react-three/drei';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
@@ -9,10 +7,8 @@ interface WeaponDisplayProps {
   isVisible: boolean;
 }
 
+// Use a DOM-based weapon display instead of a Three.js object
 const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
-  const [weaponLoaded, setWeaponLoaded] = useState(false);
-  const { camera } = useThree();
-  const pistolRef = useRef<THREE.Group>(null);
   const { isControlsLocked } = useGameControls();
   
   // Get movement keys for weapon sway animation
@@ -21,20 +17,14 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
   const left = useKeyboardControls((state) => state[Controls.left]);
   const right = useKeyboardControls((state) => state[Controls.right]);
   
-  // Track movement for sway effect
+  // Track movement for animation
   const isMoving = forward || backward || left || right;
   
-  // Track time for animations
-  const time = useRef(0);
-  
-  // Animation parameters
-  const bobSpeed = 4; // Speed of the bobbing effect
-  const bobAmount = 0.015; // Amount of bobbing
-  const swayAmount = 0.08; // Amount of weapon sway
-
-  // Add the crosshair to the DOM
+  // Create the DOM-based weapon display
   useEffect(() => {
-    // Create crosshair element
+    console.log('Creating DOM-based weapon display');
+    
+    // Add the crosshair to the DOM
     const crosshair = document.createElement('div');
     crosshair.id = 'crosshair';
     crosshair.style.position = 'fixed';
@@ -48,147 +38,119 @@ const WeaponDisplay = ({ isVisible }: WeaponDisplayProps) => {
     crosshair.style.pointerEvents = 'none';
     crosshair.style.zIndex = '1000';
     
-    // Add to DOM
+    // Create the weapon container
+    const weaponContainer = document.createElement('div');
+    weaponContainer.id = 'weapon-display';
+    weaponContainer.style.position = 'fixed';
+    weaponContainer.style.bottom = '20px';
+    weaponContainer.style.right = '20px';
+    weaponContainer.style.width = '200px';
+    weaponContainer.style.height = '150px';
+    weaponContainer.style.pointerEvents = 'none';
+    weaponContainer.style.zIndex = '999';
+    weaponContainer.style.transform = 'translate(0, 0)';
+    weaponContainer.style.transition = 'transform 0.1s ease-out';
+    
+    // Create the actual weapon image
+    const pistol = document.createElement('div');
+    pistol.id = 'pistol';
+    pistol.style.position = 'absolute';
+    pistol.style.bottom = '0';
+    pistol.style.right = '0';
+    pistol.style.width = '100%';
+    pistol.style.height = '100%';
+    pistol.style.backgroundImage = 'url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMTUwIj4NCiAgPCEtLSBQaXN0b2wgQm9keSAtLT4NCiAgPHJlY3QgeD0iOTAiIHk9IjcwIiB3aWR0aD0iODAiIGhlaWdodD0iMzAiIGZpbGw9IiMzMzMiIHN0cm9rZT0iIzIyMiIgc3Ryb2tlLXdpZHRoPSIyIi8+DQogIDwhLS0gQmFycmVsIC0tPg0KICA8cmVjdCB4PSIxNjAiIHk9Ijc1IiB3aWR0aD0iMzAiIGhlaWdodD0iMjAiIGZpbGw9IiM0NDQiIHN0cm9rZT0iIzIyMiIgc3Ryb2tlLXdpZHRoPSIyIi8+DQogIDwhLS0gUGlzdG9sIEdyaXAgLS0+DQogIDxyZWN0IHg9IjkwIiB5PSIxMDAiIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MCIgZmlsbD0iIzU1NSIgc3Ryb2tlPSIjMjIyIiBzdHJva2Utd2lkdGg9IjIiLz4NCiAgPCEtLSBUcmlnZ2VyIC0tPg0KICA8cmVjdCB4PSIxMTUiIHk9IjEwMCIgd2lkdGg9IjE1IiBoZWlnaHQ9IjE1IiBmaWxsPSIjMzMzIiBzdHJva2U9IiMyMjIiIHN0cm9rZS13aWR0aD0iMiIvPg0KICA8IS0tIE11enpsZSAtLT4NCiAgPHJlY3QgeD0iMTg1IiB5PSI3NSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMjIyIiBzdHJva2U9IiMxMTEiIHN0cm9rZS13aWR0aD0iMiIvPg0KICA8IS0tIFNpZ2h0IC0tPg0KICA8cmVjdCB4PSIxNjUiIHk9IjY1IiB3aWR0aD0iMTAiIGhlaWdodD0iNSIgZmlsbD0iIzY2NiIgc3Ryb2tlPSIjMjIyIiBzdHJva2Utd2lkdGg9IjEiLz4NCiAgPGNpcmNsZSBjeD0iMTcwIiBjeT0iNjMiIHI9IjIiIGZpbGw9IiNmMDAiIC8+DQogIDwhLS0gU2xpZGUgLS0+DQogIDxyZWN0IHg9IjEyMCIgeT0iNjUiIHdpZHRoPSI0MCIgaGVpZ2h0PSI1IiBmaWxsPSIjNTU1IiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMSIvPg0KPC9zdmc+DQo=)';
+    pistol.style.backgroundSize = 'contain';
+    pistol.style.backgroundRepeat = 'no-repeat';
+    pistol.style.backgroundPosition = 'bottom right';
+    
+    // Add the pistol to the weapon container
+    weaponContainer.appendChild(pistol);
+    
+    // Add elements to the DOM
     document.body.appendChild(crosshair);
+    document.body.appendChild(weaponContainer);
+    
+    // Animation function
+    let lastTime = 0;
+    let animationFrameId: number;
+    
+    const animate = (time: number) => {
+      const deltaTime = (time - lastTime) / 1000;
+      lastTime = time;
+      
+      const container = document.getElementById('weapon-display');
+      
+      if (container) {
+        // Only show weapon when controls are locked and player is alive
+        if (isControlsLocked && isVisible) {
+          container.style.display = 'block';
+          
+          // Bob and sway effect
+          let offsetX = 0;
+          let offsetY = 0;
+          
+          if (isMoving) {
+            // Bobbing effect when moving
+            const bobY = Math.sin(time / 200) * 5;
+            const bobX = Math.cos(time / 200) * 2;
+            offsetY += bobY;
+            offsetX += bobX;
+          } else {
+            // Subtle breathing effect when idle
+            const breathe = Math.sin(time / 700) * 2;
+            offsetY += breathe;
+          }
+          
+          // Add directional sway based on movement
+          if (forward) offsetY -= 3;
+          if (backward) offsetY += 3;
+          if (left) offsetX -= 3;
+          if (right) offsetX += 3;
+          
+          container.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        } else {
+          container.style.display = 'none';
+        }
+      }
+      
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    
+    // Start the animation
+    animationFrameId = requestAnimationFrame(animate);
+    
+    // Log the visibility state
+    console.log(`Creating weapon with visibility: ${isVisible}, Controls locked: ${isControlsLocked}`);
     
     // Cleanup on unmount
     return () => {
-      const existingCrosshair = document.getElementById('crosshair');
-      if (existingCrosshair) {
-        document.body.removeChild(existingCrosshair);
-      }
+      const crosshairElement = document.getElementById('crosshair');
+      const weaponElement = document.getElementById('weapon-display');
+      
+      if (crosshairElement) document.body.removeChild(crosshairElement);
+      if (weaponElement) document.body.removeChild(weaponElement);
+      
+      cancelAnimationFrame(animationFrameId);
     };
   }, []);
   
-  // Setup weapon position and visibility
+  // Update visibility when it changes
   useEffect(() => {
-    console.log('Weapon display initialized');
-    
-    // Only proceed if pistolRef is defined
-    if (pistolRef.current) {
-      console.log('Pistol ref exists, attaching to camera');
-      
-      // Remove the pistol from its current parent if it has one
-      if (pistolRef.current.parent && pistolRef.current.parent !== camera) {
-        pistolRef.current.parent.remove(pistolRef.current);
-      }
-      
-      // If it's not already a child of the camera, add it
-      if (pistolRef.current.parent !== camera) {
-        camera.add(pistolRef.current);
-        
-        // Position it correctly initially
-        pistolRef.current.position.set(0.3, -0.4, -0.6);
-        pistolRef.current.rotation.set(0, -Math.PI/12, 0);
-        
-        // Set the state to indicate the weapon has been loaded
-        setWeaponLoaded(true);
-        console.log('Weapon attached to camera');
+    const weaponContainer = document.getElementById('weapon-display');
+    if (weaponContainer) {
+      if (isControlsLocked && isVisible) {
+        weaponContainer.style.display = 'block';
+      } else {
+        weaponContainer.style.display = 'none';
       }
     }
     
-    // Cleanup function
-    return () => {
-      if (pistolRef.current && pistolRef.current.parent === camera) {
-        camera.remove(pistolRef.current);
-      }
-    };
-  }, [camera, pistolRef.current]);
-  
-  // Handle weapon animation and positioning
-  useFrame((_, delta) => {
-    time.current += delta;
-    
-    if (!pistolRef.current || !weaponLoaded) return;
-    
-    // Position the weapon in the bottom right corner of the screen
-    // These coordinates are relative to the camera
-    let posX = 0.3;
-    let posY = -0.4;
-    const posZ = -0.6;
-    
-    // Add bobbing effect when moving
-    if (isMoving) {
-      const bobOffsetY = Math.sin(time.current * bobSpeed) * bobAmount;
-      const bobOffsetX = Math.cos(time.current * bobSpeed) * bobAmount * 0.5;
-      
-      posY += bobOffsetY;
-      posX += bobOffsetX;
-    } else {
-      // Subtle breathing movement when idle
-      const breathingOffset = Math.sin(time.current * 1.5) * 0.003;
-      posY += breathingOffset;
-    }
-    
-    // Apply position directly - this is in local camera space so it stays fixed in view
-    pistolRef.current.position.set(posX, posY, posZ);
-    
-    // Reset rotation to base values
-    pistolRef.current.rotation.set(0, -Math.PI/12, 0);
-    
-    // Add movement-based rotation effects
-    let targetRotZ = 0;
-    if (left) targetRotZ = swayAmount;
-    if (right) targetRotZ = -swayAmount;
-    pistolRef.current.rotation.z = targetRotZ;
-    
-    // Add forward/backward tilt
-    let targetRotX = 0;
-    if (forward) targetRotX = -swayAmount * 0.5;
-    if (backward) targetRotX = swayAmount * 0.5;
-    pistolRef.current.rotation.x = targetRotX;
-  });
-  
-  // Log the isVisible state to help with debugging
-  useEffect(() => {
-    console.log(`Weapon visibility state: ${isVisible}, Controls locked: ${isControlsLocked}`);
+    console.log(`Weapon visibility changed: ${isVisible}, Controls locked: ${isControlsLocked}`);
   }, [isVisible, isControlsLocked]);
   
-  return (
-    <group ref={pistolRef}>
-      {/* Pistol body */}
-      <mesh position={[0, 0, 0]} castShadow>
-        <boxGeometry args={[0.08, 0.15, 0.25]} />
-        <meshStandardMaterial color="#111" roughness={0.5} metalness={0.7} />
-      </mesh>
-      
-      {/* Pistol grip */}
-      <mesh position={[0, -0.13, 0.05]} rotation={[0.3, 0, 0]} castShadow>
-        <boxGeometry args={[0.07, 0.15, 0.1]} />
-        <meshStandardMaterial color="#222" roughness={0.8} metalness={0.3} />
-      </mesh>
-      
-      {/* Pistol barrel */}
-      <mesh position={[0, 0.05, -0.15]} castShadow>
-        <boxGeometry args={[0.05, 0.05, 0.1]} />
-        <meshStandardMaterial color="#111" roughness={0.3} metalness={0.9} />
-      </mesh>
-      
-      {/* Trigger */}
-      <mesh position={[0, -0.05, 0.1]} castShadow>
-        <boxGeometry args={[0.03, 0.03, 0.05]} />
-        <meshStandardMaterial color="#333" roughness={0.5} metalness={0.5} />
-      </mesh>
-      
-      {/* Muzzle */}
-      <mesh position={[0, 0.05, -0.22]} castShadow>
-        <cylinderGeometry args={[0.02, 0.03, 0.04, 16]} />
-        <meshStandardMaterial color="#000" roughness={0.2} metalness={1} />
-      </mesh>
-      
-      {/* Slide */}
-      <mesh position={[0, 0.075, -0.05]} castShadow>
-        <boxGeometry args={[0.08, 0.05, 0.2]} />
-        <meshStandardMaterial color="#222" roughness={0.4} metalness={0.8} />
-      </mesh>
-      
-      {/* Sight */}
-      <mesh position={[0, 0.11, -0.13]} castShadow>
-        <boxGeometry args={[0.02, 0.02, 0.02]} />
-        <meshStandardMaterial color="#fff" emissive="#ff0000" emissiveIntensity={0.5} />
-      </mesh>
-    </group>
-  );
+  // This component doesn't render anything in the Three.js scene
+  return null;
 };
 
 export default WeaponDisplay;
