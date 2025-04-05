@@ -30,7 +30,7 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
   const { playerId, health } = usePlayer();
   const { isControlsLocked } = useGameControls();
   
-  // Weapon definitions
+  // Single primary weapon
   const weapons = useRef<Weapon[]>([
     {
       name: 'Primary',
@@ -41,26 +41,6 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
       fireSound: '/sounds/hit.mp3', // Using existing sound
       useJKey: false,
       useKKey: false
-    },
-    {
-      name: 'Secondary',
-      fireRate: 2, // 2 shots per second
-      lastFired: 0,
-      bulletSpeed: 20,
-      damage: 25,
-      fireSound: '/sounds/hit.mp3', // Using existing sound
-      useJKey: true,
-      useKKey: false
-    },
-    {
-      name: 'Special',
-      fireRate: 1, // 1 shot per second
-      lastFired: 0,
-      bulletSpeed: 15,
-      damage: 40,
-      fireSound: '/sounds/success.mp3', // Using existing sound
-      useJKey: false,
-      useKKey: true
     }
   ]);
   
@@ -88,14 +68,12 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
       }
     };
     
-    // Handle key presses for alternative weapons
+    // Handle key presses for the primary weapon
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isControlsLocked || health <= 0) return;
       
-      if (e.code === 'KeyJ') {
-        fireWeapon(1); // Secondary weapon
-      } else if (e.code === 'KeyK') {
-        fireWeapon(2); // Special weapon
+      if (e.code === 'KeyJ' || e.code === 'KeyK') {
+        fireWeapon(0); // Primary weapon for all keys
       }
     };
     
@@ -126,11 +104,8 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
     const direction = new THREE.Vector3(0, 0, -1);
     direction.applyQuaternion(camera.quaternion).normalize();
     
-    // Create bullet ID with weapon type for size determination
+    // Create bullet ID
     let bulletId = generateId();
-    if (weaponIndex === 2) { // Special weapon
-      bulletId = `special-${bulletId}`;
-    }
     
     // Create a new bullet
     const newBullet = {
@@ -151,7 +126,7 @@ const WeaponSystem = ({ position }: WeaponSystemProps) => {
     playGunSound(weapon.fireSound);
     
     // Apply screen shake
-    applyScreenShake(0.15, weaponIndex === 0 ? 0.03 : weaponIndex === 1 ? 0.05 : 0.08);
+    applyScreenShake(0.15, 0.05);
     
     console.log(`Fired ${weapon.name} weapon`);
   };
