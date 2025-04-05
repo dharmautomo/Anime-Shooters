@@ -93,8 +93,8 @@ const Bullet = ({ position, direction, bulletId, playerId, speed = 30, onHit }: 
     }
   });
   
-  // Determine bullet size based on weapon type (for special weapon bullets, keep them larger)
-  const bulletSize = playerId.includes('special') ? 0.1 : 0.05;
+  // Determine bullet size based on weapon type (special weapon bullets are much bigger)
+  const bulletSize = playerId.includes('special') ? 0.3 : 0.05;
   
   return (
     <mesh ref={bulletRef} castShadow>
