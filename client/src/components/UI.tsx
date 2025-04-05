@@ -70,36 +70,36 @@ const UI = () => {
     };
   }, []);
   
+  // Create refs outside of the effect but inside the component
+  const isInitialHealthRender = useRef(true);
+  const prevHealthRef = useRef(health);
+  
   // Effect for monitoring player health changes
   useEffect(() => {
-    // Create a local variable to check if we've initialized yet
-    const isInitialRender = useRef(true);
-    
     // Skip effect on first render
-    if (isInitialRender.current) {
-      isInitialRender.current = false;
+    if (isInitialHealthRender.current) {
+      isInitialHealthRender.current = false;
+      prevHealthRef.current = health;
       return;
     }
     
-    // Show damage effect if health decreased 
-    const handleHealthChange = () => {
-      // If health decreased, show damage effect
-      if (health < 100) {
-        setShowDamageEffect(true);
-        
-        // Play damage sound
-        const damageSound = new Audio('/sounds/hit.mp3');
-        damageSound.volume = 0.3;
-        damageSound.play().catch(e => console.error("Error playing damage sound:", e));
-        
-        // Clear damage effect after short delay
-        setTimeout(() => {
-          setShowDamageEffect(false);
-        }, 300);
-      }
-    };
+    // Only show damage effect if health decreased
+    if (health < prevHealthRef.current) {
+      setShowDamageEffect(true);
+      
+      // Play damage sound
+      const damageSound = new Audio('/sounds/hit.mp3');
+      damageSound.volume = 0.3;
+      damageSound.play().catch(e => console.error("Error playing damage sound:", e));
+      
+      // Clear damage effect after short delay
+      setTimeout(() => {
+        setShowDamageEffect(false);
+      }, 300);
+    }
     
-    handleHealthChange();
+    // Update the previous health reference
+    prevHealthRef.current = health;
   }, [health]);
   
   // Effect for monitoring score changes
