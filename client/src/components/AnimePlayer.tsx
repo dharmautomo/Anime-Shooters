@@ -340,9 +340,9 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
       {/* Add gun when the player is visible (not in first person view) */}
       {!isMainPlayer && (
         <SciFiGun 
-          position={[0.2, 0.1, 0.3]} 
+          position={[0.15, 0.05, 0.2]} 
           rotation={[0, -Math.PI / 2, 0]} 
-          scale={0.0025} // Reduced scale by half for better proportions
+          scale={0.0008} // Further reduced scale for better proportions with anime character
         />
       )}
     </group>
