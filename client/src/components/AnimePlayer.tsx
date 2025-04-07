@@ -92,11 +92,11 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
         const clonedScene = scene.clone();
         
         // Adjust model scale and position
-        const modelScaleFactor = 0.005; // Much smaller scale factor for proper proportions with environment
+        const modelScaleFactor = 0.0015; // Drastically reduced scale for proper proportions with environment
         clonedScene.scale.set(modelScaleFactor, modelScaleFactor, modelScaleFactor);
         
         // Adjust the position of the model to ensure it's on the ground
-        clonedScene.position.set(0, -1.5, 0); // Further lowered to place feet exactly on the ground
+        clonedScene.position.set(0, -0.8, 0); // Adjusted height for smaller model
         
         // Add the cloned scene
         groupRef.current.add(clonedScene);
@@ -296,7 +296,7 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
       
       // Update name tag position
       if (nameTagRef.current) {
-        nameTagRef.current.position.set(0, 1.0, 0);
+        nameTagRef.current.position.set(0, 0.5, 0); // Lowered for smaller model
       }
       
       // Apply damage flash effect if active
@@ -340,9 +340,9 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
       {/* Add gun when the player is visible (not in first person view) */}
       {!isMainPlayer && (
         <SciFiGun 
-          position={[0.15, 0.05, 0.2]} 
+          position={[0.08, 0.02, 0.1]} 
           rotation={[0, -Math.PI / 2, 0]} 
-          scale={0.0008} // Further reduced scale for better proportions with anime character
+          scale={0.0005} // Scaled to match the significantly smaller anime character
         />
       )}
     </group>
@@ -416,7 +416,7 @@ function roundRect(
 // Add license attribution
 function ModelAttribution() {
   return (
-    <sprite position={[0, 1.2, 0]} scale={[1.5, 0.3, 1]}>
+    <sprite position={[0, 0.5, 0]} scale={[1.0, 0.2, 1]}>
       <spriteMaterial 
         transparent={true}
         depthTest={false}
