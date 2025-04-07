@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
-import Player from './Player';
+import AnimePlayer from './AnimePlayer';
 import World from './World';
 import WeaponSystem from './WeaponSystem';
 import { Controls } from '../App';
@@ -456,16 +456,17 @@ const Game = ({ username }: GameProps) => {
       )}
       
       {/* Main player */}
-      <Player 
+      <AnimePlayer 
         isMainPlayer={true}
         position={position}
         rotation={rotation}
         health={health}
+        username={username}
       />
       
       {/* Render other players */}
       {Object.values(otherPlayers).map((player) => (
-        <Player 
+        <AnimePlayer 
           key={player.id}
           isMainPlayer={false}
           position={player.position}
