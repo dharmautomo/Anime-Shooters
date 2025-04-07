@@ -38,7 +38,7 @@ export function SciFiGun({
                   // Make sure material has basic properties
                   if ((mat as any).color) {
                     // Set generic colors based on material name for robustness
-                    if (mat.name.includes('barrel') || mat.name.includes('barrel')) {
+                    if (mat.name.includes('barrel') || mat.name.includes('barrell')) {
                       (mat as any).color.set('#303030'); // Dark gray for barrel
                     } else if (mat.name.includes('scope')) {
                       (mat as any).color.set('#1a1a1a'); // Black for scope
@@ -78,7 +78,7 @@ export function SciFiGun({
 
   // Add license attribution
   const AttributionTag = () => (
-    <sprite position={[0, 0.2, 0]} scale={[0.5, 0.1, 1]}>
+    <sprite position={[0, 0.05, 0]} scale={[0.2, 0.04, 1]}>
       <spriteMaterial 
         transparent={true}
         depthTest={false}
