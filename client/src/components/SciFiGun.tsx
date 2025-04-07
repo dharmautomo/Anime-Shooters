@@ -130,27 +130,28 @@ function SciFiGunModel({ position = [0, 0, 0], scale = 0.5, rotation = [0, 0, 0]
 export function SciFiGun(props: SciFiGunProps) {
   // Add caption with attribution when visible in third-person view
   const addModelCredit = () => {
-    if (!props.visible) return null;
+    // Only show caption in the editor mode or for other players
+    // Don't show it in first-person view to avoid visual clutter
+    if (!props.visible || props.position?.[2] === -1.2) return null;
     
     return (
-      <sprite position={[0, 0.3, 0]} scale={[1.5, 0.4, 1]}>
+      <sprite position={[0, 0.5, 0]} scale={[0.6, 0.2, 1]}>
         <spriteMaterial 
           transparent={true}
+          opacity={0.5}
           depthTest={false}
           map={(() => {
             const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 128;
+            canvas.width = 256;
+            canvas.height = 64;
             const ctx = canvas.getContext('2d')!;
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.font = 'bold 20px Arial';
+            ctx.font = '10px Arial';
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText("Sci-Fi Gun by Anatomy by Doctor Jana", canvas.width/2, canvas.height/2);
-            ctx.font = '14px Arial';
-            ctx.fillText("CC-BY-4.0 License", canvas.width/2, canvas.height/2 + 24);
+            ctx.fillText("Gun: Anatomy by Doctor Jana (CC-BY-4.0)", canvas.width/2, canvas.height/2);
             return new THREE.CanvasTexture(canvas);
           })()}
         />
