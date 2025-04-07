@@ -91,11 +91,11 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
         const clonedScene = scene.clone();
         
         // Adjust model scale and position
-        const modelScaleFactor = 0.75; // Adjust this based on the model's size
+        const modelScaleFactor = 0.05; // Significantly reduced scale factor for proper sizing
         clonedScene.scale.set(modelScaleFactor, modelScaleFactor, modelScaleFactor);
         
         // Adjust the position of the model to ensure it's on the ground
-        clonedScene.position.set(0, -0.5, 0); // May need adjustment for proper placement
+        clonedScene.position.set(0, 0.3, 0); // Adjusted to place feet properly on ground
         
         // Add the cloned scene
         groupRef.current.add(clonedScene);
@@ -406,7 +406,7 @@ function roundRect(
 // Add license attribution
 function ModelAttribution() {
   return (
-    <sprite position={[0, -0.5, 0]} scale={[3, 0.5, 1]}>
+    <sprite position={[0, 3, 0]} scale={[3, 0.5, 1]}>
       <spriteMaterial 
         transparent={true}
         depthTest={false}
