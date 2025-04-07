@@ -1,6 +1,7 @@
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import Portal from './Portal';
+import BabyMonster from './BabyMonster';
 import { useEffect, useState, useMemo } from 'react';
 
 // Helper function to check if coming from portal
@@ -376,6 +377,13 @@ const World = () => {
           side={THREE.BackSide}
         />
       </mesh>
+      
+      {/* Baby Monster - Animated 3D Character */}
+      <BabyMonster 
+        position={[8, 0, -8]} 
+        scale={0.8} 
+        rotation={Math.PI / 4}
+      />
       
       {/* Exit Portal - Leads to the Vibeverse */}
       <Portal 
