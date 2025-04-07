@@ -62,43 +62,48 @@ function createFallbackGun(groupRef: React.RefObject<THREE.Group>, scale: number
 
 function SciFiGunModel({ position = [0, 0, 0], scale = 0.5, rotation = [0, 0, 0], visible = true }: SciFiGunProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const [loadError, setLoadError] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   
-  // Load the model
-  let modelData;
-  try {
-    modelData = useGLTF('/models/scifi-gun/scene.gltf');
-  } catch (error) {
-    console.error('Error loading GLTF model:', error);
-    setLoadError(true);
-  }
+  // Load the model - useGLTF caches automatically
+  const { scene: model } = useGLTF('/models/scifi-gun/scene.gltf');
   
-  const model = modelData?.scene;
-  
+  // Only run this once on initialization or when scale changes
   useEffect(() => {
-    if (model && !loadError) {
-      console.log('SciFi Gun model loaded successfully');
-      
-      // Clear any existing children
-      if (groupRef.current) {
-        while (groupRef.current.children.length > 0) {
-          groupRef.current.remove(groupRef.current.children[0]);
-        }
-        
-        // Clone the model to avoid modifying the cached original
-        const modelClone = model.clone();
-        
-        // Scale the model
-        modelClone.scale.set(scale, scale, scale);
-        
-        // Add the model to the group
-        groupRef.current.add(modelClone);
+    // Skip if we've already initialized and scale hasn't changed
+    if (hasInitialized && scale === 0.5) return;
+    
+    // Clear any existing children
+    if (groupRef.current) {
+      while (groupRef.current.children.length > 0) {
+        groupRef.current.remove(groupRef.current.children[0]);
       }
-    } else if (loadError || !model) {
-      console.log('Using fallback gun model');
-      createFallbackGun(groupRef, scale);
+      
+      try {
+        if (model) {
+          console.log('SciFi Gun model loaded successfully');
+          
+          // Clone the model to avoid modifying the cached original
+          const modelClone = model.clone();
+          
+          // Scale the model
+          modelClone.scale.set(scale, scale, scale);
+          
+          // Add the model to the group
+          groupRef.current.add(modelClone);
+        } else {
+          // If model loading failed, use the fallback
+          console.log('Using fallback gun model');
+          createFallbackGun(groupRef, scale);
+        }
+      } catch (error) {
+        console.error('Error setting up gun model:', error);
+        createFallbackGun(groupRef, scale);
+      }
+      
+      // Mark as initialized
+      setHasInitialized(true);
     }
-  }, [model, loadError, scale]);
+  }, [model, scale, hasInitialized]);
 
   // Apply animations/effects
   useFrame((_, delta) => {
