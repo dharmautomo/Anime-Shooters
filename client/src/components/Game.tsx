@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
-import AnimePlayer from './AnimePlayer';
+import Player from './Player';
 import World from './World';
 import WeaponSystem from './WeaponSystem';
-import FirstPersonGun from './FirstPersonGun';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
@@ -399,7 +398,7 @@ const Game = ({ username }: GameProps) => {
     // Update camera position to match player position
     camera.position.copy(new THREE.Vector3(
       newPosition.x,
-      newPosition.y + 1.0, // Eye height, lowered to match new model scale
+      newPosition.y + 1.6, // Eye height
       newPosition.z
     ));
     
@@ -422,10 +421,7 @@ const Game = ({ username }: GameProps) => {
       
       {/* Weapon system for shooting */}
       {health > 0 && isControlsLocked && (
-        <>
-          <WeaponSystem position={position} />
-          <FirstPersonGun />
-        </>
+        <WeaponSystem position={position} />
       )}
       
       {/* Death overlay when player is dead */}
@@ -460,17 +456,16 @@ const Game = ({ username }: GameProps) => {
       )}
       
       {/* Main player */}
-      <AnimePlayer 
+      <Player 
         isMainPlayer={true}
         position={position}
         rotation={rotation}
         health={health}
-        username={username}
       />
       
       {/* Render other players */}
       {Object.values(otherPlayers).map((player) => (
-        <AnimePlayer 
+        <Player 
           key={player.id}
           isMainPlayer={false}
           position={player.position}
