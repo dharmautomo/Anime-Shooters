@@ -1,5 +1,6 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface BabyMonsterProps {
@@ -8,135 +9,172 @@ interface BabyMonsterProps {
   rotation?: number;
 }
 
-export function BabyMonster({ 
-  position = [0, 0, 0], 
-  scale = 1,
-  rotation = 0 
-}: BabyMonsterProps) {
+// Function that creates our fallback monster if loading fails
+function createFallbackMonster(groupRef: React.RefObject<THREE.Group>, scale: number, rotation: number) {
+  if (groupRef.current) {
+    // Clear existing children
+    while (groupRef.current.children.length > 0) {
+      groupRef.current.remove(groupRef.current.children[0]);
+    }
+    
+    // Create a stylized monster
+    // Body
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1.5, 1),
+      new THREE.MeshStandardMaterial({ color: '#e38c55' })
+    );
+    body.position.set(0, 0.75, 0);
+    body.castShadow = true;
+    groupRef.current.add(body);
+    
+    // Head
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.6, 16, 16),
+      new THREE.MeshStandardMaterial({ color: '#e3a06a' })
+    );
+    head.position.set(0, 1.7, 0);
+    head.castShadow = true;
+    groupRef.current.add(head);
+    
+    // Eyes
+    const eyeGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+    const eyeMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+    
+    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    leftEye.position.set(0.2, 1.8, 0.5);
+    groupRef.current.add(leftEye);
+    
+    const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    rightEye.position.set(-0.2, 1.8, 0.5);
+    groupRef.current.add(rightEye);
+    
+    // Pupils
+    const pupilGeometry = new THREE.SphereGeometry(0.06, 16, 16);
+    const pupilMaterial = new THREE.MeshBasicMaterial({ color: '#000000' });
+    
+    const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+    leftPupil.position.set(0.2, 1.8, 0.58);
+    groupRef.current.add(leftPupil);
+    
+    const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+    rightPupil.position.set(-0.2, 1.8, 0.58);
+    groupRef.current.add(rightPupil);
+    
+    // Arms
+    const armGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
+    const armMaterial = new THREE.MeshStandardMaterial({ color: '#e38c55' });
+    
+    const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+    leftArm.position.set(0.65, 0.9, 0);
+    leftArm.castShadow = true;
+    groupRef.current.add(leftArm);
+    
+    const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+    rightArm.position.set(-0.65, 0.9, 0);
+    rightArm.castShadow = true;
+    groupRef.current.add(rightArm);
+    
+    // Legs
+    const legGeometry = new THREE.BoxGeometry(0.3, 0.5, 0.3);
+    const legMaterial = new THREE.MeshStandardMaterial({ color: '#e38c55' });
+    
+    const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+    leftLeg.position.set(0.3, 0.25, 0);
+    leftLeg.castShadow = true;
+    groupRef.current.add(leftLeg);
+    
+    const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+    rightLeg.position.set(-0.3, 0.25, 0);
+    rightLeg.castShadow = true;
+    groupRef.current.add(rightLeg);
+    
+    // Mouth
+    const mouth = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.1, 0.1),
+      new THREE.MeshBasicMaterial({ color: '#ff9999' })
+    );
+    mouth.position.set(0, 1.5, 0.59);
+    groupRef.current.add(mouth);
+    
+    // Horns
+    const hornGeometry = new THREE.ConeGeometry(0.1, 0.3, 16);
+    const hornMaterial = new THREE.MeshStandardMaterial({ color: '#b35d33' });
+    
+    const leftHorn = new THREE.Mesh(hornGeometry, hornMaterial);
+    leftHorn.position.set(0.25, 2.1, 0);
+    leftHorn.rotation.x = -Math.PI / 6;
+    leftHorn.castShadow = true;
+    groupRef.current.add(leftHorn);
+    
+    const rightHorn = new THREE.Mesh(hornGeometry, hornMaterial);
+    rightHorn.position.set(-0.25, 2.1, 0);
+    rightHorn.rotation.x = -Math.PI / 6;
+    rightHorn.castShadow = true;
+    groupRef.current.add(rightHorn);
+    
+    // Tail
+    const tailGeometry = new THREE.CylinderGeometry(0.1, 0.05, 1);
+    const tailMaterial = new THREE.MeshStandardMaterial({ color: '#e38c55' });
+    
+    const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+    // Position the tail at the back and make it point backward and slightly up
+    tail.position.set(0, 0.5, -0.7);
+    tail.rotation.x = Math.PI / 4;
+    tail.castShadow = true;
+    groupRef.current.add(tail);
+    
+    // Apply scale to the group
+    groupRef.current.scale.set(scale, scale, scale);
+    
+    // Initial rotation
+    groupRef.current.rotation.y = rotation;
+  }
+}
+
+// Main component that loads and renders the 3D model
+function BabyMonsterModel({ position, scale = 1, rotation = 0 }: BabyMonsterProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [animationTime, setAnimationTime] = useState(0);
+  const [loadError, setLoadError] = useState(false);
+  const modelPath = '/models/baby-monster/scene.gltf';
   
-  // Create the stylized monster directly instead of trying to load the GLTF
+  // Load the GLTF model with error handling
+  const { scene, nodes, materials } = useGLTF(modelPath);
+  
+  // Set up the model when it's loaded
   useEffect(() => {
-    if (groupRef.current) {
-      // Clear existing children
-      while (groupRef.current.children.length > 0) {
-        groupRef.current.remove(groupRef.current.children[0]);
-      }
-      
-      // Create a stylized monster
-      // Body
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(1, 1.5, 1),
-        new THREE.MeshStandardMaterial({ color: '#6a47b8' })
-      );
-      body.position.set(0, 0.75, 0);
-      body.castShadow = true;
-      groupRef.current.add(body);
-      
-      // Head
-      const head = new THREE.Mesh(
-        new THREE.SphereGeometry(0.6, 16, 16),
-        new THREE.MeshStandardMaterial({ color: '#8c66e3' })
-      );
-      head.position.set(0, 1.7, 0);
-      head.castShadow = true;
-      groupRef.current.add(head);
-      
-      // Eyes
-      const eyeGeometry = new THREE.SphereGeometry(0.12, 16, 16);
-      const eyeMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff' });
-      
-      const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-      leftEye.position.set(0.2, 1.8, 0.5);
-      groupRef.current.add(leftEye);
-      
-      const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-      rightEye.position.set(-0.2, 1.8, 0.5);
-      groupRef.current.add(rightEye);
-      
-      // Pupils
-      const pupilGeometry = new THREE.SphereGeometry(0.06, 16, 16);
-      const pupilMaterial = new THREE.MeshBasicMaterial({ color: '#000000' });
-      
-      const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
-      leftPupil.position.set(0.2, 1.8, 0.58);
-      groupRef.current.add(leftPupil);
-      
-      const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
-      rightPupil.position.set(-0.2, 1.8, 0.58);
-      groupRef.current.add(rightPupil);
-      
-      // Arms
-      const armGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
-      const armMaterial = new THREE.MeshStandardMaterial({ color: '#6a47b8' });
-      
-      const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-      leftArm.position.set(0.65, 0.9, 0);
-      leftArm.castShadow = true;
-      groupRef.current.add(leftArm);
-      
-      const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-      rightArm.position.set(-0.65, 0.9, 0);
-      rightArm.castShadow = true;
-      groupRef.current.add(rightArm);
-      
-      // Legs
-      const legGeometry = new THREE.BoxGeometry(0.3, 0.5, 0.3);
-      const legMaterial = new THREE.MeshStandardMaterial({ color: '#6a47b8' });
-      
-      const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-      leftLeg.position.set(0.3, 0.25, 0);
-      leftLeg.castShadow = true;
-      groupRef.current.add(leftLeg);
-      
-      const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-      rightLeg.position.set(-0.3, 0.25, 0);
-      rightLeg.castShadow = true;
-      groupRef.current.add(rightLeg);
-      
-      // Mouth
-      const mouth = new THREE.Mesh(
-        new THREE.BoxGeometry(0.3, 0.1, 0.1),
-        new THREE.MeshBasicMaterial({ color: '#ff9999' })
-      );
-      mouth.position.set(0, 1.5, 0.59);
-      groupRef.current.add(mouth);
-      
-      // Horns
-      const hornGeometry = new THREE.ConeGeometry(0.1, 0.3, 16);
-      const hornMaterial = new THREE.MeshStandardMaterial({ color: '#5a3a99' });
-      
-      const leftHorn = new THREE.Mesh(hornGeometry, hornMaterial);
-      leftHorn.position.set(0.25, 2.1, 0);
-      leftHorn.rotation.x = -Math.PI / 6;
-      leftHorn.castShadow = true;
-      groupRef.current.add(leftHorn);
-      
-      const rightHorn = new THREE.Mesh(hornGeometry, hornMaterial);
-      rightHorn.position.set(-0.25, 2.1, 0);
-      rightHorn.rotation.x = -Math.PI / 6;
-      rightHorn.castShadow = true;
-      groupRef.current.add(rightHorn);
-      
-      // Tail
-      const tailGeometry = new THREE.CylinderGeometry(0.1, 0.05, 1);
-      const tailMaterial = new THREE.MeshStandardMaterial({ color: '#6a47b8' });
-      
-      const tail = new THREE.Mesh(tailGeometry, tailMaterial);
-      // Position the tail at the back and make it point backward and slightly up
-      tail.position.set(0, 0.5, -0.7);
-      tail.rotation.x = Math.PI / 4;
-      tail.castShadow = true;
-      groupRef.current.add(tail);
-      
-      // Apply scale to the group
-      groupRef.current.scale.set(scale, scale, scale);
-      
-      // Initial rotation
-      groupRef.current.rotation.y = rotation;
+    if (loadError) {
+      console.log("Using fallback monster due to loading error");
+      createFallbackMonster(groupRef, scale, rotation);
+      return;
     }
-  }, [scale, rotation]);
+    
+    if (groupRef.current && scene) {
+      try {
+        // Clear any existing children
+        while (groupRef.current.children.length > 0) {
+          groupRef.current.remove(groupRef.current.children[0]);
+        }
+        
+        // Create a clone of the scene to avoid conflicts with multiple instances
+        const clonedScene = scene.clone();
+        
+        // Add the cloned scene
+        groupRef.current.add(clonedScene);
+        
+        // Apply scale to the group
+        groupRef.current.scale.set(scale, scale, scale);
+        
+        // Apply initial rotation
+        groupRef.current.rotation.y = rotation;
+        
+        console.log("GLTF model loaded successfully!");
+      } catch (error) {
+        console.error("Error setting up model:", error);
+        setLoadError(true);
+      }
+    }
+  }, [scene, scale, rotation, loadError]);
   
   // Animation loop
   useFrame((_, delta) => {
@@ -151,8 +189,8 @@ export function BabyMonster({
       // Gentle swaying
       groupRef.current.rotation.y = rotation + Math.sin(animationTime) * 0.1;
       
-      // If children are available, animate them
-      if (groupRef.current.children.length > 0) {
+      // If using the fallback model, animate the parts
+      if (loadError && groupRef.current.children.length > 0) {
         // Animate arms (arms are at index 6 and 7)
         const leftArm = groupRef.current.children[6];
         const rightArm = groupRef.current.children[7];
@@ -189,7 +227,73 @@ export function BabyMonster({
     }
   });
   
-  // Add a caption
+  return (
+    <group
+      ref={groupRef}
+      position={[position[0], position[1], position[2]]}
+      castShadow
+      receiveShadow
+    />
+  );
+}
+
+// Error boundary component
+function ErrorFallback({ position, scale, rotation }: BabyMonsterProps) {
+  const groupRef = useRef<THREE.Group>(null);
+  const [animationTime, setAnimationTime] = useState(0);
+  
+  // Create fallback monster on mount
+  useEffect(() => {
+    console.log("Using error fallback monster");
+    createFallbackMonster(groupRef, scale || 1, rotation || 0);
+  }, [scale, rotation]);
+  
+  // Animation for fallback monster
+  useFrame((_, delta) => {
+    setAnimationTime(prevTime => prevTime + delta);
+    
+    if (groupRef.current) {
+      // Breathing animation
+      const breathingOffset = Math.sin(animationTime * 2) * 0.05;
+      groupRef.current.position.y = (position ? position[1] : 0) + breathingOffset;
+      
+      // Swaying animation
+      groupRef.current.rotation.y = (rotation || 0) + Math.sin(animationTime) * 0.1;
+      
+      // Animate parts if they exist
+      if (groupRef.current.children.length > 0) {
+        // Arms (index 6, 7)
+        const arms = [groupRef.current.children[6], groupRef.current.children[7]];
+        arms.forEach((arm, i) => {
+          if (arm) {
+            arm.rotation.x = Math.sin(animationTime * 2 + i * Math.PI) * 0.2;
+          }
+        });
+        
+        // Legs (index 8, 9)
+        const legs = [groupRef.current.children[8], groupRef.current.children[9]];
+        legs.forEach((leg, i) => {
+          if (leg) {
+            leg.position.y = 0.25 + Math.sin(animationTime * 2 + i * Math.PI) * 0.05;
+          }
+        });
+      }
+    }
+  });
+  
+  return (
+    <group 
+      ref={groupRef}
+      position={position}
+      castShadow
+      receiveShadow
+    />
+  );
+}
+
+// Main component with caption
+export function BabyMonster(props: BabyMonsterProps) {
+  // Add a caption with attribution
   const addModelCredit = () => {
     return (
       <sprite position={[0, 2.5, 0]} scale={[2, 0.5, 1]}>
@@ -218,15 +322,16 @@ export function BabyMonster({
   };
   
   return (
-    <group 
-      ref={groupRef} 
-      position={[position[0], position[1], position[2]]}
-      castShadow
-      receiveShadow
-    >
+    <group position={props.position}>
       {addModelCredit()}
+      <Suspense fallback={<ErrorFallback {...props} />}>
+        <BabyMonsterModel {...props} />
+      </Suspense>
     </group>
   );
 }
+
+// Preload the model
+useGLTF.preload('/models/baby-monster/scene.gltf');
 
 export default BabyMonster;
