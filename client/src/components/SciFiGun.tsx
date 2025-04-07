@@ -135,17 +135,18 @@ export function SciFiGun(props: SciFiGunProps) {
     if (!props.visible || props.position?.[2] === -1.2) return null;
     
     return (
-      <sprite position={[0, 0.5, 0]} scale={[0.6, 0.2, 1]}>
+      <sprite position={[0, 0.5, 0]} scale={[0.6, 0.2, 1]} renderOrder={1000}>
         <spriteMaterial 
           transparent={true}
-          opacity={0.5}
-          depthTest={false}
+          opacity={0.3}
+          depthTest={true}
+          depthWrite={false}
           map={(() => {
             const canvas = document.createElement('canvas');
             canvas.width = 256;
             canvas.height = 64;
             const ctx = canvas.getContext('2d')!;
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.font = '10px Arial';
             ctx.fillStyle = '#ffffff';

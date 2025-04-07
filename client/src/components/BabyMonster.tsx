@@ -304,16 +304,18 @@ export function BabyMonster(props: BabyMonsterProps) {
   // Add a caption with attribution
   const addModelCredit = () => {
     return (
-      <sprite position={[0, 2.5, 0]} scale={[2, 0.5, 1]}>
+      <sprite position={[0, 2.5, 0]} scale={[2, 0.5, 1]} renderOrder={1000}>
         <spriteMaterial 
           transparent={true}
-          depthTest={false}
+          opacity={0.3}
+          depthTest={true}
+          depthWrite={false}
           map={(() => {
             const canvas = document.createElement('canvas');
             canvas.width = 512;
             canvas.height = 128;
             const ctx = canvas.getContext('2d')!;
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.font = 'bold 20px Arial';
             ctx.fillStyle = '#ffffff';
