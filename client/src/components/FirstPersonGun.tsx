@@ -62,7 +62,7 @@ export function FirstPersonGun() {
         });
         
         // Apply scale to the model for proper sizing
-        const scale = 0.003;
+        const scale = 0.0015; // Reduced from 0.003 to 0.0015 for better proportions
         clonedScene.scale.set(scale, scale, scale);
         
         // Add to the group ref
@@ -108,9 +108,9 @@ export function FirstPersonGun() {
     groupRef.current.rotation.copy(camera.rotation);
     
     // Apply offset to position the gun in view
-    const offsetX = 0.2;    // Right side of screen
-    const offsetY = -0.2;   // Below center
-    const offsetZ = -0.4;   // In front of camera
+    const offsetX = 0.15;   // Right side of screen (slightly less)
+    const offsetY = -0.15;  // Below center (slightly higher)
+    const offsetZ = -0.3;   // In front of camera (slightly closer)
     
     // Create vector in local camera space
     const localOffset = new THREE.Vector3(offsetX, offsetY, offsetZ);

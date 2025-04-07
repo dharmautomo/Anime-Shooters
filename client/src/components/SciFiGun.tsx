@@ -11,7 +11,7 @@ interface SciFiGunProps {
 export function SciFiGun({ 
   position = [0, 0, 0], 
   rotation = [0, 0, 0], 
-  scale = 0.01 
+  scale = 0.003 // Reduced from 0.01 to 0.003 for better proportions
 }: SciFiGunProps) {
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF('/models/sci-fi-gun/scene.gltf', true);
