@@ -91,11 +91,11 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
         const clonedScene = scene.clone();
         
         // Adjust model scale and position
-        const modelScaleFactor = 0.05; // Significantly reduced scale factor for proper sizing
+        const modelScaleFactor = 0.005; // Much smaller scale factor for proper proportions with environment
         clonedScene.scale.set(modelScaleFactor, modelScaleFactor, modelScaleFactor);
         
         // Adjust the position of the model to ensure it's on the ground
-        clonedScene.position.set(0, 0.3, 0); // Adjusted to place feet properly on ground
+        clonedScene.position.set(0, 0.8, 0); // Raised to place feet properly on ground with new scale
         
         // Add the cloned scene
         groupRef.current.add(clonedScene);
@@ -125,8 +125,8 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
       // Create or update the name tag sprite
       if (!nameTagRef.current) {
         const sprite = new THREE.Sprite(spriteMaterial);
-        sprite.scale.set(2, 0.5, 1);
-        sprite.position.set(0, 2.5, 0);
+        sprite.scale.set(0.6, 0.15, 1);
+        sprite.position.set(0, 1.0, 0);
         // Create a new sprite and add it to the group
         groupRef.current.add(sprite);
         
@@ -295,7 +295,7 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
       
       // Update name tag position
       if (nameTagRef.current) {
-        nameTagRef.current.position.set(0, 2.5, 0);
+        nameTagRef.current.position.set(0, 1.0, 0);
       }
       
       // Apply damage flash effect if active
@@ -406,7 +406,7 @@ function roundRect(
 // Add license attribution
 function ModelAttribution() {
   return (
-    <sprite position={[0, 3, 0]} scale={[3, 0.5, 1]}>
+    <sprite position={[0, 1.2, 0]} scale={[1.5, 0.3, 1]}>
       <spriteMaterial 
         transparent={true}
         depthTest={false}
