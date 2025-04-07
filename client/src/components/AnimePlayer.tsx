@@ -95,7 +95,7 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
         clonedScene.scale.set(modelScaleFactor, modelScaleFactor, modelScaleFactor);
         
         // Adjust the position of the model to ensure it's on the ground
-        clonedScene.position.set(0, -1.0, 0); // Larger negative value to place feet firmly on the ground
+        clonedScene.position.set(0, -1.5, 0); // Further lowered to place feet exactly on the ground
         
         // Add the cloned scene
         groupRef.current.add(clonedScene);
