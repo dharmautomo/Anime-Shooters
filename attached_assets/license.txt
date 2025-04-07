@@ -1,0 +1,11 @@
+Model Information:
+* title:	Baby monster - t pose
+* source:	https://sketchfab.com/3d-models/baby-monster-t-pose-f5bb7040df4b47cea383d2812dd30bdc
+* author:	Pixel-bit (https://sketchfab.com/Pixel-bit)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Baby monster - t pose" (https://sketchfab.com/3d-models/baby-monster-t-pose-f5bb7040df4b47cea383d2812dd30bdc) by Pixel-bit (https://sketchfab.com/Pixel-bit) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
