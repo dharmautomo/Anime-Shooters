@@ -351,9 +351,9 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
       {/* First-person view for main player with weapon */}
       {isMainPlayer && (
         <SciFiGun 
-          position={[0.3, -0.3, -0.4]} 
+          position={[0.3, -0.5, -0.8]} 
           rotation={[0, Math.PI, 0]} 
-          scale={0.05}
+          scale={0.01}
           visible={true} 
         />
       )}
@@ -507,7 +507,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
             <SciFiGun 
               position={[-0.125, -0.6, 0.25]} 
               rotation={[0, 0, 0]} 
-              scale={0.03}
+              scale={0.005}
               visible={health > 0}
             />
           </group>
