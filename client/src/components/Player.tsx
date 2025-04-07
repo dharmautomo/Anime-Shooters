@@ -353,7 +353,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
         <SciFiGun 
           position={[0.3, -0.3, -0.4]} 
           rotation={[0, Math.PI, 0]} 
-          scale={0.2}
+          scale={0.05}
           visible={true} 
         />
       )}
@@ -507,7 +507,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
             <SciFiGun 
               position={[-0.125, -0.6, 0.25]} 
               rotation={[0, 0, 0]} 
-              scale={0.15}
+              scale={0.03}
               visible={health > 0}
             />
           </group>
