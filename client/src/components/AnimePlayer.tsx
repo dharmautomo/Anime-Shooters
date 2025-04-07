@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useKeyboardControls } from '@react-three/drei';
 import { Controls, ControlsType } from '../App';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
+import { SciFiGun } from './SciFiGun';
 import { checkCollision } from '../lib/utils/collisionDetection';
 
 interface AnimePlayerProps {
@@ -335,7 +336,16 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
       position={position instanceof THREE.Vector3 ? [position.x, position.y, position.z] : position}
       castShadow
       receiveShadow
-    />
+    >
+      {/* Add gun when the player is visible (not in first person view) */}
+      {!isMainPlayer && (
+        <SciFiGun 
+          position={[0.3, 0, 0.5]} 
+          rotation={[0, -Math.PI / 2, 0]} 
+          scale={0.005}
+        />
+      )}
+    </group>
   );
 }
 

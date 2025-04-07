@@ -5,6 +5,7 @@ import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
 import AnimePlayer from './AnimePlayer';
 import World from './World';
 import WeaponSystem from './WeaponSystem';
+import FirstPersonGun from './FirstPersonGun';
 import { Controls } from '../App';
 import { useGameControls } from '../lib/stores/useGameControls';
 import { KeyMapping } from '../lib/utils';
@@ -421,7 +422,10 @@ const Game = ({ username }: GameProps) => {
       
       {/* Weapon system for shooting */}
       {health > 0 && isControlsLocked && (
-        <WeaponSystem position={position} />
+        <>
+          <WeaponSystem position={position} />
+          <FirstPersonGun />
+        </>
       )}
       
       {/* Death overlay when player is dead */}
