@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface BabyMonsterProps {
@@ -16,55 +15,16 @@ export function BabyMonster({
 }: BabyMonsterProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [animationTime, setAnimationTime] = useState(0);
-  const [modelLoaded, setModelLoaded] = useState(false);
-  const [loadError, setLoadError] = useState(false);
-  const modelPath = '/models/baby-monster/scene.gltf';
-
-  // Try to load the model with useGLTF
-  const { scene, nodes, materials } = useGLTF(modelPath, undefined, 
-    (e) => {
-      console.error('Error loading model:', e);
-      setLoadError(true);
-    });
   
-  // Clone the scene to avoid conflicts with multiple instances
-  const clonedScene = useRef(scene ? scene.clone() : null);
-  
-  // Set up model
+  // Create the stylized monster directly instead of trying to load the GLTF
   useEffect(() => {
-    if (groupRef.current && clonedScene.current) {
-      try {
-        // Clear any existing children
-        while (groupRef.current.children.length > 0) {
-          groupRef.current.remove(groupRef.current.children[0]);
-        }
-        
-        // Add the cloned scene
-        groupRef.current.add(clonedScene.current);
-        
-        // Apply scale uniformly
-        groupRef.current.scale.set(scale, scale, scale);
-        
-        // Initial rotation
-        groupRef.current.rotation.y = rotation;
-        
-        setModelLoaded(true);
-      } catch (error) {
-        console.error('Error setting up model:', error);
-        setLoadError(true);
-      }
-    }
-  }, [scale, rotation, scene]);
-  
-  // Create a fallback monster if loading fails
-  const createFallbackMonster = () => {
     if (groupRef.current) {
       // Clear existing children
       while (groupRef.current.children.length > 0) {
         groupRef.current.remove(groupRef.current.children[0]);
       }
       
-      // Create a simple stylized monster as fallback
+      // Create a stylized monster
       // Body
       const body = new THREE.Mesh(
         new THREE.BoxGeometry(1, 1.5, 1),
@@ -135,18 +95,48 @@ export function BabyMonster({
       rightLeg.castShadow = true;
       groupRef.current.add(rightLeg);
       
+      // Mouth
+      const mouth = new THREE.Mesh(
+        new THREE.BoxGeometry(0.3, 0.1, 0.1),
+        new THREE.MeshBasicMaterial({ color: '#ff9999' })
+      );
+      mouth.position.set(0, 1.5, 0.59);
+      groupRef.current.add(mouth);
+      
+      // Horns
+      const hornGeometry = new THREE.ConeGeometry(0.1, 0.3, 16);
+      const hornMaterial = new THREE.MeshStandardMaterial({ color: '#5a3a99' });
+      
+      const leftHorn = new THREE.Mesh(hornGeometry, hornMaterial);
+      leftHorn.position.set(0.25, 2.1, 0);
+      leftHorn.rotation.x = -Math.PI / 6;
+      leftHorn.castShadow = true;
+      groupRef.current.add(leftHorn);
+      
+      const rightHorn = new THREE.Mesh(hornGeometry, hornMaterial);
+      rightHorn.position.set(-0.25, 2.1, 0);
+      rightHorn.rotation.x = -Math.PI / 6;
+      rightHorn.castShadow = true;
+      groupRef.current.add(rightHorn);
+      
+      // Tail
+      const tailGeometry = new THREE.CylinderGeometry(0.1, 0.05, 1);
+      const tailMaterial = new THREE.MeshStandardMaterial({ color: '#6a47b8' });
+      
+      const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+      // Position the tail at the back and make it point backward and slightly up
+      tail.position.set(0, 0.5, -0.7);
+      tail.rotation.x = Math.PI / 4;
+      tail.castShadow = true;
+      groupRef.current.add(tail);
+      
       // Apply scale to the group
       groupRef.current.scale.set(scale, scale, scale);
+      
+      // Initial rotation
+      groupRef.current.rotation.y = rotation;
     }
-  };
-  
-  // Create fallback if there's an error loading
-  useEffect(() => {
-    if (loadError) {
-      console.log("Using fallback monster model");
-      createFallbackMonster();
-    }
-  }, [loadError, scale]);
+  }, [scale, rotation]);
   
   // Animation loop
   useFrame((_, delta) => {
@@ -161,32 +151,39 @@ export function BabyMonster({
       // Gentle swaying
       groupRef.current.rotation.y = rotation + Math.sin(animationTime) * 0.1;
       
-      // If using fallback model, animate the parts
-      if (loadError && groupRef.current.children.length > 0) {
-        // Animate arms
-        const leftArm = groupRef.current.children[4];
-        const rightArm = groupRef.current.children[5];
+      // If children are available, animate them
+      if (groupRef.current.children.length > 0) {
+        // Animate arms (arms are at index 6 and 7)
+        const leftArm = groupRef.current.children[6];
+        const rightArm = groupRef.current.children[7];
         if (leftArm && rightArm) {
           leftArm.rotation.x = Math.sin(animationTime * 2) * 0.2;
           rightArm.rotation.x = Math.sin(animationTime * 2 + Math.PI) * 0.2;
         }
         
-        // Animate legs
-        const leftLeg = groupRef.current.children[6];
-        const rightLeg = groupRef.current.children[7];
+        // Animate legs (legs are at index 8 and 9)
+        const leftLeg = groupRef.current.children[8];
+        const rightLeg = groupRef.current.children[9];
         if (leftLeg && rightLeg) {
           leftLeg.position.y = 0.25 + Math.sin(animationTime * 2) * 0.05;
           rightLeg.position.y = 0.25 + Math.sin(animationTime * 2 + Math.PI) * 0.05;
         }
         
-        // Animate eyes
-        const leftPupil = groupRef.current.children[3];
-        const rightPupil = groupRef.current.children[2];
+        // Animate pupils (pupils are at index 4 and 5)
+        const leftPupil = groupRef.current.children[4];
+        const rightPupil = groupRef.current.children[5];
         if (leftPupil && rightPupil) {
           // Blink occasionally by scaling eyes on y-axis
           const blinkFactor = Math.sin(animationTime * 0.5) > 0.95 ? 0.1 : 1;
           leftPupil.scale.y = blinkFactor;
           rightPupil.scale.y = blinkFactor;
+        }
+        
+        // Animate tail (tail is at index 12)
+        const tail = groupRef.current.children[12];
+        if (tail) {
+          // Wag the tail
+          tail.rotation.z = Math.sin(animationTime * 3) * 0.2;
         }
       }
     }
@@ -230,13 +227,6 @@ export function BabyMonster({
       {addModelCredit()}
     </group>
   );
-}
-
-// Try to preload the model, but don't worry if it fails
-try {
-  useGLTF.preload('/models/baby-monster/scene.gltf');
-} catch (e) {
-  console.log('Model preloading failed, will use fallback');
 }
 
 export default BabyMonster;
