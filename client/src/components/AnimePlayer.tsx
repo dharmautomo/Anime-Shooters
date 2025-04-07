@@ -38,7 +38,7 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
   // Movement states
   const isJumping = useRef(false);
   const jumpVelocity = useRef(0);
-  const currentHeight = useRef(1.6); // Player eye height
+  const currentHeight = useRef(1.0); // Player eye height, adjusted for model scale
   
   // Get keyboard controls for main player
   const forward = useKeyboardControls((state) => state[Controls.forward]);
@@ -95,7 +95,7 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
         clonedScene.scale.set(modelScaleFactor, modelScaleFactor, modelScaleFactor);
         
         // Adjust the position of the model to ensure it's on the ground
-        clonedScene.position.set(0, 0.8, 0); // Raised to place feet properly on ground with new scale
+        clonedScene.position.set(0, 0, 0); // Lowered to place feet properly on ground
         
         // Add the cloned scene
         groupRef.current.add(clonedScene);
@@ -231,8 +231,8 @@ function AnimePlayerModel({ isMainPlayer, position, rotation, health, username }
         currentHeight.current += jumpVelocity.current;
 
         // Check if player has landed
-        if (currentHeight.current <= 1.6) {
-          currentHeight.current = 1.6;
+        if (currentHeight.current <= 1.0) {
+          currentHeight.current = 1.0;
           isJumping.current = false;
           jumpVelocity.current = 0;
         }

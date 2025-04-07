@@ -141,7 +141,7 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
   
   resetPlayer: () => {
     set({
-      position: new THREE.Vector3(0, 1.6, 10),
+      position: new THREE.Vector3(0, 0, 10), // Player starts on the ground
       rotation: 0,
       health: 100,
       score: 0,

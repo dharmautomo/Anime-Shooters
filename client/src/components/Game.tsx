@@ -398,7 +398,7 @@ const Game = ({ username }: GameProps) => {
     // Update camera position to match player position
     camera.position.copy(new THREE.Vector3(
       newPosition.x,
-      newPosition.y + 1.6, // Eye height
+      newPosition.y + 1.0, // Eye height, lowered to match new model scale
       newPosition.z
     ));
     
