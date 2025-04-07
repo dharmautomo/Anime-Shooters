@@ -132,7 +132,7 @@ function createFallbackMonster(groupRef: React.RefObject<THREE.Group>, scale: nu
 }
 
 // Main component that loads and renders the 3D model
-function BabyMonsterModel({ position, scale = 1, rotation = 0 }: BabyMonsterProps) {
+function BabyMonsterModel({ position = [0, 0, 0], scale = 1, rotation = 0 }: BabyMonsterProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [animationTime, setAnimationTime] = useState(0);
   const [loadError, setLoadError] = useState(false);
@@ -159,10 +159,18 @@ function BabyMonsterModel({ position, scale = 1, rotation = 0 }: BabyMonsterProp
         // Create a clone of the scene to avoid conflicts with multiple instances
         const clonedScene = scene.clone();
         
+        // The model is very small in the GLTF, so we need to scale it up significantly
+        // We apply a larger scale factor to make it visible
+        const modelScaleFactor = 5;
+        clonedScene.scale.set(modelScaleFactor, modelScaleFactor, modelScaleFactor);
+        
+        // Adjust the position of the model to ensure it's on the ground
+        clonedScene.position.set(0, 0.5, 0); // Raise it slightly above ground
+        
         // Add the cloned scene
         groupRef.current.add(clonedScene);
         
-        // Apply scale to the group
+        // Additional scale from props
         groupRef.current.scale.set(scale, scale, scale);
         
         // Apply initial rotation
@@ -230,7 +238,7 @@ function BabyMonsterModel({ position, scale = 1, rotation = 0 }: BabyMonsterProp
   return (
     <group
       ref={groupRef}
-      position={[position[0], position[1], position[2]]}
+      position={position}
       castShadow
       receiveShadow
     />
@@ -238,14 +246,14 @@ function BabyMonsterModel({ position, scale = 1, rotation = 0 }: BabyMonsterProp
 }
 
 // Error boundary component
-function ErrorFallback({ position, scale, rotation }: BabyMonsterProps) {
+function ErrorFallback({ position = [0, 0, 0], scale = 1, rotation = 0 }: BabyMonsterProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [animationTime, setAnimationTime] = useState(0);
   
   // Create fallback monster on mount
   useEffect(() => {
     console.log("Using error fallback monster");
-    createFallbackMonster(groupRef, scale || 1, rotation || 0);
+    createFallbackMonster(groupRef, scale, rotation);
   }, [scale, rotation]);
   
   // Animation for fallback monster
@@ -255,10 +263,10 @@ function ErrorFallback({ position, scale, rotation }: BabyMonsterProps) {
     if (groupRef.current) {
       // Breathing animation
       const breathingOffset = Math.sin(animationTime * 2) * 0.05;
-      groupRef.current.position.y = (position ? position[1] : 0) + breathingOffset;
+      groupRef.current.position.y = position[1] + breathingOffset;
       
       // Swaying animation
-      groupRef.current.rotation.y = (rotation || 0) + Math.sin(animationTime) * 0.1;
+      groupRef.current.rotation.y = rotation + Math.sin(animationTime) * 0.1;
       
       // Animate parts if they exist
       if (groupRef.current.children.length > 0) {
