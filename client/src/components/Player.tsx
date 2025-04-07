@@ -5,7 +5,6 @@ import { useKeyboardControls, useAnimations } from '@react-three/drei';
 import { Controls, ControlsType } from '../App';
 import { usePlayer, useMultiplayer } from '../lib/stores/initializeStores';
 import { checkCollision } from '../lib/utils/collisionDetection';
-import { SciFiGun } from './SciFiGun';
 
 interface PlayerProps {
   isMainPlayer: boolean;
@@ -348,15 +347,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
 
   return (
     <group ref={playerRef}>
-      {/* First-person view for main player with weapon */}
-      {isMainPlayer && (
-        <SciFiGun 
-          position={[0.3, -0.7, -1.2]} 
-          rotation={[0, Math.PI, 0]} 
-          scale={0.001}
-          visible={true} 
-        />
-      )}
+      {/* First-person view for main player - weapon display removed */}
       
       {/* Character Model - only visible for other players */}
       {!isMainPlayer && (
@@ -503,13 +494,7 @@ const Player = ({ isMainPlayer, position, rotation, health, username }: PlayerPr
               <meshStandardMaterial color="#e6ccb3" />
             </mesh>
             
-            {/* Add gun to right arm */}
-            <SciFiGun 
-              position={[-0.125, -0.6, 0.25]} 
-              rotation={[0, 0, 0]} 
-              scale={0.0005}
-              visible={health > 0}
-            />
+            {/* Weapon removed */}
           </group>
 
           {/* Legs */}
