@@ -304,7 +304,7 @@ export function BabyMonster(props: BabyMonsterProps) {
   // Add a caption with attribution
   const addModelCredit = () => {
     return (
-      <sprite position={[0, 2.5, 0]} scale={[2, 0.5, 1]}>
+      <sprite position={[0, -0.5, 0]} scale={[1, 0.25, 1]}>
         <spriteMaterial 
           transparent={true}
           depthTest={false}
@@ -313,15 +313,15 @@ export function BabyMonster(props: BabyMonsterProps) {
             canvas.width = 512;
             canvas.height = 128;
             const ctx = canvas.getContext('2d')!;
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillStyle = 'rgba(50,50,50,0.9)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.font = 'bold 20px Arial';
+            ctx.font = 'bold 24px Arial';
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText("Baby Monster by Pixel-bit", canvas.width/2, canvas.height/2);
-            ctx.font = '14px Arial';
-            ctx.fillText("CC-BY-4.0 License", canvas.width/2, canvas.height/2 + 24);
+            ctx.fillText("Baby Monster by Pixel-bit", canvas.width/2, canvas.height/2 - 10);
+            ctx.font = '16px Arial';
+            ctx.fillText("CC-BY-4.0 License", canvas.width/2, canvas.height/2 + 20);
             return new THREE.CanvasTexture(canvas);
           })()}
         />
